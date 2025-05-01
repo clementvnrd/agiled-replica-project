@@ -1,19 +1,24 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import Logo from './Logo';
 import { 
-  Home, 
+  Home,
   Users, 
   Calendar, 
-  DollarSign, 
-  FileText, 
+  DollarSign,
+  FileText,
   Clock,
   Settings,
   UserCog,
   Box,
   FileBox,
-  Rocket
+  Rocket,
+  BookOpen,
+  Activity,
+  User,
+  Bot,
+  Plug
 } from 'lucide-react';
 
 interface NavItemProps {
@@ -43,6 +48,18 @@ const NavItem: React.FC<NavItemProps> = ({ to, icon, label, expandable = false, 
 const Sidebar = () => {
   const location = useLocation();
   const path = location.pathname;
+  const [categoryOpen, setCategoryOpen] = useState({
+    business: true,
+    personal: true,
+    ai: true
+  });
+
+  const toggleCategory = (category: keyof typeof categoryOpen) => {
+    setCategoryOpen(prev => ({
+      ...prev,
+      [category]: !prev[category]
+    }));
+  };
 
   return (
     <aside className="w-64 h-screen bg-agiled-sidebar border-r border-agiled-lightBorder flex flex-col">
@@ -53,15 +70,6 @@ const Sidebar = () => {
       <div className="flex-1 overflow-y-auto py-4">
         <div className="px-3 sidebar-nav-group">
           <NavItem 
-            to="/launchpad" 
-            icon={<Home size={20} />} 
-            label="Launchpad"
-            active={path === '/launchpad'} 
-          />
-        </div>
-        
-        <div className="px-3 sidebar-nav-group">
-          <NavItem 
             to="/" 
             icon={<Home size={20} />} 
             label="Tableau de bord"
@@ -69,99 +77,131 @@ const Sidebar = () => {
           />
         </div>
         
-        <div className="px-3 sidebar-nav-group">
-          <NavItem 
-            to="/crm" 
-            icon={<Users size={20} />} 
-            label="CRM" 
-            expandable
-            active={path.startsWith('/crm')}
-          />
+        <div className="py-2">
+          <div 
+            className="flex items-center px-4 py-2 text-sm font-medium cursor-pointer"
+            onClick={() => toggleCategory('business')}
+          >
+            <span className="mr-2">{categoryOpen.business ? '▼' : '►'}</span>
+            <span>Business</span>
+          </div>
+          
+          {categoryOpen.business && (
+            <div className="pl-3">
+              <div className="px-3 sidebar-nav-group">
+                <NavItem 
+                  to="/crm" 
+                  icon={<Users size={20} />} 
+                  label="CRM" 
+                  expandable
+                  active={path.startsWith('/crm')}
+                />
+              </div>
+              
+              <div className="px-3 sidebar-nav-group">
+                <NavItem 
+                  to="/productivity" 
+                  icon={<Calendar size={20} />} 
+                  label="Productivity" 
+                  expandable
+                  active={path.startsWith('/productivity')}
+                />
+              </div>
+              
+              <div className="px-3 sidebar-nav-group">
+                <NavItem 
+                  to="/finance" 
+                  icon={<DollarSign size={20} />} 
+                  label="Finance" 
+                  expandable
+                  active={path.startsWith('/finance')}
+                />
+              </div>
+            </div>
+          )}
         </div>
         
-        <div className="px-3 sidebar-nav-group">
-          <NavItem 
-            to="/productivity" 
-            icon={<Calendar size={20} />} 
-            label="Productivity" 
-            expandable
-            active={path.startsWith('/productivity')}
-          />
+        <div className="py-2">
+          <div 
+            className="flex items-center px-4 py-2 text-sm font-medium cursor-pointer"
+            onClick={() => toggleCategory('personal')}
+          >
+            <span className="mr-2">{categoryOpen.personal ? '▼' : '►'}</span>
+            <span>Personnel</span>
+          </div>
+          
+          {categoryOpen.personal && (
+            <div className="pl-3">
+              <div className="px-3 sidebar-nav-group">
+                <NavItem 
+                  to="/personal" 
+                  icon={<User size={20} />} 
+                  label="Vue générale" 
+                  active={path === '/personal'}
+                />
+              </div>
+              
+              <div className="px-3 sidebar-nav-group">
+                <NavItem 
+                  to="/studies" 
+                  icon={<BookOpen size={20} />} 
+                  label="Études" 
+                  expandable
+                  active={path.startsWith('/studies')}
+                />
+              </div>
+              
+              <div className="px-3 sidebar-nav-group">
+                <NavItem 
+                  to="/fitness" 
+                  icon={<Activity size={20} />} 
+                  label="Fitness" 
+                  expandable
+                  active={path.startsWith('/fitness')}
+                />
+              </div>
+            </div>
+          )}
         </div>
         
-        <div className="px-3 sidebar-nav-group">
-          <NavItem 
-            to="/finance" 
-            icon={<DollarSign size={20} />} 
-            label="Finance" 
-            expandable
-            active={path.startsWith('/finance')}
-          />
-        </div>
-        
-        <div className="px-3 sidebar-nav-group">
-          <NavItem 
-            to="/docs" 
-            icon={<FileText size={20} />} 
-            label="Docs"
-            active={path.startsWith('/docs')}
-          />
-        </div>
-        
-        <div className="px-3 sidebar-nav-group">
-          <NavItem 
-            to="/scheduling" 
-            icon={<Clock size={20} />} 
-            label="Scheduling" 
-            expandable
-            active={path.startsWith('/scheduling')}
-          />
-        </div>
-        
-        <div className="px-3 sidebar-nav-group">
-          <NavItem 
-            to="/hrm" 
-            icon={<UserCog size={20} />} 
-            label="HRM" 
-            expandable
-            active={path.startsWith('/hrm')}
-          />
-        </div>
-        
-        <div className="px-3 sidebar-nav-group">
-          <NavItem 
-            to="/essentials" 
-            icon={<Box size={20} />} 
-            label="Essentials" 
-            expandable
-            active={path.startsWith('/essentials')}
-          />
-        </div>
-        
-        <div className="px-3 sidebar-nav-group">
-          <NavItem 
-            to="/templates" 
-            icon={<FileBox size={20} />} 
-            label="Templates"
-            active={path.startsWith('/templates')}
-          />
-        </div>
-        
-        <div className="px-3 sidebar-nav-group">
-          <NavItem 
-            to="/agiled-ai" 
-            icon={<Rocket size={20} />} 
-            label="Agiled AI 🚀"
-            active={path.startsWith('/agiled-ai')}
-          />
+        <div className="py-2">
+          <div 
+            className="flex items-center px-4 py-2 text-sm font-medium cursor-pointer"
+            onClick={() => toggleCategory('ai')}
+          >
+            <span className="mr-2">{categoryOpen.ai ? '▼' : '►'}</span>
+            <span>Intelligence Artificielle</span>
+          </div>
+          
+          {categoryOpen.ai && (
+            <div className="pl-3">
+              <div className="px-3 sidebar-nav-group">
+                <NavItem 
+                  to="/agent" 
+                  icon={<Bot size={20} />} 
+                  label="Agent Manager" 
+                  active={path.startsWith('/agent')}
+                />
+              </div>
+              
+              <div className="px-3 sidebar-nav-group">
+                <NavItem 
+                  to="/mcp" 
+                  icon={<Plug size={20} />} 
+                  label="Connecteurs MCP" 
+                  active={path.startsWith('/mcp')}
+                />
+              </div>
+            </div>
+          )}
         </div>
       </div>
       
       <div className="mt-auto">
         <div className="px-4 py-3 bg-blue-50 border-t border-agiled-lightBorder">
           <div className="text-sm">
-            <p className="text-center mb-1">Your free trial expires in 12 day(s).</p>
-            <button className="btn-primary w-full">Upgrade Now</button>
+            <p className="text-center mb-1">Intégrations: Strava, OpenRouter</p>
+            <button className="btn-primary w-full">Connecter + d'outils</button>
           </div>
         </div>
         <div className="p-3 border-t border-agiled-lightBorder">
