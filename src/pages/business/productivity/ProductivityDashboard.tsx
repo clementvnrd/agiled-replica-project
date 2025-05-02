@@ -1,11 +1,38 @@
 
 import React from 'react';
 import { Clipboard, Clock, FolderOpen, Calendar } from 'lucide-react';
-import StatCard from '@/components/StatCard';
 import EmptyCard from '@/components/EmptyCard';
 import TasksPerformanceCard from '@/components/TasksPerformanceCard';
+import StatCardGroup from '@/components/dashboard/StatCardGroup';
+import type { StatItem } from '@/components/dashboard/StatCardGroup';
 
 const ProductivityDashboard: React.FC = () => {
+  const productivityStats: StatItem[] = [
+    {
+      title: "Projets actifs",
+      value: "0",
+      icon: <FolderOpen size={18} className="text-blue-600" />
+    },
+    {
+      title: "Tâches en cours",
+      value: "0",
+      icon: <Clipboard size={18} className="text-green-600" />,
+      iconBg: "bg-green-100"
+    },
+    {
+      title: "Heures loguées",
+      value: "0h",
+      icon: <Clock size={18} className="text-purple-600" />,
+      iconBg: "bg-purple-100"
+    },
+    {
+      title: "Évènements à venir",
+      value: "0",
+      icon: <Calendar size={18} className="text-orange-600" />,
+      iconBg: "bg-orange-100"
+    }
+  ];
+
   return (
     <div className="p-6">
       <div className="mb-8">
@@ -13,31 +40,7 @@ const ProductivityDashboard: React.FC = () => {
         <p className="text-agiled-lightText">Gérez vos projets, tâches et suivez votre temps</p>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-        <StatCard 
-          title="Projets actifs" 
-          value="0" 
-          icon={<FolderOpen size={18} className="text-blue-600" />}
-        />
-        <StatCard 
-          title="Tâches en cours" 
-          value="0" 
-          icon={<Clipboard size={18} className="text-green-600" />}
-          iconBg="bg-green-100"
-        />
-        <StatCard 
-          title="Heures loguées" 
-          value="0h" 
-          icon={<Clock size={18} className="text-purple-600" />}
-          iconBg="bg-purple-100"
-        />
-        <StatCard 
-          title="Évènements à venir" 
-          value="0" 
-          icon={<Calendar size={18} className="text-orange-600" />}
-          iconBg="bg-orange-100"
-        />
-      </div>
+      <StatCardGroup items={productivityStats} />
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <TasksPerformanceCard />

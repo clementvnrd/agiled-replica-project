@@ -1,9 +1,10 @@
 
 import React from 'react';
 import { BookOpen, Activity, Calendar, Clock } from 'lucide-react';
-import StatCard from '@/components/StatCard';
 import EmptyCard from '@/components/EmptyCard';
 import DashboardChart from '@/components/DashboardChart';
+import StatCardGroup from '@/components/dashboard/StatCardGroup';
+import type { StatItem } from '@/components/dashboard/StatCardGroup';
 
 const activityData = [
   { name: 'Lun', value: 0 },
@@ -16,6 +17,32 @@ const activityData = [
 ];
 
 const PersonalDashboard: React.FC = () => {
+  const personalStats: StatItem[] = [
+    {
+      title: "Sessions d'étude",
+      value: "0",
+      icon: <BookOpen size={18} className="text-blue-600" />
+    },
+    {
+      title: "Activités sportives",
+      value: "0",
+      icon: <Activity size={18} className="text-green-600" />,
+      iconBg: "bg-green-100"
+    },
+    {
+      title: "Évènements personnels",
+      value: "0",
+      icon: <Calendar size={18} className="text-purple-600" />,
+      iconBg: "bg-purple-100"
+    },
+    {
+      title: "Tâches personnelles",
+      value: "0",
+      icon: <Clock size={18} className="text-orange-600" />,
+      iconBg: "bg-orange-100"
+    }
+  ];
+
   return (
     <div className="p-6">
       <div className="mb-8">
@@ -23,31 +50,7 @@ const PersonalDashboard: React.FC = () => {
         <p className="text-agiled-lightText">Gérez vos études, activités sportives et autres aspects personnels</p>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-        <StatCard 
-          title="Sessions d'étude" 
-          value="0" 
-          icon={<BookOpen size={18} className="text-blue-600" />}
-        />
-        <StatCard 
-          title="Activités sportives" 
-          value="0" 
-          icon={<Activity size={18} className="text-green-600" />}
-          iconBg="bg-green-100"
-        />
-        <StatCard 
-          title="Évènements personnels" 
-          value="0" 
-          icon={<Calendar size={18} className="text-purple-600" />}
-          iconBg="bg-purple-100"
-        />
-        <StatCard 
-          title="Tâches personnelles" 
-          value="0" 
-          icon={<Clock size={18} className="text-orange-600" />}
-          iconBg="bg-orange-100"
-        />
-      </div>
+      <StatCardGroup items={personalStats} />
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <DashboardChart 

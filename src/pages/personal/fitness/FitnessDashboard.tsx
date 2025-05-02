@@ -1,9 +1,10 @@
 
 import React from 'react';
 import { Activity, Flame, TrendingUp, Clock } from 'lucide-react';
-import StatCard from '@/components/StatCard';
 import EmptyCard from '@/components/EmptyCard';
 import DashboardChart from '@/components/DashboardChart';
+import StatCardGroup from '@/components/dashboard/StatCardGroup';
+import type { StatItem } from '@/components/dashboard/StatCardGroup';
 
 const activityData = [
   { name: 'Lun', value: 0 },
@@ -16,6 +17,32 @@ const activityData = [
 ];
 
 const FitnessDashboard: React.FC = () => {
+  const fitnessStats: StatItem[] = [
+    {
+      title: "Activités cette semaine",
+      value: "0",
+      icon: <Activity size={18} className="text-blue-600" />
+    },
+    {
+      title: "Calories brûlées",
+      value: "0",
+      icon: <Flame size={18} className="text-red-600" />,
+      iconBg: "bg-red-100"
+    },
+    {
+      title: "Distance parcourue",
+      value: "0 km",
+      icon: <TrendingUp size={18} className="text-green-600" />,
+      iconBg: "bg-green-100"
+    },
+    {
+      title: "Temps d'activité",
+      value: "0h",
+      icon: <Clock size={18} className="text-purple-600" />,
+      iconBg: "bg-purple-100"
+    }
+  ];
+
   return (
     <div className="p-6">
       <div className="mb-8">
@@ -23,31 +50,7 @@ const FitnessDashboard: React.FC = () => {
         <p className="text-agiled-lightText">Suivez vos activités sportives et votre progression</p>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-        <StatCard 
-          title="Activités cette semaine" 
-          value="0" 
-          icon={<Activity size={18} className="text-blue-600" />}
-        />
-        <StatCard 
-          title="Calories brûlées" 
-          value="0" 
-          icon={<Flame size={18} className="text-red-600" />}
-          iconBg="bg-red-100"
-        />
-        <StatCard 
-          title="Distance parcourue" 
-          value="0 km" 
-          icon={<TrendingUp size={18} className="text-green-600" />}
-          iconBg="bg-green-100"
-        />
-        <StatCard 
-          title="Temps d'activité" 
-          value="0h" 
-          icon={<Clock size={18} className="text-purple-600" />}
-          iconBg="bg-purple-100"
-        />
-      </div>
+      <StatCardGroup items={fitnessStats} />
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <DashboardChart 

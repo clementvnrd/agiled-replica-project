@@ -1,9 +1,10 @@
 
 import React from 'react';
 import { Users, Building, DollarSign, PieChart } from 'lucide-react';
-import StatCard from '@/components/StatCard';
 import DashboardChart from '@/components/DashboardChart';
 import EmptyCard from '@/components/EmptyCard';
+import StatCardGroup from '@/components/dashboard/StatCardGroup';
+import type { StatItem } from '@/components/dashboard/StatCardGroup';
 
 const chartData = [
   { name: 'Jan', value: 0 },
@@ -14,6 +15,32 @@ const chartData = [
 ];
 
 const CRMDashboard: React.FC = () => {
+  const crmStats: StatItem[] = [
+    {
+      title: "Comptes",
+      value: "0",
+      icon: <Building size={18} className="text-blue-600" />
+    },
+    {
+      title: "Contacts",
+      value: "0",
+      icon: <Users size={18} className="text-green-600" />,
+      iconBg: "bg-green-100"
+    },
+    {
+      title: "Deals",
+      value: "0",
+      icon: <DollarSign size={18} className="text-purple-600" />,
+      iconBg: "bg-purple-100"
+    },
+    {
+      title: "Revenu",
+      value: "0 €",
+      icon: <PieChart size={18} className="text-orange-600" />,
+      iconBg: "bg-orange-100"
+    }
+  ];
+
   return (
     <div className="p-6">
       <div className="mb-8">
@@ -21,31 +48,7 @@ const CRMDashboard: React.FC = () => {
         <p className="text-agiled-lightText">Gérez vos relations clients, contacts et opportunités</p>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-        <StatCard 
-          title="Comptes" 
-          value="0" 
-          icon={<Building size={18} className="text-blue-600" />}
-        />
-        <StatCard 
-          title="Contacts" 
-          value="0" 
-          icon={<Users size={18} className="text-green-600" />}
-          iconBg="bg-green-100"
-        />
-        <StatCard 
-          title="Deals" 
-          value="0" 
-          icon={<DollarSign size={18} className="text-purple-600" />}
-          iconBg="bg-purple-100"
-        />
-        <StatCard 
-          title="Revenu" 
-          value="0 €" 
-          icon={<PieChart size={18} className="text-orange-600" />}
-          iconBg="bg-orange-100"
-        />
-      </div>
+      <StatCardGroup items={crmStats} />
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <DashboardChart 

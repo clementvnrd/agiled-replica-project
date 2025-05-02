@@ -1,9 +1,10 @@
 
 import React from 'react';
 import { DollarSign, CreditCard, Receipt, PieChart } from 'lucide-react';
-import StatCard from '@/components/StatCard';
 import DashboardChart from '@/components/DashboardChart';
 import EmptyCard from '@/components/EmptyCard';
+import StatCardGroup from '@/components/dashboard/StatCardGroup';
+import type { StatItem } from '@/components/dashboard/StatCardGroup';
 
 const chartData = [
   { name: 'Jan', value: 0 },
@@ -14,6 +15,32 @@ const chartData = [
 ];
 
 const FinanceDashboard: React.FC = () => {
+  const financeStats: StatItem[] = [
+    {
+      title: "Facturé",
+      value: "0 €",
+      icon: <Receipt size={18} className="text-blue-600" />
+    },
+    {
+      title: "Recevables",
+      value: "0 €",
+      icon: <CreditCard size={18} className="text-green-600" />,
+      iconBg: "bg-green-100"
+    },
+    {
+      title: "Dépenses",
+      value: "0 €",
+      icon: <DollarSign size={18} className="text-red-600" />,
+      iconBg: "bg-red-100"
+    },
+    {
+      title: "Profit",
+      value: "0 €",
+      icon: <PieChart size={18} className="text-purple-600" />,
+      iconBg: "bg-purple-100"
+    }
+  ];
+
   return (
     <div className="p-6">
       <div className="mb-8">
@@ -21,31 +48,7 @@ const FinanceDashboard: React.FC = () => {
         <p className="text-agiled-lightText">Suivez vos finances, factures et paiements</p>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-        <StatCard 
-          title="Facturé" 
-          value="0 €" 
-          icon={<Receipt size={18} className="text-blue-600" />}
-        />
-        <StatCard 
-          title="Recevables" 
-          value="0 €" 
-          icon={<CreditCard size={18} className="text-green-600" />}
-          iconBg="bg-green-100"
-        />
-        <StatCard 
-          title="Dépenses" 
-          value="0 €" 
-          icon={<DollarSign size={18} className="text-red-600" />}
-          iconBg="bg-red-100"
-        />
-        <StatCard 
-          title="Profit" 
-          value="0 €" 
-          icon={<PieChart size={18} className="text-purple-600" />}
-          iconBg="bg-purple-100"
-        />
-      </div>
+      <StatCardGroup items={financeStats} />
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <DashboardChart 
