@@ -28,14 +28,16 @@ type FormValues = z.infer<typeof formSchema>;
  *
  * Args:
  *   onSave (function): Callback appelé avec { supabaseUrl, supabaseAnonKey }.
+ *   onSkip (function): Callback appelé quand l'utilisateur clique sur "Connecter plus tard".
  *
  * Returns:
  *   JSX.Element
  */
 const SupabaseCredentialsForm: React.FC<{ 
   onSave: (creds: { supabaseUrl: string; supabaseAnonKey: string }) => void;
+  onSkip?: () => void;
   initialCredentials?: { supabaseUrl: string; supabaseAnonKey: string } | null;
-}> = ({ onSave, initialCredentials = null }) => {
+}> = ({ onSave, onSkip, initialCredentials = null }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [testStatus, setTestStatus] = useState<'idle' | 'testing' | 'success' | 'error'>('idle');
   const [testError, setTestError] = useState<string | null>(null);
@@ -179,13 +181,26 @@ const SupabaseCredentialsForm: React.FC<{
               </div>
             )}
 
-            <Button 
-              type="submit" 
-              className="w-full bg-blue-600 hover:bg-blue-700" 
-              disabled={isSubmitting || testStatus === 'testing'}
-            >
-              {(isSubmitting || testStatus === 'testing') ? 'Test de connexion...' : 'Enregistrer'}
-            </Button>
+            <div className="flex flex-col sm:flex-row gap-3 pt-2">
+              <Button 
+                type="submit" 
+                className="bg-blue-600 hover:bg-blue-700 flex-1" 
+                disabled={isSubmitting || testStatus === 'testing'}
+              >
+                {(isSubmitting || testStatus === 'testing') ? 'Test de connexion...' : 'Enregistrer'}
+              </Button>
+              
+              {onSkip && (
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  className="border-blue-300 text-blue-700 hover:bg-blue-50 flex-1"
+                  onClick={onSkip}
+                >
+                  Connecter plus tard
+                </Button>
+              )}
+            </div>
           </form>
         </Form>
       </CardContent>
