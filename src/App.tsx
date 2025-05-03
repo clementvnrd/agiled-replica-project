@@ -13,6 +13,7 @@ import { useClerkSupabaseAuth } from './hooks/useClerkSupabaseAuth';
 import PasswordRecovery from './components/auth/PasswordRecovery';
 import AuthConfirmation from './components/auth/AuthConfirmation';
 import AuthLayout from './components/auth/AuthLayout';
+import { Card } from '@/components/ui/card';
 
 // Lazy loading pour les pages
 const DashboardPage = React.lazy(() => import('./pages/DashboardPage'));
@@ -130,7 +131,7 @@ function LoginPage() {
   return (
     <AuthLayout>
       <div className="bg-white p-6 rounded-lg shadow-md">
-        <SignIn signUpUrl="/signup" />
+        <SignIn />
         <div className="mt-4 text-center">
           <button 
             onClick={() => setMode('recovery')}
@@ -159,11 +160,7 @@ function VerifyEmail() {
 }
 
 const App = () => (
-  <ClerkProvider
-    publishableKey={clerkKey}
-    navigateAfterSignIn={(to) => `/verify-email?to=${encodeURIComponent(to || '/')}`}
-    navigateAfterSignUp={(to) => `/verify-email?to=${encodeURIComponent(to || '/')}`}
-  >
+  <ClerkProvider publishableKey={clerkKey}>
     <ClerkSupabaseSync>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
@@ -278,7 +275,7 @@ const App = () => (
                 <SignedOut>
                   <AuthLayout>
                     <div className="bg-white p-6 rounded-lg shadow-md">
-                      <SignIn signUpMode />
+                      <SignIn />
                     </div>
                   </AuthLayout>
                 </SignedOut>

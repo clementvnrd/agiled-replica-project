@@ -78,7 +78,10 @@ const SupabaseCredentialsForm: React.FC<{ onSave: (creds: { supabaseUrl: string;
       const isValid = await testConnection(values);
       
       if (isValid) {
-        onSave(values);
+        onSave({
+          supabaseUrl: values.supabaseUrl,
+          supabaseAnonKey: values.supabaseAnonKey
+        });
       }
     } finally {
       setIsSubmitting(false);
