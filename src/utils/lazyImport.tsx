@@ -1,5 +1,5 @@
 
-import { lazy, Suspense } from 'react';
+import React, { lazy, Suspense } from 'react';
 
 // Helper pour créer des imports lazy avec un fallback personnalisé
 export function lazyImport<
@@ -14,5 +14,5 @@ export function lazyImport<
 
 // Composant pour un lazy loading avec Suspense
 export function LazyLoad({ children, fallback }: { children: React.ReactNode; fallback?: React.ReactNode }) {
-  return <Suspense fallback={fallback || <div>Chargement...</div>}>{children}</Suspense>;
+  return (<Suspense fallback={fallback || <div>Chargement...</div>}>{children}</Suspense>);
 }

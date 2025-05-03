@@ -7,7 +7,9 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Check, AlertTriangle } from 'lucide-react';
+import { Check, AlertTriangle, Info } from 'lucide-react';
+import { createDynamicSupabaseClient } from '@/lib/createDynamicSupabaseClient';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const formSchema = z.object({
   supabaseUrl: z.string()
@@ -30,7 +32,10 @@ type FormValues = z.infer<typeof formSchema>;
  * Returns:
  *   JSX.Element
  */
-const SupabaseCredentialsForm: React.FC<{ onSave: (creds: { supabaseUrl: string; supabaseAnonKey: string }) => void }> = ({ onSave }) => {
+const SupabaseCredentialsForm: React.FC<{ 
+  onSave: (creds: { supabaseUrl: string; supabaseAnonKey: string }) => void;
+  initialCredentials?: { supabaseUrl: string; supabaseAnonKey: string } | null;
+}> = ({ onSave, initialCredentials = null }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [testStatus, setTestStatus] = useState<'idle' | 'testing' | 'success' | 'error'>('idle');
   const [testError, setTestError] = useState<string | null>(null);
@@ -38,8 +43,8 @@ const SupabaseCredentialsForm: React.FC<{ onSave: (creds: { supabaseUrl: string;
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      supabaseUrl: '',
-      supabaseAnonKey: ''
+      supabaseUrl: initialCredentials?.supabaseUrl || '',
+      supabaseAnonKey: initialCredentials?.supabaseAnonKey || ''
     }
   });
 
@@ -48,16 +53,17 @@ const SupabaseCredentialsForm: React.FC<{ onSave: (creds: { supabaseUrl: string;
     setTestError(null);
     
     try {
-      // Import dynamiquement pour éviter les problèmes de référence circulaire
-      const { createClient } = await import('@supabase/supabase-js');
-      
       // Création d'un client temporaire pour tester
-      const testClient = createClient(values.supabaseUrl, values.supabaseAnonKey);
+      const testClient = createDynamicSupabaseClient({
+        supabaseUrl: values.supabaseUrl,
+        supabaseAnonKey: values.supabaseAnonKey
+      });
       
       // Test simple pour vérifier si les credentials sont valides
       const { error } = await testClient.from('rag_documents').select('count()', { count: 'exact', head: true });
       
       if (error) {
+        console.error('Erreur Supabase:', error);
         throw new Error(error.message);
       }
 
@@ -89,14 +95,26 @@ const SupabaseCredentialsForm: React.FC<{ onSave: (creds: { supabaseUrl: string;
   };
 
   return (
-    <Card className="w-full max-w-md mx-auto">
-      <CardHeader>
-        <CardTitle>Configuration Supabase</CardTitle>
+    <Card className="w-full max-w-md mx-auto shadow-lg border border-gray-200">
+      <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50">
+        <CardTitle className="flex items-center gap-2 text-xl text-blue-700">
+          Configuration Supabase
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Info size={16} className="text-blue-500 cursor-help" />
+              </TooltipTrigger>
+              <TooltipContent className="max-w-xs">
+                <p>Ces informations sont disponibles dans votre projet Supabase sous "Settings &gt; API"</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </CardTitle>
         <CardDescription>
           Connectez votre projet à Supabase pour activer la fonctionnalité RAG, l'authentification, et plus encore.
         </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-6">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
             <FormField
@@ -104,7 +122,7 @@ const SupabaseCredentialsForm: React.FC<{ onSave: (creds: { supabaseUrl: string;
               name="supabaseUrl"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>URL Supabase</FormLabel>
+                  <FormLabel className="text-gray-700 font-medium">URL Supabase</FormLabel>
                   <FormControl>
                     <Input 
                       placeholder="https://xxx.supabase.co" 
@@ -124,7 +142,7 @@ const SupabaseCredentialsForm: React.FC<{ onSave: (creds: { supabaseUrl: string;
               name="supabaseAnonKey"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Clé anonyme (anon key)</FormLabel>
+                  <FormLabel className="text-gray-700 font-medium">Clé anonyme (anon key)</FormLabel>
                   <FormControl>
                     <Input 
                       type="password" 
@@ -163,7 +181,7 @@ const SupabaseCredentialsForm: React.FC<{ onSave: (creds: { supabaseUrl: string;
 
             <Button 
               type="submit" 
-              className="w-full" 
+              className="w-full bg-blue-600 hover:bg-blue-700" 
               disabled={isSubmitting || testStatus === 'testing'}
             >
               {(isSubmitting || testStatus === 'testing') ? 'Test de connexion...' : 'Enregistrer'}

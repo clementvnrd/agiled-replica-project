@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -37,6 +36,7 @@ const MCPManager = React.lazy(() => import('./pages/settings/MCPManager'));
 const Profil = React.lazy(() => import('./pages/profil'));
 const SettingsPage = React.lazy(() => import('@/pages/settings/SettingsPage'));
 const SupabaseCredentialsForm = React.lazy(() => import('./components/SupabaseCredentialsForm'));
+const RagManagementPage = React.lazy(() => import('./pages/rag/RagManagementPage'));
 
 // Hooks
 import { useUserSupabaseCredentials } from './hooks/useUserSupabaseCredentials';
@@ -235,6 +235,15 @@ const App = () => (
                   <ProtectedRoute>
                     <LazyLoad>
                       <AgentManager />
+                    </LazyLoad>
+                  </ProtectedRoute>
+                } />
+                
+                {/* RAG System Routes */}
+                <Route path="/rag" element={
+                  <ProtectedRoute>
+                    <LazyLoad>
+                      <RagManagementPage />
                     </LazyLoad>
                   </ProtectedRoute>
                 } />

@@ -1,129 +1,197 @@
+import React from 'react';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { Menu } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { Link, useLocation } from 'react-router-dom';
+import { Home, Book, Calendar, Settings, Users, FileText, Database } from 'lucide-react';
+import { SidebarNavItem, SidebarNavGroup, ragNavGroup } from './SidebarNavGroup';
+import { cn } from '@/lib/utils';
 
-import React, { useState } from 'react';
-import { useLocation } from 'react-router-dom';
-import Logo from '@/components/Logo';
-import SidebarItem from './SidebarItem';
-import SidebarCategory from './SidebarCategory';
-import SidebarNavGroup from './SidebarNavGroup';
-import SidebarFooter from './SidebarFooter';
-import { 
-  Home,
-  Users, 
-  Calendar, 
-  DollarSign,
-  User,
-  BookOpen,
-  Activity,
-  Bot,
-  Plug
-} from 'lucide-react';
+const navItems = [
+  {
+    icon: <Home size={16} />,
+    label: "Tableau de bord",
+    to: "/",
+  },
+  {
+    icon: <Book size={16} />,
+    label: "Projets",
+    to: "/projects",
+  },
+  {
+    icon: <Calendar size={16} />,
+    label: "Calendrier",
+    to: "/calendar",
+  },
+];
+
+const businessNavItems = [
+  {
+    icon: <Users size={16} />,
+    label: "CRM",
+    to: "/crm",
+  },
+  {
+    icon: <FileText size={16} />,
+    label: "Productivité",
+    to: "/productivity",
+  },
+  {
+    icon: <Book size={16} />,
+    label: "Finance",
+    to: "/finance",
+  },
+];
+
+const personalNavItems = [
+  {
+    icon: <Users size={16} />,
+    label: "Personnel",
+    to: "/personal",
+  },
+  {
+    icon: <FileText size={16} />,
+    label: "Études",
+    to: "/studies",
+  },
+  {
+    icon: <Book size={16} />,
+    label: "Fitness",
+    to: "/fitness",
+  },
+];
+
+const aiNavItems = [
+  {
+    icon: <Users size={16} />,
+    label: "Agent Manager",
+    to: "/agent",
+  },
+];
+
+const settingsNavItems = [
+  {
+    icon: <Settings size={16} />,
+    label: "Paramètres",
+    to: "/settings",
+  },
+  {
+    icon: <Users size={16} />,
+    label: "Profil",
+    to: "/profil",
+  },
+  {
+    icon: <Settings size={16} />,
+    label: "MCP Manager",
+    to: "/mcp",
+  },
+];
 
 const Sidebar: React.FC = () => {
   const location = useLocation();
-  const path = location.pathname;
 
   return (
-    <aside className="w-64 h-screen bg-agiled-sidebar border-r border-agiled-lightBorder flex flex-col">
-      <div className="p-4 border-b border-agiled-lightBorder">
-        <Logo />
+    <div className="border-r flex-shrink-0 w-64 hidden md:block">
+      <div className="p-6">
+        <Link to="/" className="flex items-center gap-2 font-bold">
+          <img src="/logo.png" alt="Agiled Logo" className="w-8 h-8" />
+          <span>Agiled</span>
+        </Link>
       </div>
-      
-      <div className="flex-1 overflow-y-auto py-4">
-        <SidebarNavGroup>
-          <SidebarItem 
-            to="/" 
-            icon={<Home size={20} />} 
-            label="Tableau de bord"
-            active={path === '/'} 
+      <Separator />
+      <nav className="p-6 space-y-4">
+        {navItems.map((item) => (
+          <SidebarNavItem
+            key={item.to}
+            icon={item.icon}
+            label={item.label}
+            to={item.to}
+            isActive={location.pathname === item.to}
           />
-        </SidebarNavGroup>
-        
-        <SidebarCategory title="Business">
-          <SidebarNavGroup>
-            <SidebarItem 
-              to="/crm" 
-              icon={<Users size={20} />} 
-              label="CRM" 
-              expandable
-              active={path.startsWith('/crm')}
+        ))}
+        <SidebarNavGroup
+          title="Business"
+          icon={<Book size={16} />}
+          items={businessNavItems}
+        />
+        <SidebarNavGroup
+          title="Personnel"
+          icon={<Calendar size={16} />}
+          items={personalNavItems}
+        />
+        <SidebarNavGroup
+          title="IA & Agents"
+          icon={<Users size={16} />}
+          items={aiNavItems}
+        />
+        <SidebarNavGroup {...ragNavGroup} />
+        <SidebarNavGroup
+          title="Paramètres"
+          icon={<Settings size={16} />}
+          items={settingsNavItems}
+        />
+      </nav>
+    </div>
+  );
+};
+
+export const MobileSidebar: React.FC = () => {
+  const location = useLocation();
+
+  return (
+    <Sheet>
+      <SheetTrigger asChild>
+        <Menu className="md:hidden" />
+      </SheetTrigger>
+      <SheetContent side="left" className="w-64 p-0">
+        <div className="p-6">
+          <Link to="/" className="flex items-center gap-2 font-bold">
+            <img src="/logo.png" alt="Agiled Logo" className="w-8 h-8" />
+            <span>Agiled</span>
+          </Link>
+        </div>
+        <Separator />
+        <nav className="p-6 space-y-4">
+          {navItems.map((item) => (
+            <SidebarNavItem
+              key={item.to}
+              icon={item.icon}
+              label={item.label}
+              to={item.to}
+              isActive={location.pathname === item.to}
             />
-          </SidebarNavGroup>
-          
-          <SidebarNavGroup>
-            <SidebarItem 
-              to="/productivity" 
-              icon={<Calendar size={20} />} 
-              label="Productivity" 
-              expandable
-              active={path.startsWith('/productivity')}
-            />
-          </SidebarNavGroup>
-          
-          <SidebarNavGroup>
-            <SidebarItem 
-              to="/finance" 
-              icon={<DollarSign size={20} />} 
-              label="Finance" 
-              expandable
-              active={path.startsWith('/finance')}
-            />
-          </SidebarNavGroup>
-        </SidebarCategory>
-        
-        <SidebarCategory title="Personnel">
-          <SidebarNavGroup>
-            <SidebarItem 
-              to="/personal" 
-              icon={<User size={20} />} 
-              label="Vue générale" 
-              active={path === '/personal'}
-            />
-          </SidebarNavGroup>
-          
-          <SidebarNavGroup>
-            <SidebarItem 
-              to="/studies" 
-              icon={<BookOpen size={20} />} 
-              label="Études" 
-              expandable
-              active={path.startsWith('/studies')}
-            />
-          </SidebarNavGroup>
-          
-          <SidebarNavGroup>
-            <SidebarItem 
-              to="/fitness" 
-              icon={<Activity size={20} />} 
-              label="Fitness" 
-              expandable
-              active={path.startsWith('/fitness')}
-            />
-          </SidebarNavGroup>
-        </SidebarCategory>
-        
-        <SidebarCategory title="Intelligence Artificielle">
-          <SidebarNavGroup>
-            <SidebarItem 
-              to="/agent" 
-              icon={<Bot size={20} />} 
-              label="Agent Manager" 
-              active={path.startsWith('/agent')}
-            />
-          </SidebarNavGroup>
-          
-          <SidebarNavGroup>
-            <SidebarItem 
-              to="/mcp" 
-              icon={<Plug size={20} />} 
-              label="Connecteurs MCP" 
-              active={path.startsWith('/mcp')}
-            />
-          </SidebarNavGroup>
-        </SidebarCategory>
-      </div>
-      
-      <SidebarFooter />
-    </aside>
+          ))}
+          <SidebarNavGroup
+            title="Business"
+            icon={<Book size={16} />}
+            items={businessNavItems}
+          />
+          <SidebarNavGroup
+            title="Personnel"
+            icon={<Calendar size={16} />}
+            items={personalNavItems}
+          />
+          <SidebarNavGroup
+            title="IA & Agents"
+            icon={<Users size={16} />}
+            items={aiNavItems}
+          />
+          <SidebarNavGroup {...ragNavGroup} />
+          <SidebarNavGroup
+            title="Paramètres"
+            icon={<Settings size={16} />}
+            items={settingsNavItems}
+          />
+        </nav>
+      </SheetContent>
+    </Sheet>
   );
 };
 

@@ -1,80 +1,77 @@
-import { useState, useCallback } from 'react';
-import { useUser, useAuth } from '@clerk/clerk-react';
+
+import { useState, useCallback, useEffect } from 'react';
+import { useUser } from '@clerk/clerk-react';
+
+const LOCAL_STORAGE_KEY = 'supabase_credentials';
 
 /**
  * Hook pour gérer les credentials Supabase liés à un utilisateur Clerk.
- *
- * Returns:
- *   credentials (object | null): Les credentials { supabaseUrl, supabaseAnonKey } ou null.
- *   getCredentials (function): Récupère les credentials depuis la table centrale.
- *   saveCredentials (function): Sauvegarde les credentials dans la table centrale.
- *   loading (boolean): Indique si une requête est en cours.
- *   error (string | null): Message d'erreur éventuel.
+ * Cette version stocke les credentials dans localStorage pour simplifier.
  */
 export function useUserSupabaseCredentials() {
   const { user } = useUser();
-  const { getToken } = useAuth();
   const [credentials, setCredentials] = useState<{ supabaseUrl: string; supabaseAnonKey: string } | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // À adapter selon ton backend/API REST pour la table centrale
-  const API_URL = '/api/user-supabase-credentials'; // À créer côté backend
+  // Récupère les credentials du localStorage
+  useEffect(() => {
+    if (!user) return;
+    
+    try {
+      const storedCreds = localStorage.getItem(`${LOCAL_STORAGE_KEY}_${user.id}`);
+      if (storedCreds) {
+        setCredentials(JSON.parse(storedCreds));
+      }
+    } catch (err) {
+      console.error("Erreur lors de la récupération des credentials:", err);
+    }
+  }, [user]);
 
-  // Récupère le JWT Clerk et l'inclut dans l'en-tête Authorization
   const getCredentials = useCallback(async () => {
     if (!user) return;
+    
     setLoading(true);
     setError(null);
+    
     try {
-      const token = await getToken();
-      const res = await fetch(`${API_URL}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-      if (!res.ok) throw new Error('Erreur lors de la récupération des credentials');
-      const data = await res.json();
-      if (data && data.supabase_url && data.supabase_anon_key) {
-        setCredentials({ supabaseUrl: data.supabase_url, supabaseAnonKey: data.supabase_anon_key });
-      } else {
-        setCredentials(null);
+      const storedCreds = localStorage.getItem(`${LOCAL_STORAGE_KEY}_${user.id}`);
+      if (storedCreds) {
+        const parsedCreds = JSON.parse(storedCreds);
+        setCredentials(parsedCreds);
       }
     } catch (err: any) {
-      setError(err.message || 'Erreur inconnue');
+      setError(err.message || 'Erreur lors de la récupération des credentials');
       setCredentials(null);
     } finally {
       setLoading(false);
     }
-  }, [user, getToken]);
+  }, [user]);
 
   const saveCredentials = useCallback(async (creds: { supabaseUrl: string; supabaseAnonKey: string }) => {
     if (!user) return;
+    
     setLoading(true);
     setError(null);
+    
     try {
-      const token = await getToken();
-      const res = await fetch(API_URL, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          supabase_url: creds.supabaseUrl,
-          supabase_anon_key: creds.supabaseAnonKey,
-        }),
-      });
-      if (!res.ok) throw new Error('Erreur lors de la sauvegarde des credentials');
+      localStorage.setItem(`${LOCAL_STORAGE_KEY}_${user.id}`, JSON.stringify(creds));
       setCredentials(creds);
+      return true;
     } catch (err: any) {
-      setError(err.message || 'Erreur inconnue');
+      setError(err.message || 'Erreur lors de la sauvegarde des credentials');
+      return false;
     } finally {
       setLoading(false);
     }
-  }, [user, getToken]);
+  }, [user]);
 
-  return { credentials, getCredentials, saveCredentials, loading, error };
-} 
+  const clearCredentials = useCallback(() => {
+    if (!user) return;
+    
+    localStorage.removeItem(`${LOCAL_STORAGE_KEY}_${user.id}`);
+    setCredentials(null);
+  }, [user]);
+
+  return { credentials, getCredentials, saveCredentials, clearCredentials, loading, error };
+}
