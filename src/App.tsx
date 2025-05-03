@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -38,6 +37,7 @@ const Profil = React.lazy(() => import('./pages/profil'));
 const SettingsPage = React.lazy(() => import('@/pages/settings/SettingsPage'));
 const SupabaseCredentialsForm = React.lazy(() => import('./components/SupabaseCredentialsForm'));
 const RagManagementPage = React.lazy(() => import('./pages/rag/RagManagementPage'));
+const SupabaseCredentialsPage = React.lazy(() => import('./pages/onboarding/SupabaseCredentialsPage'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -167,6 +167,13 @@ const App = () => (
                   <ProtectedRoute>
                     <LazyLoad>
                       <Profil />
+                    </LazyLoad>
+                  </ProtectedRoute>
+                } />
+                <Route path="/onboarding/supabase" element={
+                  <ProtectedRoute>
+                    <LazyLoad>
+                      <SupabaseCredentialsPage />
                     </LazyLoad>
                   </ProtectedRoute>
                 } />

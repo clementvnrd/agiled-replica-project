@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import SupabaseRagList from '@/components/SupabaseRagList';
 import SupabaseAuthBox from '@/components/SupabaseAuthBox';
@@ -6,6 +5,7 @@ import { supabase } from '@/lib/supabaseClient';
 import { useUserSupabaseCredentials } from '@/hooks/useUserSupabaseCredentials';
 import SupabaseCredentialsForm from '@/components/SupabaseCredentialsForm';
 import { toast } from "sonner";
+import { useNavigate } from 'react-router-dom';
 
 const TABS = [
   { key: 'mcps', label: 'MCPs' },
@@ -20,6 +20,8 @@ const SettingsPage: React.FC = () => {
   const [supabaseOnline, setSupabaseOnline] = useState<boolean | null>(null);
   const [openRouterKey, setOpenRouterKey] = useState('');
   const [showCredentialsForm, setShowCredentialsForm] = useState(false);
+  
+  const navigate = useNavigate();
   
   const { 
     credentials, 
@@ -61,16 +63,22 @@ const SettingsPage: React.FC = () => {
     setShowAuth(false);
   };
 
-  const handleSaveCredentials = (creds: { supabaseUrl: string; supabaseAnonKey: string }) => {
-    saveCredentials(creds);
-    setShowCredentialsForm(false);
-    toast.success("Connexion à Supabase établie avec succès");
+  const handleSaveCredentials = async (creds: { supabaseUrl: string; supabaseAnonKey: string }) => {
+    const ok = await saveCredentials(creds);
+    if (ok) {
+      setShowCredentialsForm(false);
+      toast.success("Connexion à Supabase établie avec succès");
+      getCredentials();
+    } else {
+      toast.error("Erreur lors de la sauvegarde des credentials Supabase");
+    }
   };
 
-  const handleDisconnectSupabase = () => {
-    clearCredentials();
+  const handleDisconnectSupabase = async () => {
+    await clearCredentials();
     setSupabaseOnline(false);
     toast.info("Connexion à Supabase déconnectée");
+    getCredentials();
   };
 
   return (
@@ -109,6 +117,9 @@ const SettingsPage: React.FC = () => {
                   initialCredentials={credentials}
                   onSkip={() => setShowCredentialsForm(false)}
                 />
+                {credentialsLoading && (
+                  <div className="text-center text-blue-600 mt-2">Chargement...</div>
+                )}
               </div>
             ) : (
               <>

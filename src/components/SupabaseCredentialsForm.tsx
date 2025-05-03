@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -65,6 +64,12 @@ const SupabaseCredentialsForm: React.FC<{
       const { error } = await testClient.from('rag_documents').select('count()', { count: 'exact', head: true });
       
       if (error) {
+        // Si la table n'existe pas, on considère la connexion comme valide mais on prévient l'utilisateur
+        if (error.message && error.message.toLowerCase().includes('relation') && error.message.toLowerCase().includes('does not exist')) {
+          setTestStatus('success');
+          setTestError("Connexion OK, mais la table 'rag_documents' n'existe pas encore. Veuillez suivre le guide pour créer la table nécessaire dans votre projet Supabase.");
+          return true;
+        }
         console.error('Erreur Supabase:', error);
         throw new Error(error.message);
       }

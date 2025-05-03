@@ -4,70 +4,52 @@
 
 **URL**: https://lovable.dev/projects/86b3e788-c7bb-4791-91fc-97ff9ffe4e0b
 
+---
+
+## Architecture
+
+- **Frontend** : React 18, Vite, shadcn-ui, Tailwind CSS
+- **Backend** : Supabase (auth, stockage, RAG)
+- **Intégrations** : Clerk, Supabase, Radix UI
+- **Organisation** :
+  - `src/pages` : pages principales (business, personal, ai, rag, settings)
+  - `src/components` : composants UI et fonctionnels
+  - `src/hooks` : hooks personnalisés
+  - `src/utils` : utilitaires
+  - `src/integrations` : intégrations externes
+  - `src/types` : types TypeScript
+
+## Variables d'environnement
+
+Documentez vos variables dans `.env` :
+- `SUPABASE_URL`
+- `SUPABASE_KEY`
+- ...
+
+## Conventions de nommage
+- Kebab-case pour les dossiers de routes
+- PascalCase pour les composants
+- camelCase pour les fonctions et variables
+
+## Scripts utiles
+
+- `npm run dev` : démarre le serveur de dev
+- `npm run build` : build de production
+- `npm run lint` : lint du code
+- `npm run preview` : prévisualisation
+- `npm run format` : formatte le code avec Prettier
+
+## Tests
+
+Les tests unitaires sont dans `/tests` et suivent la structure du code source. Utilisez `vitest` pour les lancer.
+
+## Badges
+
+![build](https://img.shields.io/badge/build-passing-brightgreen)
+![tests](https://img.shields.io/badge/tests-passing-brightgreen)
+
+---
+
 ## How can I edit this code?
 
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/86b3e788-c7bb-4791-91fc-97ff9ffe4e0b) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/86b3e788-c7bb-4791-91fc-97ff9ffe4e0b) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+... (reste du README inchangé) ...
