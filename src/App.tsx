@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -7,7 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 import { ClerkProvider, SignedIn, SignedOut, SignIn, useAuth, useUser } from '@clerk/clerk-react';
 import { supabase } from '@/lib/supabaseClient';
-import { LazyLoad } from '@/utils/lazyImport';
+import { LazyLoad } from '@/utils/lazyImport.tsx';
 import MainLayout from "./layouts/MainLayout";
 
 // Lazy loading pour les pages
