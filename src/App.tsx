@@ -1,57 +1,75 @@
-import React from 'react';
+
+import React, { useEffect } from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
-import { ClerkProvider, SignedIn, SignedOut, SignIn, SignUp, useAuth, useUser } from '@clerk/clerk-react';
+import { ClerkProvider, SignedIn, SignedOut, SignIn, useAuth, useUser } from '@clerk/clerk-react';
 import { supabase } from '@/lib/supabaseClient';
+import { LazyLoad } from '@/utils/lazyImport';
 import MainLayout from "./layouts/MainLayout";
-import DashboardPage from "./pages/DashboardPage";
-import NotFound from "./pages/NotFound";
 
-// Business modules
-import CRMDashboard from "./pages/business/crm/CRMDashboard";
-import ProductivityDashboard from "./pages/business/productivity/ProductivityDashboard";
-import FinanceDashboard from "./pages/business/finance/FinanceDashboard";
+// Lazy loading pour les pages
+const DashboardPage = React.lazy(() => import('./pages/DashboardPage'));
+const NotFound = React.lazy(() => import('./pages/NotFound'));
 
-// Personal modules
-import PersonalDashboard from "./pages/personal/PersonalDashboard";
-import StudiesDashboard from "./pages/personal/studies/StudiesDashboard";
-import FitnessDashboard from "./pages/personal/fitness/FitnessDashboard";
+// Business modules - lazy loaded
+const CRMDashboard = React.lazy(() => import('./pages/business/crm/CRMDashboard'));
+const ProductivityDashboard = React.lazy(() => import('./pages/business/productivity/ProductivityDashboard'));
+const FinanceDashboard = React.lazy(() => import('./pages/business/finance/FinanceDashboard'));
 
-// Agent / AI interface
-import AgentManager from "./pages/ai/AgentManager";
+// Personal modules - lazy loaded
+const PersonalDashboard = React.lazy(() => import('./pages/personal/PersonalDashboard'));
+const StudiesDashboard = React.lazy(() => import('./pages/personal/studies/StudiesDashboard'));
+const FitnessDashboard = React.lazy(() => import('./pages/personal/fitness/FitnessDashboard'));
 
-// Settings & Configuration
-import MCPManager from "./pages/settings/MCPManager";
-import Profil from "./pages/profil";
-import SettingsPage from '@/pages/settings/SettingsPage';
-import SupabaseCredentialsForm from './components/SupabaseCredentialsForm';
+// Agent / AI interface - lazy loaded
+const AgentManager = React.lazy(() => import('./pages/ai/AgentManager'));
+
+// Settings & Configuration - lazy loaded
+const MCPManager = React.lazy(() => import('./pages/settings/MCPManager'));
+const Profil = React.lazy(() => import('./pages/profil'));
+const SettingsPage = React.lazy(() => import('@/pages/settings/SettingsPage'));
+const SupabaseCredentialsForm = React.lazy(() => import('./components/SupabaseCredentialsForm'));
+
+// Hooks
 import { useUserSupabaseCredentials } from './hooks/useUserSupabaseCredentials';
-import { useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js';
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    },
+  },
+});
 
 const clerkKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
 // Synchronise Clerk et Supabase : connecte Supabase avec le JWT Clerk
 function useSyncClerkSupabaseAuth() {
   const { isSignedIn, getToken } = useAuth();
-  React.useEffect(() => {
+  
+  useEffect(() => {
     let isMounted = true;
+    
     async function sync() {
       if (isSignedIn) {
-        const token = await getToken({ template: 'supabase' });
-        console.log('Clerk JWT:', token);
-        if (token && isMounted) {
-          await supabase.auth.setSession({ access_token: token, refresh_token: token });
+        try {
+          const token = await getToken({ template: 'supabase' });
+          if (token && isMounted) {
+            await supabase.auth.setSession({ access_token: token, refresh_token: token });
+          }
+        } catch (error) {
+          console.error('Erreur lors de la synchronisation Clerk-Supabase:', error);
         }
       } else {
         await supabase.auth.signOut();
       }
     }
+    
     sync();
     return () => { isMounted = false; };
   }, [isSignedIn, getToken]);
@@ -66,20 +84,12 @@ function ClerkSupabaseSync({ children }: { children: React.ReactNode }) {
 function OnboardingWrapper({ children }: { children: React.ReactNode }) {
   const { user } = useUser();
   const { credentials, getCredentials, saveCredentials, loading, error } = useUserSupabaseCredentials();
-  const [supabaseClient, setSupabaseClient] = React.useState<any>(null);
 
   // Récupère les credentials à chaque login
   useEffect(() => {
     if (user) getCredentials();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
-
-  // Initialise dynamiquement le client Supabase dès que les credentials sont là
-  useEffect(() => {
-    if (credentials) {
-      setSupabaseClient(createClient(credentials.supabaseUrl, credentials.supabaseAnonKey));
-    }
-  }, [credentials]);
 
   // Si pas connecté Clerk, rien
   if (!user) return null;
@@ -88,32 +98,13 @@ function OnboardingWrapper({ children }: { children: React.ReactNode }) {
   // Si pas de credentials, afficher le formulaire
   if (!credentials) {
     return (
-      <SupabaseCredentialsForm onSave={saveCredentials} />
+      <LazyLoad>
+        <SupabaseCredentialsForm onSave={saveCredentials} />
+      </LazyLoad>
     );
   }
-  // Si credentials présents, fournir le client Supabase dynamiquement (via context ou prop drilling si besoin)
-  // Ici, on passe juste children, mais tu peux adapter pour fournir le client
+  // Si credentials présents, afficher l'application
   return <>{children}</>;
-}
-
-function AppProviders({ children }: { children: React.ReactNode }) {
-  const navigate = useNavigate();
-  useSyncClerkSupabaseAuth();
-  return (
-    <ClerkProvider
-      publishableKey={clerkKey}
-      routerPush={to => navigate(to)}
-      routerReplace={to => navigate(to, { replace: true })}
-    >
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          {children}
-        </TooltipProvider>
-      </QueryClientProvider>
-    </ClerkProvider>
-  );
 }
 
 const App = () => (
@@ -132,24 +123,72 @@ const App = () => (
               <OnboardingWrapper>
                 <Routes>
                   <Route path="/" element={<MainLayout />}>
-                    <Route index element={<DashboardPage />} />
+                    <Route index element={
+                      <LazyLoad>
+                        <DashboardPage />
+                      </LazyLoad>
+                    } />
                     {/* Business Routes */}
-                    <Route path="/crm" element={<CRMDashboard />} />
-                    <Route path="/productivity" element={<ProductivityDashboard />} />
-                    <Route path="/finance" element={<FinanceDashboard />} />
+                    <Route path="/crm" element={
+                      <LazyLoad>
+                        <CRMDashboard />
+                      </LazyLoad>
+                    } />
+                    <Route path="/productivity" element={
+                      <LazyLoad>
+                        <ProductivityDashboard />
+                      </LazyLoad>
+                    } />
+                    <Route path="/finance" element={
+                      <LazyLoad>
+                        <FinanceDashboard />
+                      </LazyLoad>
+                    } />
                     {/* Personal Routes */}
-                    <Route path="/personal" element={<PersonalDashboard />} />
-                    <Route path="/studies" element={<StudiesDashboard />} />
-                    <Route path="/fitness" element={<FitnessDashboard />} />
+                    <Route path="/personal" element={
+                      <LazyLoad>
+                        <PersonalDashboard />
+                      </LazyLoad>
+                    } />
+                    <Route path="/studies" element={
+                      <LazyLoad>
+                        <StudiesDashboard />
+                      </LazyLoad>
+                    } />
+                    <Route path="/fitness" element={
+                      <LazyLoad>
+                        <FitnessDashboard />
+                      </LazyLoad>
+                    } />
                     {/* AI Routes */}
-                    <Route path="/agent" element={<AgentManager />} />
+                    <Route path="/agent" element={
+                      <LazyLoad>
+                        <AgentManager />
+                      </LazyLoad>
+                    } />
                     {/* Settings Routes */}
-                    <Route path="/mcp" element={<MCPManager />} />
-                    <Route path="/settings" element={<SettingsPage />} />
+                    <Route path="/mcp" element={
+                      <LazyLoad>
+                        <MCPManager />
+                      </LazyLoad>
+                    } />
+                    <Route path="/settings" element={
+                      <LazyLoad>
+                        <SettingsPage />
+                      </LazyLoad>
+                    } />
                     {/* Profil Route */}
-                    <Route path="/profil" element={<Profil />} />
+                    <Route path="/profil" element={
+                      <LazyLoad>
+                        <Profil />
+                      </LazyLoad>
+                    } />
                   </Route>
-                  <Route path="*" element={<NotFound />} />
+                  <Route path="*" element={
+                    <LazyLoad>
+                      <NotFound />
+                    </LazyLoad>
+                  } />
                 </Routes>
               </OnboardingWrapper>
             </SignedIn>

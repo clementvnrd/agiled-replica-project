@@ -188,6 +188,30 @@ export type Database = {
         }
         Relationships: []
       }
+      user_supabase_credentials: {
+        Row: {
+          clerk_user_id: string
+          created_at: string | null
+          id: string
+          supabase_anon_key: string
+          supabase_url: string
+        }
+        Insert: {
+          clerk_user_id: string
+          created_at?: string | null
+          id?: string
+          supabase_anon_key: string
+          supabase_url: string
+        }
+        Update: {
+          clerk_user_id?: string
+          created_at?: string | null
+          id?: string
+          supabase_anon_key?: string
+          supabase_url?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

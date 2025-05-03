@@ -2,7 +2,8 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
 import Header from '@/components/Header';
-import Sidebar from '@/components/Sidebar';
+import Sidebar from '@/components/navigation/Sidebar';
+import { Toaster } from "@/components/ui/toaster";
 
 const MainLayout: React.FC = () => {
   return (
@@ -13,6 +14,7 @@ const MainLayout: React.FC = () => {
         <main className="flex-1 overflow-y-auto bg-gray-50">
           <Outlet />
         </main>
+        <Toaster />
       </div>
     </div>
   );
