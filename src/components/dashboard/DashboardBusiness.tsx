@@ -1,10 +1,9 @@
-
 import React from 'react';
 import { Users, FolderOpen, Clock, FileText } from 'lucide-react';
 import TasksPerformanceCard from '@/components/TasksPerformanceCard';
 import DashboardChart from '@/components/DashboardChart';
-import StatCardGroup from './StatCardGroup';
-import type { StatItem } from './StatCardGroup';
+import StatCardGroup from '@/components/dashboard/StatCardGroup';
+import type { StatItem } from '@/components/dashboard/StatCardGroup';
 
 // Example data for charts
 const revenueData = [

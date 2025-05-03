@@ -1,10 +1,9 @@
-
 import React from 'react';
 import { BookOpen, Activity, Clock } from 'lucide-react';
 import EmptyCard from '@/components/EmptyCard';
 import DashboardChart from '@/components/DashboardChart';
-import StatCardGroup from './StatCardGroup';
-import type { StatItem } from './StatCardGroup';
+import StatCardGroup from '@/components/dashboard/StatCardGroup';
+import type { StatItem } from '@/components/dashboard/StatCardGroup';
 
 // Example data for charts
 const activityData = [

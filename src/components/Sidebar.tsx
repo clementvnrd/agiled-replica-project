@@ -1,7 +1,6 @@
-
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import Logo from './Logo';
+import Logo from '@/components/Logo';
 import { 
   Home,
   Users, 

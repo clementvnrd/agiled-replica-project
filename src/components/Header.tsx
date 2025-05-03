@@ -7,19 +7,19 @@ import {
   Plus,
   Briefcase
 } from 'lucide-react';
-import { Button } from './ui/button';
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem
-} from './ui/dropdown-menu';
+} from '@/components/ui/dropdown-menu';
 import { useNavigate } from 'react-router-dom';
-import { useUser } from './UserContext';
+import { useUser, SignOutButton } from '@clerk/clerk-react';
 
 const Header: React.FC = () => {
   const navigate = useNavigate();
-  const { name, avatar } = useUser();
+  const { user } = useUser();
 
   return (
     <header className="h-16 bg-white border-b border-agiled-lightBorder flex items-center px-4">
@@ -61,15 +61,14 @@ const Header: React.FC = () => {
           <DropdownMenuTrigger asChild>
             <div className="flex items-center gap-3 pl-3 border-l border-agiled-lightBorder cursor-pointer">
               <div className="w-8 h-8 rounded-full bg-agiled-primary text-white flex items-center justify-center overflow-hidden">
-                {avatar ? (
-                  <img src={avatar} alt="Avatar" className="w-full h-full object-cover rounded-full" />
+                {user?.imageUrl ? (
+                  <img src={user.imageUrl} alt="Avatar" className="w-full h-full object-cover rounded-full" />
                 ) : (
-                  name.charAt(0).toUpperCase()
+                  user?.fullName?.charAt(0)?.toUpperCase() || user?.emailAddresses?.[0]?.emailAddress?.charAt(0)?.toUpperCase()
                 )}
               </div>
               <div className="text-sm">
-                <p className="font-medium">{name}</p>
-                <p className="text-xs text-agiled-lightText">Administrator</p>
+                <p className="font-medium">{user?.fullName || user?.emailAddresses?.[0]?.emailAddress}</p>
               </div>
             </div>
           </DropdownMenuTrigger>
@@ -77,9 +76,11 @@ const Header: React.FC = () => {
             <DropdownMenuItem onSelect={() => navigate('/profil')}>
               Profil
             </DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => {/* TODO: Log out */}}>
-              Log out
-            </DropdownMenuItem>
+            <SignOutButton>
+              <DropdownMenuItem asChild>
+                <span>Log out</span>
+              </DropdownMenuItem>
+            </SignOutButton>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
