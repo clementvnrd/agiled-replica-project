@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabaseClient';
+import { useDynamicSupabase } from '@/providers/DynamicSupabaseProvider';
 import { useUser } from '@clerk/clerk-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,12 +24,16 @@ const RagDocumentEditor: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('editor');
   const [documents, setDocuments] = useState<RagDocument[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { supabase, loading: supabaseLoading, error: supabaseError } = useDynamicSupabase();
+
+  if (supabaseLoading) return <div>Chargement Supabase...</div>;
+  if (supabaseError) return <div>Erreur Supabase : {supabaseError}</div>;
 
   useEffect(() => {
-    if (user) {
+    if (user && !supabaseLoading && !supabaseError) {
       fetchDocuments();
     }
-  }, [user]);
+  }, [user, supabase, supabaseLoading, supabaseError]);
 
   const fetchDocuments = async () => {
     if (!user) return;

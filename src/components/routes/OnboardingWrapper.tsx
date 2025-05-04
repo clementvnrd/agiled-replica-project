@@ -1,56 +1,79 @@
 import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useUser } from '@clerk/clerk-react';
-import { LazyLoad } from '@/utils/lazyImport';
 import { useUserSupabaseCredentials } from '@/hooks/useUserSupabaseCredentials';
 import AuthLayout from '../auth/AuthLayout';
 import { LoadingScreen } from './ProtectedRoute';
 
 export default function OnboardingWrapper({ children }: { children: React.ReactNode }) {
+  // Hooks
   const { user } = useUser();
   const navigate = useNavigate();
-  const { credentials, getCredentials, saveCredentials, loading, error } = useUserSupabaseCredentials();
-  
-  // Récupère les credentials à chaque login
-  useEffect(() => {
-    if (user) getCredentials();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
-  
-  // Si pas connecté Clerk, rien
-  if (!user) return null;
-  // Si loading, spinner
-  if (loading) return <LoadingScreen />;
+  const location = useLocation();
+  const { credentials, getCredentials, loading, error } = useUserSupabaseCredentials();
 
-  // Gestion d'erreur visible
+  // Effet pour récupérer les credentials (inchangé)
+  useEffect(() => {
+    if (user) {
+      console.log('OnboardingWrapper: User detected, calling getCredentials');
+      getCredentials();
+    }
+  }, [user, getCredentials]);
+
+  // Effet pour gérer la redirection
+  useEffect(() => {
+    console.log('OnboardingWrapper: Redirect effect check', { 
+      loading, 
+      error, 
+      user: !!user, 
+      credentials: !!credentials, 
+      pathname: location.pathname 
+    });
+    
+    // AJOUTEZ la vérification de location.pathname
+    if (!loading && !error && user && !credentials && location.pathname !== '/onboarding/supabase') {
+      console.log('OnboardingWrapper: Redirecting to /onboarding/supabase');
+      navigate('/onboarding/supabase');
+    }
+  // AJOUTEZ location aux dépendances
+  }, [user, credentials, loading, error, navigate, location]);
+
+  // Logique de rendu (inchangée)
+  if (!user) {
+    console.log('OnboardingWrapper: No user yet');
+    return null;
+  }
+  if (loading) {
+    console.log('OnboardingWrapper: Loading credentials...');
+    return <LoadingScreen />;
+  }
   if (error) {
+    console.error('OnboardingWrapper: Error loading credentials:', error);
     return (
       <AuthLayout title="Erreur de connexion à Supabase">
-        <div className="max-w-md mx-auto mt-10 p-6 bg-red-50 border border-red-200 rounded text-red-900">
-          <h2 className="font-bold mb-2 text-base">Impossible de se connecter à Supabase</h2>
-          <p className="mb-4">{error}</p>
-          <button
-            className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
-            onClick={() => getCredentials()}
-          >
-            Réessayer
-          </button>
+        <div className="p-4 bg-red-50 border border-red-200 rounded text-red-800">
+          {error}
         </div>
       </AuthLayout>
     );
   }
-  
-  // Si pas de credentials, redirige vers la page d'onboarding Supabase
   if (!credentials) {
-    navigate('/onboarding/supabase');
-    return null;
+     // Si on est déjà sur la page d'onboarding, on ne veut pas afficher LoadingScreen indéfiniment
+     // Si le chemin EST /onboarding/supabase, on laisse le composant enfant (SupabaseCredentialsPage) s'afficher
+     if (location.pathname === '/onboarding/supabase') {
+       console.log('OnboardingWrapper: Already on onboarding page, allowing child render');
+       // Attention: Ceci suppose que SupabaseCredentialsPage est bien l'enfant direct
+       // Si ce n'est pas le cas, cette logique pourrait devoir être ajustée
+       // ou il faudrait que SupabaseCredentialsPage n'ait pas besoin de OnboardingWrapper
+       // Pour l'instant, on laisse passer pour voir si ça débloque
+       return <>{children}</>; 
+     } else {
+       // Sinon (on n'est pas sur la page d'onboarding), on attend la redirection
+       console.log('OnboardingWrapper: No credentials found, waiting for redirect effect');
+       return <LoadingScreen />;
+     }
   }
-  
-  // Fonction pour ignorer la configuration Supabase
-  const handleSkip = () => {
-    navigate('/');
-  };
-  
-  // Si credentials présents, afficher l'application
+
+  console.log('OnboardingWrapper: Credentials found, rendering children');
   return <>{children}</>;
 }

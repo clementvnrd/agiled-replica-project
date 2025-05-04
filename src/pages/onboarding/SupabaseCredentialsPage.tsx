@@ -7,10 +7,19 @@ import AuthLayout from '@/components/auth/AuthLayout';
 const SupabaseCredentialsPage: React.FC = () => {
   const navigate = useNavigate();
   const { saveCredentials } = useUserSupabaseCredentials();
+  const [error, setError] = React.useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
 
-  const handleSave = (creds: { supabaseUrl: string; supabaseAnonKey: string }) => {
-    saveCredentials(creds);
-    navigate('/');
+  const handleSave = async (creds: { supabaseUrl: string; supabaseAnonKey: string }) => {
+    setIsSubmitting(true);
+    setError(null);
+    const success = await saveCredentials(creds);
+    setIsSubmitting(false);
+    if (success) {
+      navigate('/');
+    } else {
+      setError("Erreur lors de l'enregistrement des credentials. Veuillez réessayer ou contacter le support.");
+    }
   };
 
   const handleSkip = () => {
@@ -38,6 +47,11 @@ const SupabaseCredentialsPage: React.FC = () => {
           </div>
         </div>
         <SupabaseCredentialsForm onSave={handleSave} onSkip={handleSkip} />
+        {error && (
+          <div className="mt-4 p-3 rounded-md bg-red-50 border border-red-200 text-red-800">
+            {error}
+          </div>
+        )}
       </div>
     </AuthLayout>
   );

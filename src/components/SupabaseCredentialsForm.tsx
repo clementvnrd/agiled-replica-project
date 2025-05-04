@@ -60,22 +60,32 @@ const SupabaseCredentialsForm: React.FC<{
         supabaseAnonKey: values.supabaseAnonKey
       });
       
-      // Test simple pour vérifier si les credentials sont valides
-      const { error } = await testClient.from('rag_documents').select('count()', { count: 'exact', head: true });
+      // Test simple : Essayer de lire l'ID d'une seule ligne (sans récupérer le corps)
+      // Cela vérifie si les credentials sont valides et si la table est accessible
+      const { error: headError } = await testClient
+        .from('rag_documents') // Assurez-vous que le nom de la table est correct
+        .select('id', { head: true }) // Sélectionne juste l'ID, méthode HEAD
+        .limit(1); // Limite à 1 pour l'efficacité
       
-      if (error) {
-        // Si la table n'existe pas, on considère la connexion comme valide mais on prévient l'utilisateur
-        if (error.message && error.message.toLowerCase().includes('relation') && error.message.toLowerCase().includes('does not exist')) {
-          setTestStatus('success');
-          setTestError("Connexion OK, mais la table 'rag_documents' n'existe pas encore. Veuillez suivre le guide pour créer la table nécessaire dans votre projet Supabase.");
-          return true;
+      if (headError) {
+        // Gérer spécifiquement l'erreur si la table n'existe pas
+        if (headError.message && headError.message.toLowerCase().includes('relation') && headError.message.toLowerCase().includes('does not exist')) {
+          console.warn("Test Connection: Table 'rag_documents' does not exist, but proceeding.");
+          setTestStatus('success'); // On considère la connexion valide même si la table manque
+          // On peut optionnellement informer l'utilisateur que la table manque
+          // setTestError("Connexion OK, mais la table 'rag_documents' n'existe pas encore. Veuillez la créer."); 
+          return true; // Permettre la sauvegarde des credentials
         }
-        console.error('Erreur Supabase:', error);
-        throw new Error(error.message);
+        // Si c'est une autre erreur (mauvais credentials, RLS restante, etc.)
+        console.error('Erreur Supabase (test HEAD):', headError);
+        throw new Error(headError.message || 'Erreur lors du test de connexion.');
       }
 
+      // Si la requête HEAD réussit, la connexion est considérée comme valide
+      console.log("Test Connection: HEAD request successful.");
       setTestStatus('success');
       return true;
+
     } catch (err: any) {
       console.error('Erreur de test connexion:', err);
       setTestStatus('error');

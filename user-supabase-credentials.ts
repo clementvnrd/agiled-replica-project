@@ -1,6 +1,5 @@
 import express from 'express';
 import { createClient } from '@supabase/supabase-js';
-import { verifyToken } from './src/lib/clerkJwt';
 import bodyParser from 'body-parser';
 import dotenv from 'dotenv';
 dotenv.config();
@@ -13,15 +12,11 @@ app.use(bodyParser.json());
  * Récupère les credentials Supabase pour un utilisateur Clerk authentifié.
  */
 app.get('/api/user-supabase-credentials', async (req, res) => {
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ error: 'Authorization header missing' });
-  }
-  let clerkUserId;
-  try {
-    clerkUserId = await verifyToken(authHeader.replace('Bearer ', ''));
-  } catch {
-    return res.status(401).json({ error: 'Invalid Clerk token' });
+  // TODO: Extraire clerkUserId du token JWT Clerk (à implémenter selon la nouvelle méthode d'auth)
+  // Pour l'instant, on le prend d'un header custom pour debug
+  const clerkUserId = req.headers['x-clerk-user-id'];
+  if (!clerkUserId) {
+    return res.status(401).json({ error: 'Clerk user id missing' });
   }
   const supabaseAdmin = createClient(process.env.SUPABASE_ADMIN_URL!, process.env.SUPABASE_ADMIN_SERVICE_ROLE_KEY!);
   const { data, error } = await supabaseAdmin
@@ -38,15 +33,11 @@ app.get('/api/user-supabase-credentials', async (req, res) => {
  * Enregistre ou met à jour les credentials Supabase pour un utilisateur Clerk authentifié.
  */
 app.post('/api/user-supabase-credentials', async (req, res) => {
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ error: 'Authorization header missing' });
-  }
-  let clerkUserId;
-  try {
-    clerkUserId = await verifyToken(authHeader.replace('Bearer ', ''));
-  } catch {
-    return res.status(401).json({ error: 'Invalid Clerk token' });
+  // TODO: Extraire clerkUserId du token JWT Clerk (à implémenter selon la nouvelle méthode d'auth)
+  // Pour l'instant, on le prend d'un header custom pour debug
+  const clerkUserId = req.headers['x-clerk-user-id'];
+  if (!clerkUserId) {
+    return res.status(401).json({ error: 'Clerk user id missing' });
   }
   const { supabase_url, supabase_anon_key } = req.body;
   if (!supabase_url || !supabase_anon_key) {

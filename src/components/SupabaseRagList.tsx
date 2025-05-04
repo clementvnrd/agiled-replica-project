@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getRagDocumentsByUser } from '@/lib/supabaseRag';
-import { supabase } from '@/lib/supabaseClient';
+import { useDynamicSupabase } from '@/providers/DynamicSupabaseProvider';
 
 /**
  * Affiche la liste des documents RAG de l'utilisateur connecté avec un bouton de rafraîchissement.
@@ -10,9 +9,11 @@ const SupabaseRagList: React.FC = () => {
   const [docs, setDocs] = useState<Array<{ id: string; content: string | null; metadata: any; created_at: string | null }>>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { supabase, loading: supabaseLoading, error: supabaseError } = useDynamicSupabase();
 
   // Récupère l'UUID de l'utilisateur connecté
   useEffect(() => {
+    if (supabaseLoading || supabaseError) return;
     supabase.auth.getUser().then(({ data, error }) => {
       if (error) {
         setError(error.message);
@@ -21,14 +22,19 @@ const SupabaseRagList: React.FC = () => {
         setUserId(data?.user?.id ?? null);
       }
     });
-  }, []);
+  }, [supabase, supabaseLoading, supabaseError]);
 
   const fetchDocs = async () => {
     if (!userId) return;
     setLoading(true);
     setError(null);
     try {
-      const data = await getRagDocumentsByUser(userId);
+      // Utilise le client dynamique pour la requête
+      const { data, error } = await supabase
+        .from('rag_documents')
+        .select('*')
+        .eq('user_id', userId);
+      if (error) throw error;
       setDocs(data || []);
     } catch (err: any) {
       setError(err.message || 'Erreur lors du chargement');
@@ -41,6 +47,10 @@ const SupabaseRagList: React.FC = () => {
     if (userId) fetchDocs();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
+
+  // Gestion du chargement/erreur du contexte dynamique
+  if (supabaseLoading) return <div>Chargement Supabase...</div>;
+  if (supabaseError) return <div>Erreur Supabase : {supabaseError}</div>;
 
   if (!userId) {
     return <div className="mt-8 text-agiled-lightText">Utilisateur non connecté ou UUID non disponible.</div>;

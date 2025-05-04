@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabaseClient';
+import { useDynamicSupabase } from '@/providers/DynamicSupabaseProvider';
 import { useUser } from '@clerk/clerk-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -21,12 +20,16 @@ const RagDocumentsViewer: React.FC = () => {
   const [filteredDocuments, setFilteredDocuments] = useState<RagDocument[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const { supabase, loading: supabaseLoading, error: supabaseError } = useDynamicSupabase();
+
+  if (supabaseLoading) return <div>Chargement Supabase...</div>;
+  if (supabaseError) return <div>Erreur Supabase : {supabaseError}</div>;
 
   useEffect(() => {
-    if (user) {
+    if (user && !supabaseLoading && !supabaseError) {
       fetchDocuments();
     }
-  }, [user]);
+  }, [user, supabase, supabaseLoading, supabaseError]);
 
   useEffect(() => {
     if (!searchQuery.trim()) {

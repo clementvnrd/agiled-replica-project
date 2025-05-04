@@ -1,3 +1,4 @@
+import '@testing-library/jest-dom';
 import { render, screen, fireEvent } from '@testing-library/react';
 import SupabaseCredentialsForm from '../src/components/SupabaseCredentialsForm';
 import React from 'react';

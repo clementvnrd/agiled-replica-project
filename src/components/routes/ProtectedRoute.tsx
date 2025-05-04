@@ -1,7 +1,6 @@
-
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useClerkSupabaseAuth } from '@/hooks/useClerkSupabaseAuth';
+import { useUser } from '@clerk/clerk-react';
 
 // Composant pour afficher un écran de chargement générique
 export function LoadingScreen() {
@@ -17,17 +16,17 @@ export function LoadingScreen() {
 
 // Wrapper pour protéger les routes avec authentification
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, loading } = useClerkSupabaseAuth();
   const location = useLocation();
-  
-  if (loading) {
+  const { isSignedIn, isLoaded } = useUser();
+
+  if (!isLoaded) {
     return <LoadingScreen />;
   }
-  
-  if (!isAuthenticated) {
+
+  if (!isSignedIn) {
     // Rediriger vers la page de connexion, en mémorisant la page demandée
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
-  
+
   return <>{children}</>;
 }

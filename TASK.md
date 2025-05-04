@@ -22,6 +22,18 @@
     7. **Robustesse du flow**
        - Pas de boucle, pas de page blanche, erreurs explicites, UX claire.
 
+- **Correction architecture Clerk & Supabase Multi-Tenant (2024-07-09)**
+#follow les instructions de "Guide de Correction_ Intégration Clerk & Supabase (Multi-tenant).md"
+  - [x] 1. Simplifier l'auth Clerk (ClerkProvider dans main.tsx, plus de sync JWT global)
+  - [x] 2. Supprimer le hook useClerkSupabaseAuth et clerkJwt.ts
+  - [x] 3. Vérifier que useUserSupabaseCredentials utilise bien le client global
+  - [x] 4. Créer DynamicSupabaseContext (client dynamique par utilisateur)
+  - [ ] 5. Intégrer le provider dynamique dans App.tsx
+  - [ ] 6. Adapter OnboardingWrapper pour la logique credentials
+  - [ ] 7. Adapter tous les hooks d'accès aux données pour utiliser le client dynamique
+  - [ ] 8. Configurer RLS sur les bases utilisateurs (ex: rag_documents)
+  - [ ] 9. Nettoyer le code et tester le flow complet
+
 ## Tâches terminées
 
 ## Découvertes pendant le travail
@@ -29,3 +41,4 @@
 - Absence de gestion centralisée des erreurs
 - Absence de documentation sur les variables d'environnement
 - Fichiers composants volumineux (>200 lignes)
+- [ ] Refactor all user-data hooks to use the dynamic Supabase client (if not already present)
