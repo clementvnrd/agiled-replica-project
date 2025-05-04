@@ -3,8 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import SupabaseCredentialsForm from '@/components/SupabaseCredentialsForm';
 import { useUserSupabaseCredentials } from '@/hooks/useUserSupabaseCredentials';
 import AuthLayout from '@/components/auth/AuthLayout';
+import { useUser } from '@clerk/clerk-react';
 
 const SupabaseCredentialsPage: React.FC = () => {
+  const { user } = useUser();
+  console.log('Clerk user:', user);
   const navigate = useNavigate();
   const { saveCredentials } = useUserSupabaseCredentials();
   const [error, setError] = React.useState<string | null>(null);
@@ -13,6 +16,8 @@ const SupabaseCredentialsPage: React.FC = () => {
   const handleSave = async (creds: { supabaseUrl: string; supabaseAnonKey: string }) => {
     setIsSubmitting(true);
     setError(null);
+    console.log('Tentative d’enregistrement des credentials pour userId:', user?.id, creds);
+    console.log('UPDATING CREDENTIALS ON SUPABASE URL:', import.meta.env.VITE_SUPABASE_URL);
     const success = await saveCredentials(creds);
     setIsSubmitting(false);
     if (success) {

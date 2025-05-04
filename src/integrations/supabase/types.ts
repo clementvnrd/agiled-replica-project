@@ -12,21 +12,18 @@ export type Database = {
       document_metadata: {
         Row: {
           created_at: string | null
-          id: string
           schema: string | null
           title: string | null
           url: string | null
         }
         Insert: {
           created_at?: string | null
-          id: string
           schema?: string | null
           title?: string | null
           url?: string | null
         }
         Update: {
           created_at?: string | null
-          id?: string
           schema?: string | null
           title?: string | null
           url?: string | null
@@ -36,17 +33,14 @@ export type Database = {
       document_rows: {
         Row: {
           dataset_id: string | null
-          id: number
           row_data: Json | null
         }
         Insert: {
           dataset_id?: string | null
-          id?: number
           row_data?: Json | null
         }
         Update: {
           dataset_id?: string | null
-          id?: number
           row_data?: Json | null
         }
         Relationships: [
@@ -63,19 +57,16 @@ export type Database = {
         Row: {
           content: string | null
           embedding: string | null
-          id: number
           metadata: Json | null
         }
         Insert: {
           content?: string | null
           embedding?: string | null
-          id?: number
           metadata?: Json | null
         }
         Update: {
           content?: string | null
           embedding?: string | null
-          id?: number
           metadata?: Json | null
         }
         Relationships: []
@@ -109,17 +100,14 @@ export type Database = {
       }
       n8n_chat_histories: {
         Row: {
-          id: number
           message: Json
           session_id: string
         }
         Insert: {
-          id?: number
           message: Json
           session_id: string
         }
         Update: {
-          id?: number
           message?: Json
           session_id?: string
         }
@@ -130,7 +118,6 @@ export type Database = {
           content: string | null
           created_at: string | null
           embedding: string | null
-          id: string
           metadata: Json | null
           user_id: string | null
         }
@@ -138,7 +125,6 @@ export type Database = {
           content?: string | null
           created_at?: string | null
           embedding?: string | null
-          id?: string
           metadata?: Json | null
           user_id?: string | null
         }
@@ -146,7 +132,6 @@ export type Database = {
           content?: string | null
           created_at?: string | null
           embedding?: string | null
-          id?: string
           metadata?: Json | null
           user_id?: string | null
         }
@@ -158,7 +143,6 @@ export type Database = {
           content: string
           created_at: string
           embedding: string | null
-          id: number
           metadata: Json
           summary: string
           title: string
@@ -169,7 +153,6 @@ export type Database = {
           content: string
           created_at?: string
           embedding?: string | null
-          id?: number
           metadata?: Json
           summary: string
           title: string
@@ -180,7 +163,6 @@ export type Database = {
           content?: string
           created_at?: string
           embedding?: string | null
-          id?: number
           metadata?: Json
           summary?: string
           title?: string
@@ -192,21 +174,18 @@ export type Database = {
         Row: {
           clerk_user_id: string
           created_at: string | null
-          id: string
           supabase_anon_key: string
           supabase_url: string
         }
         Insert: {
           clerk_user_id: string
           created_at?: string | null
-          id?: string
           supabase_anon_key: string
           supabase_url: string
         }
         Update: {
           clerk_user_id?: string
           created_at?: string | null
-          id?: string
           supabase_anon_key?: string
           supabase_url?: string
         }
