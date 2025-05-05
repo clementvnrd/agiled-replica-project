@@ -21,44 +21,50 @@ const RagDocumentEditor: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const { supabase, loading: supabaseLoading, error: supabaseError } = useDynamicSupabase();
 
-  // Simplify the fetchDocuments function to avoid deep type instantiation
-  const fetchData = async () => {
-    if (!user) return;
-    
-    try {
-      const { data, error } = await supabase
-        .from('rag_documents')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-        
-      if (error) throw error;
-      
-      // Ensure each document has an ID
-      const processedData = (data || []).map((doc: any) => ({
-        ...doc,
-        id: doc.id || `doc-${crypto.randomUUID()}`
-      })) as RagDocument[];
-      
-      setDocuments(processedData);
-    } catch (err) {
-      console.error('Erreur lors de la récupération des documents:', err);
-      toast.error("Erreur lors de la récupération des documents");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
-  const fetchDocuments = () => {
+  // Function to load documents - separated from the effect to avoid type issues
+  function loadDocuments() {
     if (!user || supabaseLoading || supabaseError) return;
     setIsLoading(true);
+    
+    // Use a regular function to fetch data
+    const fetchData = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('rag_documents')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+          
+        if (error) throw error;
+        
+        // Process the data manually to avoid complex type inference
+        const processedData: RagDocument[] = [];
+        if (data) {
+          for (const doc of data) {
+            processedData.push({
+              ...doc,
+              id: doc.id || `doc-${crypto.randomUUID()}`
+            });
+          }
+        }
+        
+        setDocuments(processedData);
+      } catch (err) {
+        console.error('Erreur lors de la récupération des documents:', err);
+        toast.error("Erreur lors de la récupération des documents");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    // Execute the fetch function
     fetchData();
-  };
+  }
 
-  // Simple effect that calls fetchDocuments when dependencies change
+  // Simple effect without dependencies on functions
   useEffect(() => {
     if (user && !supabaseLoading && !supabaseError) {
-      fetchDocuments();
+      loadDocuments();
     }
   }, [user, supabaseLoading, supabaseError]);
 
@@ -88,7 +94,7 @@ const RagDocumentEditor: React.FC = () => {
       toast.success("Document RAG ajouté avec succès");
       setTitle('');
       setContent('');
-      fetchDocuments();
+      loadDocuments();
       setActiveTab('list');
     } catch (err) {
       console.error('Erreur lors de la création du document:', err);
@@ -150,7 +156,7 @@ const RagDocumentEditor: React.FC = () => {
         if (error) throw error;
         
         toast.success("Document importé avec succès");
-        fetchDocuments();
+        loadDocuments();
       } else {
         toast.error("Format de fichier non supporté. Seuls les fichiers texte (.txt) sont acceptés pour le moment");
       }
@@ -231,7 +237,7 @@ const RagDocumentEditor: React.FC = () => {
               <Button 
                 size="sm" 
                 variant="outline" 
-                onClick={() => fetchDocuments()}
+                onClick={() => loadDocuments()}
                 disabled={isLoading}
               >
                 {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Rafraîchir"}
