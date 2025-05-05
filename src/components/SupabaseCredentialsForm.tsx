@@ -65,26 +65,15 @@ const SupabaseCredentialsForm: React.FC<{
         throw new Error("Impossible de créer un client Supabase avec les credentials fournis.");
       }
       
-      // Test de connexion en utilisant la méthode rpc qui est toujours disponible
-      // même si aucune fonction personnalisée n'est définie
-      const { error: rpcError } = await testClient.rpc('current_timestamp', {}).single();
+      // Test simple en utilisant l'API auth qui est toujours disponible
+      const { error: authError } = await testClient.auth.getSession();
       
-      // Test alternatif qui essaie d'obtenir la version de Supabase
-      if (rpcError) {
-        // Si l'appel RPC a échoué, essayons une autre méthode
-        try {
-          // Essayons de récupérer les utilisateurs, qui devrait au moins confirmer si les identifiants sont valides
-          // même si l'utilisateur n'a pas accès à cette table
-          const { error: authError } = await testClient.auth.getSession();
-          
-          if (authError && authError.message && 
-              !authError.message.includes('No session found') && 
-              !authError.message.includes('JWT expired')) {
-            throw new Error(authError.message);
-          }
-        } catch (innerError: any) {
-          throw new Error(`Erreur de connexion secondaire: ${innerError.message}`);
-        }
+      // Nous ignorons les erreurs liées à l'absence de session ou à l'expiration du JWT,
+      // car elles indiquent que l'API auth fonctionne correctement
+      if (authError && authError.message && 
+          !authError.message.includes('No session found') && 
+          !authError.message.includes('JWT expired')) {
+        throw new Error(authError.message);
       }
       
       // Si on arrive ici sans erreur fatale, les credentials semblent valides
