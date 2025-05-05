@@ -1,10 +1,10 @@
-
 import React, { useState } from 'react';
 import { SignedIn, SignedOut, SignIn, useUser } from '@clerk/clerk-react';
 import { Navigate, useLocation } from 'react-router-dom';
 import AuthLayout from '../auth/AuthLayout';
 import PasswordRecovery from '../auth/PasswordRecovery';
 import { Card } from '@/components/ui/card';
+import AuthConfirmation from '../auth/AuthConfirmation';
 
 export function LoginPage() {
   const [mode, setMode] = useState<'signin' | 'recovery'>('signin');
