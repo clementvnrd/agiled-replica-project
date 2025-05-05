@@ -19,7 +19,7 @@ const SupabaseCredentialsPage: React.FC = () => {
   const handleSave = async (creds: { supabaseUrl: string; supabaseAnonKey: string }) => {
     setIsSubmitting(true);
     setError(null);
-    console.log('Tentative d'enregistrement des credentials pour userId:', user?.id, creds);
+    console.log("Tentative d'enregistrement des credentials pour userId:", user?.id, creds);
     const success = await saveCredentials(creds);
     setIsSubmitting(false);
     if (success) {
