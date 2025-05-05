@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useDynamicSupabase } from '@/providers/DynamicSupabaseProvider';
 import { useUser } from '@clerk/clerk-react';
@@ -15,9 +16,6 @@ const RagDocumentsViewer: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const { supabase, loading: supabaseLoading, error: supabaseError } = useDynamicSupabase();
-
-  if (supabaseLoading) return <div>Chargement Supabase...</div>;
-  if (supabaseError) return <div>Erreur Supabase : {supabaseError}</div>;
 
   useEffect(() => {
     if (user && !supabaseLoading && !supabaseError) {
@@ -52,10 +50,10 @@ const RagDocumentsViewer: React.FC = () => {
         
       if (error) throw error;
       
-      // Convertir explicitement le type et assurer que chaque document a un ID
-      const processedData = (data || []).map(doc => ({
+      // Ensure each document has an ID
+      const processedData = (data || []).map((doc: any) => ({
         ...doc,
-        id: doc.id || `doc-${crypto.randomUUID()}` // Utiliser l'ID existant ou en générer un
+        id: doc.id || `doc-${crypto.randomUUID()}`
       })) as RagDocument[];
       
       setDocuments(processedData);
@@ -67,6 +65,9 @@ const RagDocumentsViewer: React.FC = () => {
       setIsLoading(false);
     }
   };
+
+  if (supabaseLoading) return <div>Chargement Supabase...</div>;
+  if (supabaseError) return <div>Erreur Supabase : {supabaseError}</div>;
 
   return (
     <div className="space-y-4">

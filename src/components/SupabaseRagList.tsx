@@ -38,10 +38,10 @@ const SupabaseRagList: React.FC = () => {
         .eq('user_id', userId);
       if (error) throw error;
       
-      // Convertir explicitement le type et assurer que chaque document a un ID
-      const processedData = (data || []).map(doc => ({
+      // Ensure each document has an ID
+      const processedData = (data || []).map((doc: any) => ({
         ...doc,
-        id: doc.id || crypto.randomUUID() // Utiliser l'ID existant ou en générer un
+        id: doc.id || `doc-${crypto.randomUUID()}`
       })) as RagDocument[];
       
       setDocs(processedData);

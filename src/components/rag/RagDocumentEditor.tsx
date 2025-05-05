@@ -34,8 +34,8 @@ const RagDocumentEditor: React.FC = () => {
         
       if (error) throw error;
       
-      // Générer un ID unique pour chaque document qui n'en a pas
-      const processedData = (data || []).map(doc => ({
+      // Ensure each document has an ID
+      const processedData = (data || []).map((doc: any) => ({
         ...doc,
         id: doc.id || `doc-${crypto.randomUUID()}`
       })) as RagDocument[];
@@ -54,9 +54,6 @@ const RagDocumentEditor: React.FC = () => {
       fetchDocuments();
     }
   }, [user, fetchDocuments, supabaseLoading, supabaseError]);
-
-  if (supabaseLoading) return <div>Chargement Supabase...</div>;
-  if (supabaseError) return <div>Erreur Supabase : {supabaseError}</div>;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -159,6 +156,9 @@ const RagDocumentEditor: React.FC = () => {
       e.target.value = '';
     }
   };
+
+  if (supabaseLoading) return <div>Chargement Supabase...</div>;
+  if (supabaseError) return <div>Erreur Supabase : {supabaseError}</div>;
 
   return (
     <div className="space-y-6">
@@ -268,7 +268,7 @@ const RagDocumentEditor: React.FC = () => {
                         variant="ghost" 
                         size="sm" 
                         className="text-red-600 hover:text-red-800 hover:bg-red-50"
-                        onClick={() => handleDelete(doc.id as string)}
+                        onClick={() => handleDelete(doc.id)}
                       >
                         Supprimer
                       </Button>

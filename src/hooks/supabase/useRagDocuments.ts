@@ -32,10 +32,10 @@ export function useRagDocuments() {
           .eq('user_id', user.id);
         if (error) throw error;
         
-        // Convertir explicitement le type et assurer que chaque document a un ID
-        const processedData = (data || []).map(doc => ({
+        // Ensure each document has an ID
+        const processedData = (data || []).map((doc: any) => ({
           ...doc,
-          id: doc.id || `doc-${crypto.randomUUID()}` // Utiliser l'ID existant ou en générer un
+          id: doc.id || `doc-${crypto.randomUUID()}`
         })) as RagDocument[];
         
         setDocuments(processedData);
@@ -65,11 +65,11 @@ export function useRagDocuments() {
         .single();
       if (error) throw error;
       
-      // Assurer que le document a un ID
-      const processedDoc = {
-        ...data,
-        id: data.id || `doc-${crypto.randomUUID()}`
-      } as RagDocument;
+      // Ensure the document has an ID
+      const processedDoc: RagDocument = {
+        ...(data as any),
+        id: (data as any).id || `doc-${crypto.randomUUID()}`
+      };
       
       setDocuments(prev => [...prev, processedDoc]);
       return processedDoc;
