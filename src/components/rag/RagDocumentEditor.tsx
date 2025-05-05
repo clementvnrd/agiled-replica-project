@@ -34,10 +34,10 @@ const RagDocumentEditor: React.FC = () => {
         
       if (error) throw error;
       
-      // Convertir explicitement le type et s'assurer que chaque document a un ID
+      // Générer un ID unique pour chaque document qui n'en a pas
       const processedData = (data || []).map(doc => ({
         ...doc,
-        id: doc.id || crypto.randomUUID() // Utiliser l'ID existant ou en générer un
+        id: doc.id || `doc-${crypto.randomUUID()}`
       })) as RagDocument[];
       
       setDocuments(processedData);

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useUser } from '@clerk/clerk-react';
 import { useDynamicSupabase } from '@/providers/DynamicSupabaseProvider';
@@ -5,13 +6,6 @@ import { RagDocument } from '@/types';
 
 /**
  * Hook to manage RAG documents for the current user using their dynamic Supabase client.
- *
- * Returns:
- *   documents (RagDocument[]): List of RAG documents.
- *   isLoading (boolean): Loading state.
- *   error (Error | null): Error state.
- *   addDocument (function): Add a new RAG document.
- *   deleteDocument (function): Delete a RAG document by ID.
  */
 export function useRagDocuments() {
   const { user } = useUser();
@@ -38,10 +32,10 @@ export function useRagDocuments() {
           .eq('user_id', user.id);
         if (error) throw error;
         
-        // Convertir explicitement le type et s'assurer que chaque document a un ID
+        // Convertir explicitement le type et assurer que chaque document a un ID
         const processedData = (data || []).map(doc => ({
           ...doc,
-          id: doc.id || crypto.randomUUID() // Utiliser l'ID existant ou en générer un
+          id: doc.id || `doc-${crypto.randomUUID()}` // Utiliser l'ID existant ou en générer un
         })) as RagDocument[];
         
         setDocuments(processedData);
@@ -74,7 +68,7 @@ export function useRagDocuments() {
       // Assurer que le document a un ID
       const processedDoc = {
         ...data,
-        id: data.id || crypto.randomUUID()
+        id: data.id || `doc-${crypto.randomUUID()}`
       } as RagDocument;
       
       setDocuments(prev => [...prev, processedDoc]);

@@ -9,7 +9,7 @@ export interface User {
 
 // Types pour les données Supabase
 export interface RagDocument {
-  id?: string; // Rendu optionnel car absent dans les réponses de Supabase
+  id?: string; // Optionnel car peut ne pas exister dans les réponses Supabase
   user_id: string;
   content: string | null;
   metadata: Record<string, any>;

@@ -52,10 +52,10 @@ const RagDocumentsViewer: React.FC = () => {
         
       if (error) throw error;
       
-      // Convertir explicitement le type et s'assurer que chaque document a un ID
+      // Convertir explicitement le type et assurer que chaque document a un ID
       const processedData = (data || []).map(doc => ({
         ...doc,
-        id: doc.id || crypto.randomUUID() // Utiliser l'ID existant ou en générer un
+        id: doc.id || `doc-${crypto.randomUUID()}` // Utiliser l'ID existant ou en générer un
       })) as RagDocument[];
       
       setDocuments(processedData);
