@@ -1,14 +1,8 @@
+
 import { useState, useEffect } from 'react';
 import { useUser } from '@clerk/clerk-react';
 import { useDynamicSupabase } from '@/providers/DynamicSupabaseProvider';
-
-export interface RagDocument {
-  id: string;
-  content: string;
-  metadata: Record<string, any>;
-  created_at: string;
-  user_id: string;
-}
+import { RagDocument } from '@/types';
 
 /**
  * Hook to manage RAG documents for the current user using their dynamic Supabase client.
@@ -44,7 +38,13 @@ export function useRagDocuments() {
           .select('*')
           .eq('user_id', user.id);
         if (error) throw error;
-        setDocuments(data as RagDocument[]);
+        
+        // Convertir explicitement le type et s'assurer que chaque document a un ID
+        const processedData = (data || []).map(doc => ({
+          ...doc,
+          id: doc.id || crypto.randomUUID() // Utiliser l'ID existant ou en générer un
+        }));
+        setDocuments(processedData as RagDocument[]);
       } catch (err) {
         setError(err instanceof Error ? err : new Error('Unknown error occurred'));
         console.error('Error fetching RAG documents:', err);
@@ -70,8 +70,15 @@ export function useRagDocuments() {
         .select()
         .single();
       if (error) throw error;
-      setDocuments(prev => [...prev, data as RagDocument]);
-      return data;
+      
+      // Assurer que le document a un ID
+      const processedDoc = {
+        ...data,
+        id: data.id || crypto.randomUUID()
+      };
+      
+      setDocuments(prev => [...prev, processedDoc as RagDocument]);
+      return processedDoc;
     } catch (err) {
       console.error('Error adding RAG document:', err);
       return null;

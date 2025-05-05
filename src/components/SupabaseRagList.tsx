@@ -1,12 +1,14 @@
+
 import React, { useEffect, useState } from 'react';
 import { useDynamicSupabase } from '@/providers/DynamicSupabaseProvider';
+import { RagDocument } from '@/types';
 
 /**
  * Affiche la liste des documents RAG de l'utilisateur connecté avec un bouton de rafraîchissement.
  */
 const SupabaseRagList: React.FC = () => {
   const [userId, setUserId] = useState<string | null>(null);
-  const [docs, setDocs] = useState<Array<{ id: string; content: string | null; metadata: any; created_at: string | null }>>([]);
+  const [docs, setDocs] = useState<RagDocument[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { supabase, loading: supabaseLoading, error: supabaseError } = useDynamicSupabase();
@@ -35,7 +37,12 @@ const SupabaseRagList: React.FC = () => {
         .select('*')
         .eq('user_id', userId);
       if (error) throw error;
-      setDocs(data || []);
+      // Convertir explicitement le type et s'assurer que chaque document a un ID
+      const processedData = (data || []).map(doc => ({
+        ...doc,
+        id: doc.id || crypto.randomUUID() // Utiliser l'ID existant ou en générer un
+      }));
+      setDocs(processedData as RagDocument[]);
     } catch (err: any) {
       setError(err.message || 'Erreur lors du chargement');
     } finally {

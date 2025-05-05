@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useDynamicSupabase } from '@/providers/DynamicSupabaseProvider';
 import { useUser } from '@clerk/clerk-react';
@@ -6,13 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Loader2, Search, FileText, AlertCircle } from 'lucide-react';
 import { toast } from "sonner";
-
-interface RagDocument {
-  id: string;
-  content: string;
-  metadata: Record<string, any>;
-  created_at: string;
-}
+import { RagDocument } from '@/types';
 
 const RagDocumentsViewer: React.FC = () => {
   const { user } = useUser();
@@ -38,7 +33,7 @@ const RagDocumentsViewer: React.FC = () => {
       const query = searchQuery.toLowerCase();
       setFilteredDocuments(
         documents.filter(doc => 
-          doc.content.toLowerCase().includes(query) || 
+          (doc.content?.toLowerCase() || '').includes(query) || 
           (doc.metadata?.title && doc.metadata.title.toLowerCase().includes(query))
         )
       );
@@ -58,8 +53,14 @@ const RagDocumentsViewer: React.FC = () => {
         
       if (error) throw error;
       
-      setDocuments(data as RagDocument[]);
-      setFilteredDocuments(data as RagDocument[]);
+      // Convertir explicitement le type et s'assurer que chaque document a un ID
+      const processedData = (data || []).map(doc => ({
+        ...doc,
+        id: doc.id || crypto.randomUUID() // Utiliser l'ID existant ou en générer un
+      }));
+      
+      setDocuments(processedData as RagDocument[]);
+      setFilteredDocuments(processedData as RagDocument[]);
     } catch (err) {
       console.error('Erreur lors de la récupération des documents:', err);
       toast.error("Erreur lors de la récupération des documents");
@@ -125,7 +126,7 @@ const RagDocumentsViewer: React.FC = () => {
               </CardHeader>
               <CardContent className="p-4">
                 <div className="text-xs text-gray-500 mb-2">
-                  {new Date(doc.created_at).toLocaleString()}
+                  {doc.created_at ? new Date(doc.created_at).toLocaleString() : ''}
                 </div>
                 <p className="text-sm line-clamp-4">{doc.content}</p>
               </CardContent>

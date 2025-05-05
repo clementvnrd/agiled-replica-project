@@ -1,4 +1,3 @@
-
 // Types généraux de l'application
 export interface User {
   id: string;
@@ -9,12 +8,12 @@ export interface User {
 
 // Types pour les données Supabase
 export interface RagDocument {
-  id: string;
+  id?: string; // Rendu optionnel car peut être absent dans certaines réponses de Supabase
   user_id: string;
-  content: string;
+  content: string | null;
   metadata: Record<string, any>;
-  embedding?: number[];
-  created_at: string;
+  embedding?: number[] | string | null;
+  created_at: string | null;
 }
 
 export interface McpConnection {

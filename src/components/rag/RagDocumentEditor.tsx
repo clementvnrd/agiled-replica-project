@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useDynamicSupabase } from '@/providers/DynamicSupabaseProvider';
 import { useUser } from '@clerk/clerk-react';
@@ -8,13 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Check, Loader2, AlertTriangle, FileText, Upload } from 'lucide-react';
 import { toast } from "sonner";
-
-interface RagDocument {
-  id: string;
-  content: string;
-  metadata: Record<string, any>;
-  created_at: string;
-}
+import { RagDocument } from '@/types';
 
 const RagDocumentEditor: React.FC = () => {
   const { user } = useUser();
@@ -48,7 +43,12 @@ const RagDocumentEditor: React.FC = () => {
         
       if (error) throw error;
       
-      setDocuments(data as RagDocument[]);
+      // Convertir explicitement le type et s'assurer que chaque document a un ID
+      const processedData = (data || []).map(doc => ({
+        ...doc,
+        id: doc.id || crypto.randomUUID() // Utiliser l'ID existant ou en générer un
+      }));
+      setDocuments(processedData as RagDocument[]);
     } catch (err) {
       console.error('Erreur lors de la récupération des documents:', err);
       toast.error("Erreur lors de la récupération des documents");
@@ -75,7 +75,8 @@ const RagDocumentEditor: React.FC = () => {
         .from('rag_documents')
         .insert([
           { user_id: user.id, content, metadata }
-        ]);
+        ])
+        .select();
         
       if (error) throw error;
       
@@ -125,7 +126,7 @@ const RagDocumentEditor: React.FC = () => {
       if (file.type === 'text/plain') {
         const text = await file.text();
         
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('rag_documents')
           .insert([
             { 
@@ -138,7 +139,8 @@ const RagDocumentEditor: React.FC = () => {
                 uploadedAt: new Date().toISOString() 
               } 
             }
-          ]);
+          ])
+          .select();
           
         if (error) throw error;
         
@@ -255,7 +257,7 @@ const RagDocumentEditor: React.FC = () => {
                           {doc.metadata?.title || 'Sans titre'}
                         </h4>
                         <p className="text-sm text-gray-500 truncate">
-                          {new Date(doc.created_at).toLocaleDateString()}
+                          {doc.created_at ? new Date(doc.created_at).toLocaleDateString() : ''}
                         </p>
                         <p className="mt-2 text-sm text-gray-600 line-clamp-2">
                           {doc.content}
@@ -265,7 +267,7 @@ const RagDocumentEditor: React.FC = () => {
                         variant="ghost" 
                         size="sm" 
                         className="text-red-600 hover:text-red-800 hover:bg-red-50"
-                        onClick={() => handleDelete(doc.id)}
+                        onClick={() => handleDelete(doc.id as string)}
                       >
                         Supprimer
                       </Button>
