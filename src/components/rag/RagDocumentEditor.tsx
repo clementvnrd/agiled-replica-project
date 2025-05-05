@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { useDynamicSupabase } from '@/providers/DynamicSupabaseProvider';
 import { useUser } from '@clerk/clerk-react';
 import { Button } from '@/components/ui/button';
@@ -20,7 +21,7 @@ const RagDocumentEditor: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const { supabase, loading: supabaseLoading, error: supabaseError } = useDynamicSupabase();
 
-  // Define fetchDocuments without useCallback first to avoid circular reference
+  // Simple function definition without useCallback to avoid circular reference
   const fetchDocuments = async () => {
     if (!user || supabaseLoading || supabaseError) return;
     
@@ -49,17 +50,12 @@ const RagDocumentEditor: React.FC = () => {
     }
   };
 
-  // Wrap fetchDocuments in useCallback with minimal dependencies
-  // This avoids the infinite type instantiation
-  const memoizedFetchDocuments = useCallback(() => {
-    fetchDocuments();
-  }, [user?.id, supabase]); // Only include primitive values or stable references
-
+  // Use effect with direct function reference
   useEffect(() => {
     if (user && !supabaseLoading && !supabaseError) {
-      memoizedFetchDocuments();
+      fetchDocuments();
     }
-  }, [user, memoizedFetchDocuments, supabaseLoading, supabaseError]);
+  }, [user, supabase, supabaseLoading, supabaseError]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -230,7 +226,7 @@ const RagDocumentEditor: React.FC = () => {
               <Button 
                 size="sm" 
                 variant="outline" 
-                onClick={memoizedFetchDocuments}
+                onClick={fetchDocuments}
                 disabled={isLoading}
               >
                 {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Rafraîchir"}
