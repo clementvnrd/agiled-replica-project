@@ -21,14 +21,14 @@ const RagDocumentEditor: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const { supabase, loading: supabaseLoading, error: supabaseError } = useDynamicSupabase();
 
-  // Define fetchDocuments as a regular function without dependencies
-  function fetchDocuments() {
+  const fetchDocuments = () => {
     if (!user || supabaseLoading || supabaseError) return;
     
     setIsLoading(true);
-    try {
-      // Use an immediately invoked async function to perform the fetch
-      (async () => {
+    
+    // Using an IIFE to handle async code without useCallback
+    (async () => {
+      try {
         const { data, error } = await supabase
           .from('rag_documents')
           .select('*')
@@ -44,20 +44,16 @@ const RagDocumentEditor: React.FC = () => {
         })) as RagDocument[];
         
         setDocuments(processedData);
-        setIsLoading(false);
-      })().catch((err) => {
+      } catch (err) {
         console.error('Erreur lors de la récupération des documents:', err);
         toast.error("Erreur lors de la récupération des documents");
+      } finally {
         setIsLoading(false);
-      });
-    } catch (err) {
-      console.error('Erreur lors de la récupération des documents:', err);
-      toast.error("Erreur lors de la récupération des documents");
-      setIsLoading(false);
-    }
-  }
+      }
+    })();
+  };
 
-  // Use effect with no function reference in dependencies
+  // Simple effect that calls fetchDocuments when dependencies change
   useEffect(() => {
     if (user && !supabaseLoading && !supabaseError) {
       fetchDocuments();
