@@ -1,13 +1,17 @@
+
 import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { SignedIn } from '@clerk/clerk-react';
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { SignedIn, SignedOut } from '@clerk/clerk-react';
 import { LazyLoad } from '@/utils/lazyImport.tsx';
 import MainLayout from "./layouts/MainLayout";
 import { DynamicSupabaseProvider } from '@/providers/DynamicSupabaseProvider';
+
+// Landing Page
+const LandingPage = React.lazy(() => import('./pages/LandingPage'));
 
 // Auth Components
 import { LoginPage, SignupPage, VerifyEmail, ResetPassword, RedirectIfAuthenticated } from './components/routes/AuthRoutes';
@@ -56,6 +60,22 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
+          {/* Landing page accessible publiquement */}
+          <Route path="/" element={
+            <SignedOut>
+              <LazyLoad>
+                <LandingPage />
+              </LazyLoad>
+            </SignedOut>
+          } />
+
+          {/* Redirect to dashboard if signed in */}
+          <Route path="/" element={
+            <SignedIn>
+              <Navigate to="/dashboard" replace />
+            </SignedIn>
+          }/>
+
           {/* Routes authentifiées */}
           <Route path="/" element={
             <SignedIn>
@@ -67,7 +87,7 @@ const App = () => (
               </DynamicSupabaseProvider>
             </SignedIn>
           }>
-            <Route index element={
+            <Route path="/dashboard" element={
               <ProtectedRoute>
                 <LazyLoad>
                   <DashboardPage />

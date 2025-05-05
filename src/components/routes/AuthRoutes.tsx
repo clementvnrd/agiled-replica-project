@@ -1,6 +1,7 @@
+
 import React, { useState } from 'react';
 import { SignedIn, SignedOut, SignIn, useUser } from '@clerk/clerk-react';
-import { Navigate, useLocation } from 'react-router-dom';
+import { Navigate, useLocation, Link } from 'react-router-dom';
 import AuthLayout from '../auth/AuthLayout';
 import PasswordRecovery from '../auth/PasswordRecovery';
 import { Card } from '@/components/ui/card';
@@ -9,7 +10,7 @@ import AuthConfirmation from '../auth/AuthConfirmation';
 export function LoginPage() {
   const [mode, setMode] = useState<'signin' | 'recovery'>('signin');
   const location = useLocation();
-  const from = (location.state as any)?.from?.pathname || '/';
+  const from = (location.state as any)?.from?.pathname || '/dashboard';
   
   if (mode === 'recovery') {
     return (
@@ -22,14 +23,21 @@ export function LoginPage() {
   return (
     <AuthLayout>
       <div className="bg-white p-6 rounded-lg shadow-md">
+        <h1 className="text-2xl font-bold mb-4 text-center">Connectez-vous</h1>
         <SignIn redirectUrl={from} />
-        <div className="mt-4 text-center">
+        <div className="mt-6 text-center space-y-2">
           <button 
             onClick={() => setMode('recovery')}
-            className="text-sm text-blue-600 hover:underline"
+            className="text-sm text-blue-600 hover:underline block w-full"
           >
             Mot de passe oublié ?
           </button>
+          <div className="text-sm text-gray-600">
+            Pas encore de compte ?{' '}
+            <Link to="/signup" className="text-blue-600 hover:underline font-medium">
+              Créer un compte
+            </Link>
+          </div>
         </div>
       </div>
     </AuthLayout>
@@ -38,12 +46,21 @@ export function LoginPage() {
 
 export function SignupPage() {
   const location = useLocation();
-  const from = (location.state as any)?.from?.pathname || '/';
+  const from = (location.state as any)?.from?.pathname || '/dashboard';
   
   return (
     <AuthLayout>
       <div className="bg-white p-6 rounded-lg shadow-md">
+        <h1 className="text-2xl font-bold mb-4 text-center">Créez votre compte</h1>
         <SignIn redirectUrl={from} />
+        <div className="mt-6 text-center">
+          <div className="text-sm text-gray-600">
+            Déjà inscrit ?{' '}
+            <Link to="/login" className="text-blue-600 hover:underline font-medium">
+              Se connecter
+            </Link>
+          </div>
+        </div>
       </div>
     </AuthLayout>
   );
@@ -69,7 +86,11 @@ export function ResetPassword() {
       <Card className="p-6">
         <h2 className="text-xl font-bold mb-4">Réinitialiser votre mot de passe</h2>
         <p className="mb-4">Créez un nouveau mot de passe sécurisé.</p>
-        {/* Formulaire de réinitialisation de mot de passe à implémenter */}
+        <p className="text-center mt-4">
+          <Link to="/login" className="text-blue-600 hover:underline">
+            Retour à la connexion
+          </Link>
+        </p>
       </Card>
     </AuthLayout>
   );
@@ -80,7 +101,7 @@ export function RedirectIfAuthenticated({ children }: { children: React.ReactNod
   return (
     <>
       <SignedIn>
-        <Navigate to="/" replace />
+        <Navigate to="/dashboard" replace />
       </SignedIn>
       <SignedOut>
         {children}

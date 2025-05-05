@@ -1,9 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
 import SupabaseRagList from '@/components/SupabaseRagList';
 import SupabaseAuthBox from '@/components/SupabaseAuthBox';
 import { supabase } from '@/lib/supabaseClient';
 import { useUserSupabaseCredentials } from '@/hooks/useUserSupabaseCredentials';
 import SupabaseCredentialsForm from '@/components/SupabaseCredentialsForm';
+import OpenRouterSettings from '@/components/settings/OpenRouterSettings';
 import { toast } from "sonner";
 import { useNavigate } from 'react-router-dom';
 
@@ -18,7 +20,6 @@ const SettingsPage: React.FC = () => {
   const [showAuth, setShowAuth] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [supabaseOnline, setSupabaseOnline] = useState<boolean | null>(null);
-  const [openRouterKey, setOpenRouterKey] = useState('');
   const [showCredentialsForm, setShowCredentialsForm] = useState(false);
   
   const navigate = useNavigate();
@@ -193,19 +194,7 @@ const SettingsPage: React.FC = () => {
         {activeTab === 'llm' && (
           <div>
             <h2 className="text-xl font-bold mb-4">LLM (OpenRouter)</h2>
-            <form className="space-y-4 max-w-md">
-              <div>
-                <label className="block text-sm font-medium mb-1">OpenRouter API Key</label>
-                <input
-                  type="password"
-                  value={openRouterKey}
-                  onChange={e => setOpenRouterKey(e.target.value)}
-                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                  placeholder="Votre clé OpenRouter"
-                />
-              </div>
-              <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors">Sauvegarder</button>
-            </form>
+            <OpenRouterSettings />
           </div>
         )}
       </section>
