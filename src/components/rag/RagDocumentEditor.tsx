@@ -40,12 +40,15 @@ const RagDocumentEditor: React.FC = () => {
         
         if (data) {
           for (const item of data) {
-            // Create a properly typed document object with id explicitly set as a string
+            // Generate an ID if none exists (important for TypeScript)
+            const docId = item.id ? String(item.id) : `doc-${crypto.randomUUID()}`;
+            
+            // Create a properly typed document object
             const doc: RagDocument = {
-              id: (item.id as string) || `doc-${crypto.randomUUID()}`,
+              id: docId,
               user_id: item.user_id || user.id,
               content: item.content,
-              metadata: typeof item.metadata === 'object' ? item.metadata : {}, // Handle metadata safely
+              metadata: typeof item.metadata === 'object' ? item.metadata : {}, 
               created_at: item.created_at
             };
             processedData.push(doc);
@@ -85,7 +88,7 @@ const RagDocumentEditor: React.FC = () => {
       // Define metadata with correct type
       const metadata: Record<string, any> = { title: title || 'Sans titre', type: 'text' };
       
-      // Avoid unnecessary select() after insert to prevent type issues
+      // Insert without select() to avoid deep type issues
       const { error } = await supabase
         .from('rag_documents')
         .insert([
@@ -97,7 +100,7 @@ const RagDocumentEditor: React.FC = () => {
       toast.success("Document RAG ajouté avec succès");
       setTitle('');
       setContent('');
-      loadDocuments();
+      loadDocuments(); // Reload documents after adding
       setActiveTab('list');
     } catch (err) {
       console.error('Erreur lors de la création du document:', err);
@@ -148,7 +151,7 @@ const RagDocumentEditor: React.FC = () => {
           uploadedAt: new Date().toISOString() 
         };
         
-        // Avoid unnecessary select() after insert to prevent type issues
+        // Insert without select() to avoid deep type issues
         const { error } = await supabase
           .from('rag_documents')
           .insert([{ user_id: user.id, content: text, metadata }]);
@@ -156,7 +159,7 @@ const RagDocumentEditor: React.FC = () => {
         if (error) throw error;
         
         toast.success("Document importé avec succès");
-        loadDocuments();
+        loadDocuments(); // Reload documents after import
       } else {
         toast.error("Format de fichier non supporté. Seuls les fichiers texte (.txt) sont acceptés pour le moment");
       }
