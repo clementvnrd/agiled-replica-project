@@ -21,36 +21,38 @@ const RagDocumentEditor: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const { supabase, loading: supabaseLoading, error: supabaseError } = useDynamicSupabase();
 
+  // Simplify the fetchDocuments function to avoid deep type instantiation
+  const fetchData = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('rag_documents')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+        
+      if (error) throw error;
+      
+      // Ensure each document has an ID
+      const processedData = (data || []).map((doc: any) => ({
+        ...doc,
+        id: doc.id || `doc-${crypto.randomUUID()}`
+      })) as RagDocument[];
+      
+      setDocuments(processedData);
+    } catch (err) {
+      console.error('Erreur lors de la récupération des documents:', err);
+      toast.error("Erreur lors de la récupération des documents");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
   const fetchDocuments = () => {
     if (!user || supabaseLoading || supabaseError) return;
-    
     setIsLoading(true);
-    
-    // Using an IIFE to handle async code without useCallback
-    (async () => {
-      try {
-        const { data, error } = await supabase
-          .from('rag_documents')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
-          
-        if (error) throw error;
-        
-        // Ensure each document has an ID
-        const processedData = (data || []).map((doc: any) => ({
-          ...doc,
-          id: doc.id || `doc-${crypto.randomUUID()}`
-        })) as RagDocument[];
-        
-        setDocuments(processedData);
-      } catch (err) {
-        console.error('Erreur lors de la récupération des documents:', err);
-        toast.error("Erreur lors de la récupération des documents");
-      } finally {
-        setIsLoading(false);
-      }
-    })();
+    fetchData();
   };
 
   // Simple effect that calls fetchDocuments when dependencies change
