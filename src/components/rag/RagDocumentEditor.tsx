@@ -21,41 +21,48 @@ const RagDocumentEditor: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const { supabase, loading: supabaseLoading, error: supabaseError } = useDynamicSupabase();
 
-  // Simple function definition without useCallback to avoid circular reference
-  const fetchDocuments = async () => {
+  // Define fetchDocuments as a regular function without dependencies
+  function fetchDocuments() {
     if (!user || supabaseLoading || supabaseError) return;
     
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('rag_documents')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+      // Use an immediately invoked async function to perform the fetch
+      (async () => {
+        const { data, error } = await supabase
+          .from('rag_documents')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+          
+        if (error) throw error;
         
-      if (error) throw error;
-      
-      // Ensure each document has an ID
-      const processedData = (data || []).map((doc: any) => ({
-        ...doc,
-        id: doc.id || `doc-${crypto.randomUUID()}`
-      })) as RagDocument[];
-      
-      setDocuments(processedData);
+        // Ensure each document has an ID
+        const processedData = (data || []).map((doc: any) => ({
+          ...doc,
+          id: doc.id || `doc-${crypto.randomUUID()}`
+        })) as RagDocument[];
+        
+        setDocuments(processedData);
+        setIsLoading(false);
+      })().catch((err) => {
+        console.error('Erreur lors de la récupération des documents:', err);
+        toast.error("Erreur lors de la récupération des documents");
+        setIsLoading(false);
+      });
     } catch (err) {
       console.error('Erreur lors de la récupération des documents:', err);
       toast.error("Erreur lors de la récupération des documents");
-    } finally {
       setIsLoading(false);
     }
-  };
+  }
 
-  // Use effect with direct function reference
+  // Use effect with no function reference in dependencies
   useEffect(() => {
     if (user && !supabaseLoading && !supabaseError) {
       fetchDocuments();
     }
-  }, [user, supabase, supabaseLoading, supabaseError]);
+  }, [user, supabaseLoading, supabaseError]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -226,7 +233,7 @@ const RagDocumentEditor: React.FC = () => {
               <Button 
                 size="sm" 
                 variant="outline" 
-                onClick={fetchDocuments}
+                onClick={() => fetchDocuments()}
                 disabled={isLoading}
               >
                 {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Rafraîchir"}
