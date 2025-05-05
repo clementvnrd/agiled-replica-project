@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useDynamicSupabase } from '@/providers/DynamicSupabaseProvider';
 import { useUser } from '@clerk/clerk-react';
@@ -40,12 +41,13 @@ const RagDocumentEditor: React.FC = () => {
         
         if (data) {
           for (const item of data) {
-            // Generate an ID if none exists (important for TypeScript)
-            const docId = item.id ? String(item.id) : `doc-${crypto.randomUUID()}`;
+            // Important fix: Ensure each document has an ID, even if it's not in the database response
+            // by checking if it exists in the item object and generating one if not
+            const documentId = (item as any).id || `doc-${crypto.randomUUID()}`;
             
             // Create a properly typed document object
             const doc: RagDocument = {
-              id: docId,
+              id: documentId,
               user_id: item.user_id || user.id,
               content: item.content,
               metadata: typeof item.metadata === 'object' ? item.metadata : {}, 
@@ -88,7 +90,7 @@ const RagDocumentEditor: React.FC = () => {
       // Define metadata with correct type
       const metadata: Record<string, any> = { title: title || 'Sans titre', type: 'text' };
       
-      // Insert without select() to avoid deep type issues
+      // Fix for deep type instantiation issue: Do not chain .select() or try to retrieve the inserted documents
       const { error } = await supabase
         .from('rag_documents')
         .insert([
@@ -151,7 +153,7 @@ const RagDocumentEditor: React.FC = () => {
           uploadedAt: new Date().toISOString() 
         };
         
-        // Insert without select() to avoid deep type issues
+        // Fix for deep type instantiation issue: Do not chain .select()
         const { error } = await supabase
           .from('rag_documents')
           .insert([{ user_id: user.id, content: text, metadata }]);
