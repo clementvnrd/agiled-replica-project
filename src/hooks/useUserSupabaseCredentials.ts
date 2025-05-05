@@ -1,7 +1,9 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { useUser, useAuth } from '@clerk/clerk-react'; // Import useAuth
 import { createClient } from '@supabase/supabase-js'; // Import createClient
 import { supabase } from '@/lib/supabaseClient'; // Gardez l'import du client global pour getCredentials
+import { toast } from 'sonner';
 
 // Ajout de l'interface UserSupabaseCredentials
 export interface UserSupabaseCredentials {
@@ -30,8 +32,6 @@ export function useUserSupabaseCredentials() {
   const [credentials, setCredentials] = useState<UserSupabaseCredentials | null | undefined>(undefined); // undefined = loading
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  console.log('[DEBUG][useUserSupabaseCredentials] Clerk user:', user);
 
   const getCredentials = useCallback(async () => {
     if (!user) return;
@@ -67,25 +67,40 @@ export function useUserSupabaseCredentials() {
   }, [user]);
 
   const saveCredentials = useCallback(async (newCredentials: UserSupabaseCredentials): Promise<boolean> => {
-    if (!user) return false;
+    if (!user) {
+      toast.error("Erreur d'authentification", { 
+        description: "Vous devez être connecté pour enregistrer vos credentials." 
+      });
+      return false;
+    }
+    
     const userId = user.id;
     setLoading(true); // Indiquer le chargement pendant la sauvegarde
     setError(null);
 
     try {
       // 1. Obtenir le jeton Supabase depuis Clerk
-      const supabaseToken = await getToken({ template: 'supabase' });
+      const supabaseToken = await getToken({ template: 'supabase' }).catch(err => {
+        console.error("Erreur lors de l'obtention du token Clerk:", err);
+        return null;
+      });
+      
       if (!supabaseToken) {
         throw new Error("Impossible d'obtenir le jeton Supabase depuis Clerk.");
       }
 
-      // LOG pour debug
-      console.log("SUPABASE URL utilisée pour l'upsert:", import.meta.env.VITE_SUPABASE_URL);
+      // Vérifie que l'URL est bien disponible
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      
+      if (!supabaseUrl || !supabaseAnonKey) {
+        throw new Error("Variables d'environnement Supabase manquantes.");
+      }
 
-      // Vérifie que l'URL est bien celle de TON projet Supabase personnel
+      // Créer un client Supabase temporaire avec authentification
       const tempSupabaseClient = createClient(
-        import.meta.env.VITE_SUPABASE_URL!,
-        import.meta.env.VITE_SUPABASE_ANON_KEY!,
+        supabaseUrl,
+        supabaseAnonKey,
         {
           global: {
             headers: { Authorization: `Bearer ${supabaseToken}` },
@@ -94,7 +109,7 @@ export function useUserSupabaseCredentials() {
       );
 
       // 3. Effectuer l'upsert avec le client authentifié
-      const { error: saveError } = await tempSupabaseClient // Utilise le client temporaire
+      const { error: saveError } = await tempSupabaseClient
         .from('user_supabase_credentials')
         .upsert({
           clerk_user_id: userId,
@@ -106,14 +121,12 @@ export function useUserSupabaseCredentials() {
         });
 
       if (saveError) {
-        // Log spécifique pour les erreurs Supabase
         console.error('Erreur Supabase lors de la sauvegarde:', saveError);
         throw new Error(saveError.message || 'Erreur Supabase inconnue lors de la sauvegarde.');
       }
 
       // Mettre à jour l'état local SEULEMENT si la sauvegarde réussit
       setCredentials(newCredentials);
-      console.log('Credentials sauvegardés avec succès');
       return true;
 
     } catch (err: any) {
@@ -139,51 +152,32 @@ export function useUserSupabaseCredentials() {
    */
   const createUserSupabaseClient = useCallback(() => {
     if (!credentials) {
-      console.error('[DEBUG][useUserSupabaseCredentials] No credentials found for user:', user?.id);
       return null;
     }
-    console.log('[DEBUG][useUserSupabaseCredentials] Creating dynamic Supabase client with:', credentials.supabaseUrl, credentials.supabaseAnonKey);
-    return createClient(credentials.supabaseUrl, credentials.supabaseAnonKey);
-  }, [credentials, user]);
+    
+    try {
+      return createClient(credentials.supabaseUrl, credentials.supabaseAnonKey, {
+        auth: {
+          persistSession: true,
+          autoRefreshToken: true,
+          detectSessionInUrl: true
+        }
+      });
+    } catch (error) {
+      console.error("Erreur lors de la création du client utilisateur:", error);
+      return null;
+    }
+  }, [credentials]);
 
   useEffect(() => {
     if (!user) return;
-    setLoading(true);
-    // Log le début du SELECT
-    console.log('[DEBUG][useUserSupabaseCredentials] SELECT credentials for user:', user.id);
-    supabase
-      .from('user_supabase_credentials')
-      .select('*')
-      .eq('clerk_user_id', user.id)
-      .single()
-      .then(({ data, error }) => {
-        // Si aucune ligne trouvée, ce n'est PAS une erreur bloquante : on affiche le formulaire
-        if (error && error.code === 'PGRST116') {
-          // "The result contains 0 rows" (aucun credentials pour ce user)
-          console.log('[DEBUG][useUserSupabaseCredentials] Aucun credentials trouvés pour ce user, formulaire à afficher.');
-          setCredentials(null);
-          setError(null);
-        } else if (error) {
-          // Vraie erreur Supabase
-          console.error('[DEBUG][useUserSupabaseCredentials] Error fetching credentials:', error);
-          setError(error.message);
-        } else {
-          // On mappe les champs snake_case -> camelCase
-          if (data) {
-            const mapped = {
-              ...data,
-              supabaseUrl: data.supabase_url,
-              supabaseAnonKey: data.supabase_anon_key,
-            };
-            console.log('[DEBUG][useUserSupabaseCredentials] Credentials fetched:', mapped);
-            setCredentials(mapped);
-          } else {
-            setCredentials(null);
-          }
-        }
-        setLoading(false);
-      });
-  }, [user]);
+    
+    getCredentials().catch(err => {
+      console.error("Erreur lors de la récupération initiale des credentials:", err);
+      setError("Erreur lors du chargement des credentials");
+      setLoading(false);
+    });
+  }, [user, getCredentials]);
 
   return { credentials, loading, error, saveCredentials, getCredentials, clearCredentials, createUserSupabaseClient };
 }

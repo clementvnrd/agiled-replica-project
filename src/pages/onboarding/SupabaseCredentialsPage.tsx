@@ -3,7 +3,6 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import SupabaseCredentialsForm from '@/components/SupabaseCredentialsForm';
 import { useUserSupabaseCredentials } from '@/hooks/useUserSupabaseCredentials';
-import AuthLayout from '@/components/auth/AuthLayout';
 import { useUser } from '@clerk/clerk-react';
 import { toast } from 'sonner';
 import { Card } from '@/components/ui/card';
@@ -20,15 +19,29 @@ const SupabaseCredentialsPage: React.FC = () => {
     setIsSubmitting(true);
     setError(null);
     console.log("Tentative d'enregistrement des credentials pour userId:", user?.id, creds);
-    const success = await saveCredentials(creds);
-    setIsSubmitting(false);
-    if (success) {
-      toast.success('Connexion à Supabase établie avec succès', {
-        description: 'Vous pouvez maintenant profiter de toutes les fonctionnalités.'
+    
+    try {
+      const success = await saveCredentials(creds);
+      
+      if (success) {
+        toast.success('Connexion à Supabase établie avec succès', {
+          description: 'Vous pouvez maintenant profiter de toutes les fonctionnalités.'
+        });
+        navigate('/dashboard');
+      } else {
+        setError("Erreur lors de l'enregistrement des credentials. Veuillez réessayer ou contacter le support.");
+        toast.error("Échec de la connexion", {
+          description: "Impossible d'enregistrer vos informations Supabase."
+        });
+      }
+    } catch (err: any) {
+      console.error("Erreur lors de la sauvegarde:", err);
+      setError(err.message || "Une erreur inattendue s'est produite");
+      toast.error("Erreur", {
+        description: err.message || "Une erreur inattendue s'est produite"
       });
-      navigate('/dashboard');
-    } else {
-      setError("Erreur lors de l'enregistrement des credentials. Veuillez réessayer ou contacter le support.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 

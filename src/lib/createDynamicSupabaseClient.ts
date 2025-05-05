@@ -24,11 +24,16 @@ export function createDynamicSupabaseClient(credentials: { supabaseUrl: string; 
     return createEmptyClient();
   }
 
-  return createClient<Database>(
-    credentials.supabaseUrl,
-    credentials.supabaseAnonKey,
-    defaultOptions
-  );
+  try {
+    return createClient<Database>(
+      credentials.supabaseUrl,
+      credentials.supabaseAnonKey,
+      defaultOptions
+    );
+  } catch (error) {
+    console.error('Erreur lors de la création du client Supabase:', error);
+    return createEmptyClient();
+  }
 }
 
 /**
@@ -57,6 +62,7 @@ function createEmptyClient() {
             update: () => ({ data: null, error: { message: 'Supabase non configuré' } }),
             delete: () => ({ data: null, error: { message: 'Supabase non configuré' } }),
             invoke: () => ({ data: null, error: { message: 'Supabase non configuré' } }),
+            catch: (fn: any) => fn({ message: 'Supabase non configuré' })
           });
         }
       }
