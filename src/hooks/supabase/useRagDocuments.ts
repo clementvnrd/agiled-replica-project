@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useUser } from '@clerk/clerk-react';
 import { useDynamicSupabase } from '@/providers/DynamicSupabaseProvider';
@@ -43,8 +42,9 @@ export function useRagDocuments() {
         const processedData = (data || []).map(doc => ({
           ...doc,
           id: doc.id || crypto.randomUUID() // Utiliser l'ID existant ou en générer un
-        }));
-        setDocuments(processedData as RagDocument[]);
+        })) as RagDocument[];
+        
+        setDocuments(processedData);
       } catch (err) {
         setError(err instanceof Error ? err : new Error('Unknown error occurred'));
         console.error('Error fetching RAG documents:', err);
@@ -75,9 +75,9 @@ export function useRagDocuments() {
       const processedDoc = {
         ...data,
         id: data.id || crypto.randomUUID()
-      };
+      } as RagDocument;
       
-      setDocuments(prev => [...prev, processedDoc as RagDocument]);
+      setDocuments(prev => [...prev, processedDoc]);
       return processedDoc;
     } catch (err) {
       console.error('Error adding RAG document:', err);

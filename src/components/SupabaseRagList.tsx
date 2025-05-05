@@ -37,12 +37,14 @@ const SupabaseRagList: React.FC = () => {
         .select('*')
         .eq('user_id', userId);
       if (error) throw error;
+      
       // Convertir explicitement le type et s'assurer que chaque document a un ID
       const processedData = (data || []).map(doc => ({
         ...doc,
         id: doc.id || crypto.randomUUID() // Utiliser l'ID existant ou en générer un
-      }));
-      setDocs(processedData as RagDocument[]);
+      })) as RagDocument[];
+      
+      setDocs(processedData);
     } catch (err: any) {
       setError(err.message || 'Erreur lors du chargement');
     } finally {

@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useDynamicSupabase } from '@/providers/DynamicSupabaseProvider';
 import { useUser } from '@clerk/clerk-react';
 import { Button } from '@/components/ui/button';
@@ -21,17 +21,8 @@ const RagDocumentEditor: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const { supabase, loading: supabaseLoading, error: supabaseError } = useDynamicSupabase();
 
-  if (supabaseLoading) return <div>Chargement Supabase...</div>;
-  if (supabaseError) return <div>Erreur Supabase : {supabaseError}</div>;
-
-  useEffect(() => {
-    if (user && !supabaseLoading && !supabaseError) {
-      fetchDocuments();
-    }
-  }, [user, supabase, supabaseLoading, supabaseError]);
-
-  const fetchDocuments = async () => {
-    if (!user) return;
+  const fetchDocuments = useCallback(async () => {
+    if (!user || supabaseLoading || supabaseError) return;
     
     setIsLoading(true);
     try {
@@ -47,15 +38,25 @@ const RagDocumentEditor: React.FC = () => {
       const processedData = (data || []).map(doc => ({
         ...doc,
         id: doc.id || crypto.randomUUID() // Utiliser l'ID existant ou en générer un
-      }));
-      setDocuments(processedData as RagDocument[]);
+      })) as RagDocument[];
+      
+      setDocuments(processedData);
     } catch (err) {
       console.error('Erreur lors de la récupération des documents:', err);
       toast.error("Erreur lors de la récupération des documents");
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user, supabase, supabaseLoading, supabaseError]);
+
+  useEffect(() => {
+    if (user && !supabaseLoading && !supabaseError) {
+      fetchDocuments();
+    }
+  }, [user, fetchDocuments, supabaseLoading, supabaseError]);
+
+  if (supabaseLoading) return <div>Chargement Supabase...</div>;
+  if (supabaseError) return <div>Erreur Supabase : {supabaseError}</div>;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

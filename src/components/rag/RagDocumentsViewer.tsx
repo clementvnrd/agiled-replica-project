@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useDynamicSupabase } from '@/providers/DynamicSupabaseProvider';
 import { useUser } from '@clerk/clerk-react';
@@ -57,10 +56,10 @@ const RagDocumentsViewer: React.FC = () => {
       const processedData = (data || []).map(doc => ({
         ...doc,
         id: doc.id || crypto.randomUUID() // Utiliser l'ID existant ou en générer un
-      }));
+      })) as RagDocument[];
       
-      setDocuments(processedData as RagDocument[]);
-      setFilteredDocuments(processedData as RagDocument[]);
+      setDocuments(processedData);
+      setFilteredDocuments(processedData);
     } catch (err) {
       console.error('Erreur lors de la récupération des documents:', err);
       toast.error("Erreur lors de la récupération des documents");
