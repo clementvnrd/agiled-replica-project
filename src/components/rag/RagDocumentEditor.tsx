@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useDynamicSupabase } from '@/providers/DynamicSupabaseProvider';
 import { useUser } from '@clerk/clerk-react';
@@ -41,9 +40,9 @@ const RagDocumentEditor: React.FC = () => {
         
         if (data) {
           for (const item of data) {
-            // Create a properly typed document object
+            // Create a properly typed document object with id explicitly set as a string
             const doc: RagDocument = {
-              id: item.id || `doc-${crypto.randomUUID()}`,
+              id: (item.id as string) || `doc-${crypto.randomUUID()}`,
               user_id: item.user_id || user.id,
               content: item.content,
               metadata: typeof item.metadata === 'object' ? item.metadata : {}, // Handle metadata safely
@@ -86,6 +85,7 @@ const RagDocumentEditor: React.FC = () => {
       // Define metadata with correct type
       const metadata: Record<string, any> = { title: title || 'Sans titre', type: 'text' };
       
+      // Avoid unnecessary select() after insert to prevent type issues
       const { error } = await supabase
         .from('rag_documents')
         .insert([
@@ -148,6 +148,7 @@ const RagDocumentEditor: React.FC = () => {
           uploadedAt: new Date().toISOString() 
         };
         
+        // Avoid unnecessary select() after insert to prevent type issues
         const { error } = await supabase
           .from('rag_documents')
           .insert([{ user_id: user.id, content: text, metadata }]);
