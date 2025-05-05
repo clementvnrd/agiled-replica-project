@@ -21,12 +21,11 @@ const RagDocumentEditor: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const { supabase, loading: supabaseLoading, error: supabaseError } = useDynamicSupabase();
 
-  // Function to load documents - separated from the effect to avoid type issues
+  // Function to load documents with proper type handling
   function loadDocuments() {
     if (!user || supabaseLoading || supabaseError) return;
     setIsLoading(true);
     
-    // Use a regular function to fetch data
     const fetchData = async () => {
       try {
         const { data, error } = await supabase
@@ -37,14 +36,20 @@ const RagDocumentEditor: React.FC = () => {
           
         if (error) throw error;
         
-        // Process the data manually to avoid complex type inference
+        // Process the data with explicit type casting
         const processedData: RagDocument[] = [];
+        
         if (data) {
-          for (const doc of data) {
-            processedData.push({
-              ...doc,
-              id: doc.id || `doc-${crypto.randomUUID()}`
-            });
+          for (const item of data) {
+            // Create a properly typed document object
+            const doc: RagDocument = {
+              id: item.id || `doc-${crypto.randomUUID()}`,
+              user_id: item.user_id || user.id,
+              content: item.content,
+              metadata: item.metadata as Record<string, any>, // Safely cast metadata
+              created_at: item.created_at
+            };
+            processedData.push(doc);
           }
         }
         
@@ -57,11 +62,10 @@ const RagDocumentEditor: React.FC = () => {
       }
     };
     
-    // Execute the fetch function
     fetchData();
   }
 
-  // Simple effect without dependencies on functions
+  // Simple effect without function dependencies
   useEffect(() => {
     if (user && !supabaseLoading && !supabaseError) {
       loadDocuments();
@@ -80,7 +84,8 @@ const RagDocumentEditor: React.FC = () => {
     setIsSubmitting(true);
     
     try {
-      const metadata = { title: title || 'Sans titre', type: 'text' };
+      // Define metadata with correct type
+      const metadata: Record<string, any> = { title: title || 'Sans titre', type: 'text' };
       
       const { data, error } = await supabase
         .from('rag_documents')
@@ -137,20 +142,17 @@ const RagDocumentEditor: React.FC = () => {
       if (file.type === 'text/plain') {
         const text = await file.text();
         
+        // Define metadata with correct type
+        const metadata: Record<string, any> = { 
+          title: file.name, 
+          type: 'text',
+          size: file.size,
+          uploadedAt: new Date().toISOString() 
+        };
+        
         const { data, error } = await supabase
           .from('rag_documents')
-          .insert([
-            { 
-              user_id: user.id, 
-              content: text, 
-              metadata: { 
-                title: file.name, 
-                type: 'text',
-                size: file.size,
-                uploadedAt: new Date().toISOString() 
-              } 
-            }
-          ])
+          .insert([{ user_id: user.id, content: text, metadata }])
           .select();
           
         if (error) throw error;
