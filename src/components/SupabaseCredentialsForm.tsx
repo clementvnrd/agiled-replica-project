@@ -4,25 +4,19 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form } from '@/components/ui/form';
 import { useForm } from 'react-hook-form';
-import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Info } from 'lucide-react';
-import { createDynamicSupabaseClient } from '@/lib/createDynamicSupabaseClient';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import SupabaseFormFields from './supabase/SupabaseFormFields';
 import SupabaseConnectionTest from './supabase/SupabaseConnectionTest';
+import { supabaseCredentialsSchema, type SupabaseCredentialsFormValues } from '@/lib/schemas/supabaseCredentialsSchema';
+import { testSupabaseConnection, ConnectionTestStatus } from '@/services/supabaseConnectionService';
 
-const formSchema = z.object({
-  supabaseUrl: z.string()
-    .url("L'URL doit être valide")
-    .startsWith('https://', "L'URL doit commencer par https://")
-    .nonempty("L'URL est requise"),
-  supabaseAnonKey: z.string()
-    .min(20, "La clé doit contenir au moins 20 caractères")
-    .nonempty("La clé est requise")
-});
-
-type FormValues = z.infer<typeof formSchema>;
+interface SupabaseCredentialsFormProps {
+  onSave: (creds: SupabaseCredentialsFormValues) => void;
+  onSkip?: () => void;
+  initialCredentials?: SupabaseCredentialsFormValues | null;
+}
 
 /**
  * Formulaire pour saisir les credentials Supabase utilisateur.
@@ -34,76 +28,40 @@ type FormValues = z.infer<typeof formSchema>;
  * Returns:
  *   JSX.Element
  */
-const SupabaseCredentialsForm: React.FC<{ 
-  onSave: (creds: { supabaseUrl: string; supabaseAnonKey: string }) => void;
-  onSkip?: () => void;
-  initialCredentials?: { supabaseUrl: string; supabaseAnonKey: string } | null;
-}> = ({ onSave, onSkip, initialCredentials = null }) => {
+const SupabaseCredentialsForm: React.FC<SupabaseCredentialsFormProps> = ({ 
+  onSave, 
+  onSkip, 
+  initialCredentials = null 
+}) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [testStatus, setTestStatus] = useState<'idle' | 'testing' | 'success' | 'error'>('idle');
+  const [testStatus, setTestStatus] = useState<ConnectionTestStatus>('idle');
   const [testError, setTestError] = useState<string | null>(null);
 
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<SupabaseCredentialsFormValues>({
+    resolver: zodResolver(supabaseCredentialsSchema),
     defaultValues: {
       supabaseUrl: initialCredentials?.supabaseUrl || '',
       supabaseAnonKey: initialCredentials?.supabaseAnonKey || ''
     }
   });
 
-  const testConnection = async (values: FormValues) => {
+  const handleSubmit = async (values: SupabaseCredentialsFormValues) => {
+    setIsSubmitting(true);
     setTestStatus('testing');
     setTestError(null);
     
     try {
-      // Création d'un client temporaire pour tester
-      const testClient = createDynamicSupabaseClient({
-        supabaseUrl: values.supabaseUrl,
-        supabaseAnonKey: values.supabaseAnonKey
-      });
+      const { success, errorMessage } = await testSupabaseConnection(values);
       
-      if (!testClient) {
-        throw new Error("Impossible de créer un client Supabase avec les credentials fournis.");
-      }
-      
-      // Test simple en utilisant l'API auth qui est toujours disponible
-      const { error: authError } = await testClient.auth.getSession();
-      
-      // Nous ignorons les erreurs liées à l'absence de session ou à l'expiration du JWT,
-      // car elles indiquent que l'API auth fonctionne correctement
-      if (authError && authError.message && 
-          !authError.message.includes('No session found') && 
-          !authError.message.includes('JWT expired')) {
-        throw new Error(authError.message);
-      }
-      
-      // Si on arrive ici sans erreur fatale, les credentials semblent valides
-      setTestStatus('success');
-      return true;
-    } catch (err: any) {
-      console.error('Erreur de test connexion:', err);
-      setTestStatus('error');
-      setTestError(err.message || 'Impossible de se connecter à Supabase avec ces credentials');
-      return false;
-    }
-  };
-
-  const handleSubmit = async (values: FormValues) => {
-    setIsSubmitting(true);
-    
-    try {
-      const isValid = await testConnection(values);
-      
-      if (isValid) {
-        onSave({
-          supabaseUrl: values.supabaseUrl,
-          supabaseAnonKey: values.supabaseAnonKey
-        });
+      if (success) {
+        setTestStatus('success');
+        onSave(values);
       } else {
-        // Si le test échoue, on ne passe pas les credentials au parent
+        setTestStatus('error');
+        setTestError(errorMessage);
         setIsSubmitting(false);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erreur lors de la soumission:", error);
       setIsSubmitting(false);
       setTestStatus('error');

@@ -3,12 +3,10 @@ import React from 'react';
 import { Input } from '@/components/ui/input';
 import { FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from '@/components/ui/form';
 import { UseFormReturn } from 'react-hook-form';
+import { SupabaseCredentialsFormValues } from '@/lib/schemas/supabaseCredentialsSchema';
 
 interface SupabaseFormFieldsProps {
-  form: UseFormReturn<{
-    supabaseUrl: string;
-    supabaseAnonKey: string;
-  }>;
+  form: UseFormReturn<SupabaseCredentialsFormValues>;
 }
 
 const SupabaseFormFields: React.FC<SupabaseFormFieldsProps> = ({ form }) => {

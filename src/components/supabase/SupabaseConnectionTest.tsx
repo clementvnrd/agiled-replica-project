@@ -1,9 +1,10 @@
 
 import React from 'react';
 import { AlertTriangle, Check } from 'lucide-react';
+import { ConnectionTestStatus } from '@/services/supabaseConnectionService';
 
 interface SupabaseConnectionTestProps {
-  status: 'idle' | 'testing' | 'success' | 'error';
+  status: ConnectionTestStatus;
   errorMessage: string | null;
 }
 
