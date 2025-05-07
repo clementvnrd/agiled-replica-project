@@ -1,15 +1,16 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form } from '@/components/ui/form';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Check, AlertTriangle, Info } from 'lucide-react';
+import { Info } from 'lucide-react';
 import { createDynamicSupabaseClient } from '@/lib/createDynamicSupabaseClient';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import SupabaseFormFields from './supabase/SupabaseFormFields';
+import SupabaseConnectionTest from './supabase/SupabaseConnectionTest';
 
 const formSchema = z.object({
   supabaseUrl: z.string()
@@ -133,67 +134,12 @@ const SupabaseCredentialsForm: React.FC<{
       <CardContent className="pt-6">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-            <FormField
-              control={form.control}
-              name="supabaseUrl"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-gray-700 font-medium">URL Supabase</FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="https://xxx.supabase.co" 
-                      {...field} 
-                      className="font-mono text-sm"
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    L'URL de votre projet Supabase (se termine par .supabase.co)
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="supabaseAnonKey"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-gray-700 font-medium">Clé anonyme (anon key)</FormLabel>
-                  <FormControl>
-                    <Input 
-                      type="password" 
-                      placeholder="eyJ0eXAiOi..." 
-                      {...field}
-                      className="font-mono text-sm"
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    La clé anonyme de votre projet Supabase (commence par eyJ...)
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <SupabaseFormFields form={form} />
             
-            {testStatus === 'error' && (
-              <div className="p-3 rounded-md bg-red-50 border border-red-200 text-red-800 flex items-start gap-2">
-                <AlertTriangle className="h-5 w-5 flex-shrink-0 text-red-500 mt-0.5" />
-                <div className="text-sm">
-                  <p className="font-semibold">Erreur de connexion</p>
-                  <p>{testError || "Impossible de se connecter à Supabase avec ces credentials"}</p>
-                </div>
-              </div>
-            )}
-
-            {testStatus === 'success' && (
-              <div className="p-3 rounded-md bg-green-50 border border-green-200 text-green-800 flex items-start gap-2">
-                <Check className="h-5 w-5 flex-shrink-0 text-green-500 mt-0.5" />
-                <div className="text-sm">
-                  <p className="font-semibold">Connexion réussie</p>
-                  <p>Les credentials sont valides et la connexion à Supabase est établie.</p>
-                </div>
-              </div>
-            )}
+            <SupabaseConnectionTest 
+              status={testStatus} 
+              errorMessage={testError} 
+            />
 
             <div className="flex flex-col sm:flex-row gap-3 pt-2">
               <Button 

@@ -8,11 +8,15 @@ import SupabaseCredentialsForm from '@/components/SupabaseCredentialsForm';
 import OpenRouterSettings from '@/components/settings/OpenRouterSettings';
 import { toast } from "sonner";
 import { useNavigate } from 'react-router-dom';
+import SupabaseStatusBadge from '@/components/supabase/SupabaseStatusBadge';
+import VectorSearch from '@/components/rag/VectorSearch';
+import { useUser } from '@clerk/clerk-react';
 
 const TABS = [
   { key: 'mcps', label: 'MCPs' },
   { key: 'supabase', label: 'Supabase' },
   { key: 'llm', label: 'LLM' },
+  { key: 'rag', label: 'RAG' },
 ];
 
 const SettingsPage: React.FC = () => {
@@ -23,13 +27,15 @@ const SettingsPage: React.FC = () => {
   const [showCredentialsForm, setShowCredentialsForm] = useState(false);
   
   const navigate = useNavigate();
+  const clerkUser = useUser();
   
   const { 
     credentials, 
     getCredentials, 
     saveCredentials, 
     clearCredentials, 
-    loading: credentialsLoading 
+    loading: credentialsLoading,
+    createUserSupabaseClient
   } = useUserSupabaseCredentials();
 
   // Vérifie l'état de connexion utilisateur
@@ -82,6 +88,9 @@ const SettingsPage: React.FC = () => {
     getCredentials();
   };
 
+  // Création d'un client dynamique basé sur les credentials utilisateur
+  const dynamicSupabase = createUserSupabaseClient();
+
   return (
     <div className="flex min-h-[70vh] bg-white rounded shadow mt-10 max-w-4xl mx-auto">
       {/* Sidebar */}
@@ -98,14 +107,22 @@ const SettingsPage: React.FC = () => {
           ))}
         </nav>
       </aside>
+      
       {/* Content */}
       <section className="flex-1 p-8">
         {activeTab === 'mcps' && (
           <div>
             <h2 className="text-xl font-bold mb-4">MCPs</h2>
-            <p className="text-gray-600">Connectez vos outils MCP ici (à venir...)</p>
+            <p className="text-gray-600 mb-4">Connectez vos outils MCP pour étendre les fonctionnalités</p>
+            <Button 
+              onClick={() => navigate('/mcp')}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              Gérer les connexions MCP
+            </Button>
           </div>
         )}
+        
         {activeTab === 'supabase' && (
           <div>
             <h2 className="text-xl font-bold mb-4">Supabase</h2>
@@ -133,11 +150,7 @@ const SettingsPage: React.FC = () => {
                       <div className="mt-2 text-sm">Clé: {credentials.supabaseAnonKey.substring(0, 10)}...</div>
                     </div>
                     <div className="flex items-center gap-4">
-                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${supabaseOnline === null ? 'bg-gray-500' : supabaseOnline ? 'bg-green-600' : 'bg-red-600'}`}
-                      >
-                        <span className="w-2 h-2 rounded-full mr-2 inline-block" style={{ background: supabaseOnline === null ? '#888' : supabaseOnline ? '#22c55e' : '#ef4444' }}></span>
-                        {supabaseOnline === null ? '...' : supabaseOnline ? 'Connected' : 'Offline'}
-                      </span>
+                      <SupabaseStatusBadge status={supabaseOnline} />
                       <div className="flex flex-col gap-2">
                         <button
                           onClick={() => setShowCredentialsForm(true)}
@@ -191,10 +204,35 @@ const SettingsPage: React.FC = () => {
             )}
           </div>
         )}
+        
         {activeTab === 'llm' && (
           <div>
             <h2 className="text-xl font-bold mb-4">LLM (OpenRouter)</h2>
             <OpenRouterSettings />
+          </div>
+        )}
+        
+        {activeTab === 'rag' && credentials && dynamicSupabase && clerkUser.user && (
+          <div>
+            <h2 className="text-xl font-bold mb-4">Recherche RAG</h2>
+            <p className="text-gray-600 mb-6">
+              Recherchez dans votre base de connaissances avec la technologie vectorielle.
+            </p>
+            
+            <div className="mb-8">
+              <VectorSearch 
+                supabase={dynamicSupabase} 
+                userId={clerkUser.user.id} 
+              />
+            </div>
+            
+            <div className="mt-4 text-center">
+              <p className="text-sm text-gray-500">
+                Pour gérer tous vos documents RAG, visitez la 
+                <a href="/rag" className="text-blue-600 hover:underline mx-1">page RAG</a> 
+                dédiée.
+              </p>
+            </div>
           </div>
         )}
       </section>
