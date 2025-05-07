@@ -134,8 +134,8 @@ const MCPDashboard: React.FC = () => {
             </CardHeader>
             <CardContent>
               <MCPConnectionsList 
-                connections={connections} 
-                loading={loading} 
+                connectionsList={connections} 
+                isLoading={loading} 
                 onRefresh={fetchConnections}
               />
             </CardContent>
@@ -159,7 +159,7 @@ const MCPDashboard: React.FC = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <MCPConnectionForm onSubmit={handleAddConnection} />
+              <MCPConnectionForm onConnectionSubmit={handleAddConnection} />
             </CardContent>
           </Card>
         </TabsContent>

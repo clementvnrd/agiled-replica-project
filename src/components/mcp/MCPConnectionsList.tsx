@@ -1,159 +1,145 @@
 
-import React, { useEffect, useState } from 'react';
-import { SupabaseClient } from '@supabase/supabase-js';
-import { Loader2, ExternalLink, Edit, Trash2 } from 'lucide-react';
-import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import React from 'react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
-import { ErrorHandler } from '@/utils/errorHandler';
+import { Badge } from '@/components/ui/badge';
+import { ExternalLink, RefreshCw, Trash2 } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 
-interface MCPConnection {
+export interface MCPConnection {
   id: string;
   name: string;
   url: string;
-  type: string;
-  status: 'connected' | 'disconnected' | 'error';
-  last_accessed: string | null;
+  status: string;
+  description?: string;
+  created_at: string;
 }
 
-interface MCPConnectionsListProps {
-  userId: string | undefined;
-  supabase: SupabaseClient;
+export interface MCPConnectionsListProps {
+  connectionsList: MCPConnection[];
+  isLoading: boolean;
+  onRefresh: () => Promise<void>;
+  onDelete?: (id: string) => Promise<void>;
 }
 
-const MCPConnectionsList: React.FC<MCPConnectionsListProps> = ({ userId, supabase }) => {
-  const [connections, setConnections] = useState<MCPConnection[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-
-  useEffect(() => {
-    if (!userId) return;
-    
-    const fetchConnections = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('mcp_connections')
-          .select('*')
-          .eq('user_id', userId)
-          .order('created_at', { ascending: false });
-          
-        if (error) throw error;
-        
-        setConnections(data || []);
-      } catch (err) {
-        ErrorHandler.handleSupabaseError(err, 'fetchConnections');
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    fetchConnections();
-  }, [userId, supabase]);
-
-  const handleDeleteConnection = async (id: string) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer cette connexion ?')) return;
-    
-    try {
-      const { error } = await supabase
-        .from('mcp_connections')
-        .delete()
-        .eq('id', id);
-        
-      if (error) throw error;
-      
-      setConnections(connections.filter(conn => conn.id !== id));
-      toast.success('Connexion supprimée avec succès');
-    } catch (err) {
-      ErrorHandler.handleSupabaseError(err, 'deleteConnection');
-    }
-  };
-
-  const getStatusColor = (status: string) => {
+const MCPConnectionsList: React.FC<MCPConnectionsListProps> = ({ 
+  connectionsList, 
+  isLoading, 
+  onRefresh,
+  onDelete 
+}) => {
+  const getStatusBadgeStyle = (status: string) => {
     switch (status) {
-      case 'connected': return 'bg-green-100 text-green-800';
-      case 'disconnected': return 'bg-gray-100 text-gray-800';
-      case 'error': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'connected':
+        return 'bg-green-100 text-green-800 hover:bg-green-200';
+      case 'disconnected':
+        return 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200';
+      case 'error':
+        return 'bg-red-100 text-red-800 hover:bg-red-200';
+      default:
+        return 'bg-gray-100 text-gray-800 hover:bg-gray-200';
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-      </div>
-    );
-  }
+  const renderTableContent = () => {
+    if (isLoading) {
+      return Array(3).fill(0).map((_, i) => (
+        <TableRow key={`skeleton-${i}`}>
+          <TableCell><Skeleton className="h-4 w-full" /></TableCell>
+          <TableCell><Skeleton className="h-4 w-full" /></TableCell>
+          <TableCell><Skeleton className="h-4 w-full" /></TableCell>
+          <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+          <TableCell><Skeleton className="h-8 w-20" /></TableCell>
+        </TableRow>
+      ));
+    }
 
-  if (connections.length === 0) {
-    return (
-      <div className="bg-gray-50 rounded-lg p-8 text-center">
-        <h3 className="font-medium text-gray-700 text-lg mb-2">Aucun connecteur MCP trouvé</h3>
-        <p className="text-gray-500 mb-4">
-          Vous n'avez pas encore configuré de connecteurs Multi-Channel Provider.
-        </p>
-        <Button variant="outline" onClick={() => document.querySelector("[value='add']")?.dispatchEvent(
-          new MouseEvent('click', { bubbles: true })
-        )}>
-          Configurer votre premier connecteur
-        </Button>
-      </div>
-    );
-  }
+    if (connectionsList.length === 0) {
+      return (
+        <TableRow>
+          <TableCell colSpan={5} className="text-center py-8">
+            <p className="text-gray-500 mb-4">Aucune connexion MCP configurée.</p>
+            <Button 
+              variant="outline" 
+              onClick={onRefresh} 
+              className="mx-auto"
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Rafraîchir
+            </Button>
+          </TableCell>
+        </TableRow>
+      );
+    }
+
+    return connectionsList.map(connection => (
+      <TableRow key={connection.id}>
+        <TableCell className="font-medium">{connection.name}</TableCell>
+        <TableCell className="font-mono text-xs truncate max-w-[250px]">
+          <a 
+            href={connection.url} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="flex items-center hover:text-blue-600 hover:underline"
+          >
+            {connection.url}
+            <ExternalLink className="ml-1 h-3 w-3" />
+          </a>
+        </TableCell>
+        <TableCell className="max-w-[250px] truncate">
+          {connection.description || <span className="text-gray-400 italic">Aucune description</span>}
+        </TableCell>
+        <TableCell>
+          <Badge className={getStatusBadgeStyle(connection.status)}>
+            {connection.status}
+          </Badge>
+        </TableCell>
+        <TableCell>
+          {onDelete && (
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => onDelete(connection.id)}
+              className="text-red-500 hover:text-red-700 hover:bg-red-50"
+            >
+              <Trash2 className="h-4 w-4" />
+              <span className="sr-only">Supprimer</span>
+            </Button>
+          )}
+        </TableCell>
+      </TableRow>
+    ));
+  };
 
   return (
-    <div className="bg-white rounded-lg border overflow-hidden">
-      <Table>
-        <TableCaption>Liste de vos connecteurs MCP</TableCaption>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Nom</TableHead>
-            <TableHead>Type</TableHead>
-            <TableHead>Statut</TableHead>
-            <TableHead>Dernière utilisation</TableHead>
-            <TableHead>Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {connections.map((connection) => (
-            <TableRow key={connection.id}>
-              <TableCell className="font-medium">{connection.name}</TableCell>
-              <TableCell>{connection.type}</TableCell>
-              <TableCell>
-                <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(connection.status)}`}>
-                  {connection.status}
-                </span>
-              </TableCell>
-              <TableCell>
-                {connection.last_accessed 
-                  ? new Date(connection.last_accessed).toLocaleDateString() 
-                  : 'Jamais'}
-              </TableCell>
-              <TableCell>
-                <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="icon" asChild>
-                    <a href={connection.url} target="_blank" rel="noopener noreferrer">
-                      <ExternalLink className="h-4 w-4" />
-                      <span className="sr-only">Ouvrir</span>
-                    </a>
-                  </Button>
-                  <Button variant="ghost" size="icon">
-                    <Edit className="h-4 w-4" />
-                    <span className="sr-only">Modifier</span>
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="icon"
-                    onClick={() => handleDeleteConnection(connection.id)}
-                  >
-                    <Trash2 className="h-4 w-4 text-red-600" />
-                    <span className="sr-only">Supprimer</span>
-                  </Button>
-                </div>
-              </TableCell>
+    <div>
+      <div className="flex justify-end mb-4">
+        <Button 
+          variant="outline" 
+          onClick={onRefresh}
+          disabled={isLoading}
+        >
+          <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+          Rafraîchir
+        </Button>
+      </div>
+      
+      <div className="border rounded-md">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Nom</TableHead>
+              <TableHead>URL</TableHead>
+              <TableHead>Description</TableHead>
+              <TableHead>Statut</TableHead>
+              <TableHead className="w-[100px]">Actions</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {renderTableContent()}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 };

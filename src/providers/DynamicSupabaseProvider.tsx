@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useMemo } from 'react';
 import { useUserSupabaseCredentials } from '@/hooks/useUserSupabaseCredentials';
 import { createDynamicSupabaseClient } from '@/lib/createDynamicSupabaseClient';
@@ -9,7 +10,7 @@ import type { Database } from '@/integrations/supabase/types';
  * Context type for the dynamic Supabase client.
  */
 interface DynamicSupabaseContextType {
-  supabase: SupabaseClient<Database>;
+  dynamicSupabase: SupabaseClient<Database> | null;
   loading: boolean;
   error: string | null;
 }
@@ -29,18 +30,15 @@ export function DynamicSupabaseProvider({ children }: { children: React.ReactNod
   const { credentials, loading, error } = useUserSupabaseCredentials();
 
   // Memoize the client to avoid unnecessary re-instantiations
-  const supabase = useMemo(() => {
+  const dynamicSupabase = useMemo(() => {
     if (credentials) {
       return createDynamicSupabaseClient(credentials);
     }
-    return createDynamicSupabaseClient({ supabaseUrl: '', supabaseAnonKey: '' });
+    return null;
   }, [credentials]);
 
-  // Optionally, you can show a loading spinner or error UI here
-  // For now, just provide the context regardless
-
   return (
-    <DynamicSupabaseContext.Provider value={{ supabase, loading, error }}>
+    <DynamicSupabaseContext.Provider value={{ dynamicSupabase, loading, error }}>
       {children}
     </DynamicSupabaseContext.Provider>
   );
@@ -61,4 +59,4 @@ export function useDynamicSupabase() {
     throw new Error('useDynamicSupabase must be used within a DynamicSupabaseProvider');
   }
   return context;
-} 
+}

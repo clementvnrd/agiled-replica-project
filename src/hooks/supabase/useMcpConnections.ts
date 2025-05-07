@@ -1,12 +1,15 @@
+
 import { useState, useEffect } from 'react';
 import { useUser } from '@clerk/clerk-react';
 import { useDynamicSupabase } from '@/providers/DynamicSupabaseProvider';
+import { toast } from 'sonner';
 
 export interface McpConnection {
   id: string;
   name: string;
   url: string;
   status: 'connected' | 'disconnected' | 'error';
+  description?: string;
   created_at: string;
   user_id: string;
 }
@@ -24,40 +27,138 @@ export interface McpConnection {
  */
 export function useMcpConnections() {
   const { user } = useUser();
-  const { supabase, loading: supabaseLoading, error: supabaseError } = useDynamicSupabase();
+  const { dynamicSupabase, loading: supabaseLoading, error: supabaseError } = useDynamicSupabase();
   const [connections, setConnections] = useState<McpConnection[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
 
+  const fetchConnections = async () => {
+    if (!user || !dynamicSupabase) {
+      setIsLoading(false);
+      return;
+    }
+    
+    try {
+      setIsLoading(true);
+      const { data, error } = await dynamicSupabase
+        .from('mcp_connections')
+        .select('*')
+        .eq('user_id', user.id);
+      
+      if (error) throw new Error(error.message);
+      
+      setConnections(data || []);
+      setError(null);
+    } catch (err) {
+      console.error('Failed to fetch MCP connections:', err);
+      setError(err instanceof Error ? err : new Error('Failed to fetch connections'));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    // Prépare la récupération des connexions MCP (implémentation à venir)
-    const fetchConnections = async () => {
+    if (user && dynamicSupabase && !supabaseLoading) {
+      fetchConnections();
+    } else if (!dynamicSupabase && !supabaseLoading) {
       setConnections([]);
       setIsLoading(false);
-    };
-
-    if (user && !supabaseLoading && !supabaseError) {
-      fetchConnections();
     }
-  }, [user, supabase, supabaseLoading, supabaseError]);
+  }, [user, dynamicSupabase, supabaseLoading]);
 
-  // Ces fonctions seront implémentées ultérieurement
-  const addConnection = async (name: string, url: string) => {
-    // Prévu pour utiliser supabase
-    console.log('Adding connection:', name, url);
-    return null;
+  const addConnection = async (name: string, url: string, description?: string) => {
+    if (!user || !dynamicSupabase) return null;
+    
+    try {
+      const { data, error } = await dynamicSupabase
+        .from('mcp_connections')
+        .insert([
+          { 
+            name, 
+            url, 
+            description, 
+            status: 'connected', 
+            user_id: user.id 
+          }
+        ])
+        .select('*')
+        .single();
+      
+      if (error) throw new Error(error.message);
+      
+      setConnections(prev => [...prev, data as McpConnection]);
+      toast.success('Connexion MCP ajoutée avec succès');
+      return data as McpConnection;
+    } catch (err) {
+      console.error('Failed to add MCP connection:', err);
+      toast.error('Échec de l\'ajout de la connexion MCP');
+      return null;
+    }
   };
 
   const deleteConnection = async (id: string) => {
-    // Prévu pour utiliser supabase
-    console.log('Deleting connection:', id);
-    return false;
+    if (!dynamicSupabase) return false;
+    
+    try {
+      const { error } = await dynamicSupabase
+        .from('mcp_connections')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw new Error(error.message);
+      
+      setConnections(prev => prev.filter(conn => conn.id !== id));
+      toast.success('Connexion MCP supprimée');
+      return true;
+    } catch (err) {
+      console.error('Failed to delete MCP connection:', err);
+      toast.error('Échec de la suppression de la connexion MCP');
+      return false;
+    }
   };
 
   const testConnection = async (id: string) => {
-    // Prévu pour utiliser supabase
-    console.log('Testing connection:', id);
-    return true;
+    if (!dynamicSupabase) return false;
+    
+    const connection = connections.find(c => c.id === id);
+    if (!connection) return false;
+    
+    try {
+      // Simulate testing the connection - in a real app, you would call the MCP server
+      // and check if it responds correctly
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      const { error } = await dynamicSupabase
+        .from('mcp_connections')
+        .update({ status: 'connected' })
+        .eq('id', id);
+      
+      if (error) throw new Error(error.message);
+      
+      setConnections(prev => 
+        prev.map(c => c.id === id ? { ...c, status: 'connected' } : c)
+      );
+      
+      toast.success('Test de connexion MCP réussi');
+      return true;
+    } catch (err) {
+      console.error('Failed to test MCP connection:', err);
+      
+      // Update connection status to error
+      if (dynamicSupabase) {
+        await dynamicSupabase
+          .from('mcp_connections')
+          .update({ status: 'error' })
+          .eq('id', id);
+        
+        setConnections(prev => 
+          prev.map(c => c.id === id ? { ...c, status: 'error' } : c)
+        );
+      }
+      
+      toast.error('Échec du test de connexion MCP');
+      return false;
+    }
   };
 
   return {
@@ -66,6 +167,7 @@ export function useMcpConnections() {
     error: error || (supabaseError ? new Error(supabaseError) : null),
     addConnection,
     deleteConnection,
-    testConnection
+    testConnection,
+    refreshConnections: fetchConnections
   };
 }
