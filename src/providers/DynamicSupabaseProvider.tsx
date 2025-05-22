@@ -1,4 +1,6 @@
-
+// Désactivé : logique multi-instance Supabase (connexion individuelle)
+// Tout ce fichier est désactivé, remplacé par le client global partagé (voir src/lib/supabaseClient.ts)
+/*
 import React, { createContext, useContext, useMemo } from 'react';
 import { useUserSupabaseCredentials } from '@/hooks/useUserSupabaseCredentials';
 import { createDynamicSupabaseClient } from '@/lib/createDynamicSupabaseClient';
@@ -60,3 +62,4 @@ export function useDynamicSupabase() {
   }
   return context;
 }
+*/

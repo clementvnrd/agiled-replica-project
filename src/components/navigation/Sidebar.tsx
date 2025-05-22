@@ -18,7 +18,7 @@ const navItems = [
   {
     icon: <Home size={16} />,
     label: "Tableau de bord",
-    to: "/",
+    to: "/dashboard",
   },
   {
     icon: <Book size={16} />,
@@ -100,7 +100,7 @@ const Sidebar: React.FC = () => {
   return (
     <div className="border-r flex-shrink-0 w-64 hidden md:block">
       <div className="p-6">
-        <Link to="/" className="flex items-center gap-2 font-bold">
+        <Link to="/dashboard" className="flex items-center gap-2 font-bold">
           <img src="/logo.png" alt="Agiled Logo" className="w-8 h-8" />
           <span>Agiled</span>
         </Link>
@@ -152,7 +152,7 @@ export const MobileSidebar: React.FC = () => {
       </SheetTrigger>
       <SheetContent side="left" className="w-64 p-0">
         <div className="p-6">
-          <Link to="/" className="flex items-center gap-2 font-bold">
+          <Link to="/dashboard" className="flex items-center gap-2 font-bold">
             <img src="/logo.png" alt="Agiled Logo" className="w-8 h-8" />
             <span>Agiled</span>
           </Link>

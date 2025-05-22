@@ -1,6 +1,9 @@
-
+// Désactivé : logique multi-instance Supabase (connexion individuelle)
+// Tout ce fichier est désactivé, remplacé par le client global partagé (voir src/lib/supabaseClient.ts)
+/*
 import { createDynamicSupabaseClient } from '@/lib/createDynamicSupabaseClient';
 import type { SupabaseCredentialsFormValues } from '@/lib/schemas/supabaseCredentialsSchema';
+import { ErrorHandler } from '@/utils/errorHandler';
 
 export type ConnectionTestStatus = 'idle' | 'testing' | 'success' | 'error';
 
@@ -39,10 +42,11 @@ export async function testSupabaseConnection(values: SupabaseCredentialsFormValu
     // Si on arrive ici sans erreur fatale, les credentials semblent valides
     return { success: true, errorMessage: null };
   } catch (err: any) {
-    console.error('Erreur de test connexion:', err);
+    ErrorHandler.handleError(err, 'Erreur de test connexion');
     return { 
       success: false, 
       errorMessage: err.message || 'Impossible de se connecter à Supabase avec ces credentials' 
     };
   }
 }
+*/

@@ -1,6 +1,6 @@
-
+// Migration : utilisation du client Supabase global (plus de logique multi-instance)
+import { supabase } from '@/lib/supabaseClient';
 import React, { useState, useEffect } from 'react';
-import { useDynamicSupabase } from '@/providers/DynamicSupabaseProvider';
 import { useUser } from '@clerk/clerk-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RagDocument } from '@/types';
@@ -13,7 +13,9 @@ const RagDocumentEditor: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('editor');
   const [documents, setDocuments] = useState<RagDocument[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const { supabase, loading: supabaseLoading, error: supabaseError } = useDynamicSupabase();
+  // On utilise le client global, donc pas de loading/error spécifique
+  const supabaseLoading = false;
+  const supabaseError = null;
 
   // Function to load documents with proper type handling
   function loadDocuments() {

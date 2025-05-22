@@ -1,3 +1,4 @@
+import { ErrorHandler } from '@/utils/errorHandler';
 
 // Service pour interagir avec l'API OpenRouter
 export interface Message {
@@ -43,7 +44,7 @@ export class OpenRouterService {
         this.apiKey = parsed.openRouterApiKey || null;
       }
     } catch (e) {
-      console.error('Erreur lors du chargement de la clé API:', e);
+      ErrorHandler.handleError(e, 'Erreur lors du chargement de la clé API');
       this.apiKey = null;
     }
   }
@@ -74,7 +75,7 @@ export class OpenRouterService {
 
       return await response.json();
     } catch (error) {
-      console.error('Error fetching models:', error);
+      ErrorHandler.handleError(error, 'Error fetching models');
       throw error;
     }
   }
@@ -114,7 +115,7 @@ export class OpenRouterService {
 
       return await response.json();
     } catch (error) {
-      console.error('Error generating completion:', error);
+      ErrorHandler.handleError(error, 'Error generating completion');
       throw error;
     }
   }
@@ -180,12 +181,12 @@ export class OpenRouterService {
               yield JSON.parse(jsonLine);
             }
           } catch (e) {
-            console.error('Error parsing SSE line:', e, line);
+            ErrorHandler.handleError(e, 'Error parsing SSE line');
           }
         }
       }
     } catch (error) {
-      console.error('Error streaming completion:', error);
+      ErrorHandler.handleError(error, 'Error streaming completion');
       throw error;
     }
   }

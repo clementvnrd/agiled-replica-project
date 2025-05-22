@@ -4,6 +4,7 @@
 - Audit du projet, détection et correction des problèmes, erreurs, manques d'optimisation (2024-07-09)
 - Refactor onboarding Supabase utilisateur (2024-07-09)
   - Objectif : Chaque utilisateur peut connecter sa propre instance Supabase, utilisée pour toutes ses données (RAG, stockage, etc.), de façon isolée et sécurisée.
+  - [ABANDONNÉ/PAUSÉ le 2024-07-09] : La logique multi-instance Supabase est désactivée. Toutes les données sont désormais stockées dans l'instance Supabase globale du projet.
   - Étapes à implémenter :
     1. **Inscription avec Clerk**
        - L'utilisateur crée son compte (Clerk gère l'auth).
@@ -35,6 +36,14 @@
   - [ ] 9. Nettoyer le code et tester le flow complet
 
 ## Tâches terminées
+- [x] Centralisation des erreurs modules/services
+- [x] Correction imports ErrorHandler
+- [x] Suppression console.error/warn
+- [x] Migration Supabase : désactivation de la logique multi-instance, centralisation sur le client global partagé (2024-07-09)
+    - Tous les hooks et composants utilisent maintenant le client global (src/lib/supabaseClient.ts)
+    - Les fichiers liés à la gestion individuelle sont commentés, non supprimés
+    - Typage corrigé pour la table mcp_connections
+    - Documentation et README mis à jour
 
 ## Découvertes pendant le travail
 - Absence de tests unitaires
@@ -42,3 +51,8 @@
 - Absence de documentation sur les variables d'environnement
 - Fichiers composants volumineux (>200 lignes)
 - [ ] Refactor all user-data hooks to use the dynamic Supabase client (if not already present)
+
+// Discovered During Work :
+- [ ] TODO : Renforcer typage dynamique des retours Supabase dans useMcpConnections
+- [ ] TODO : Tests unitaires ErrorHandler
+- [ ] TODO : Vérifier la couverture de tests sur tous les hooks/services modifiés

@@ -1,10 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { ErrorHandler } from '@/utils/errorHandler';
 
 // Types pour le stockage des API keys
 type StoredApiKeys = {
@@ -28,7 +28,7 @@ const OpenRouterSettings: React.FC = () => {
           setIsConfigured(true);
         }
       } catch (e) {
-        console.error('Erreur lors de la récupération des clés API:', e);
+        ErrorHandler.handleError(e, 'Erreur lors de la récupération des clés API');
       }
     }
   }, []);
@@ -55,7 +55,7 @@ const OpenRouterSettings: React.FC = () => {
       
       return success;
     } catch (error) {
-      console.error('Erreur lors de la validation de la clé API:', error);
+      ErrorHandler.handleError(error, 'Erreur lors de la validation de la clé API');
       toast.error('Erreur de connexion à OpenRouter');
       return false;
     } finally {
@@ -86,7 +86,7 @@ const OpenRouterSettings: React.FC = () => {
         setIsConfigured(true);
         toast.success('Clé API OpenRouter sauvegardée avec succès');
       } catch (e) {
-        console.error('Erreur lors de la sauvegarde de la clé API:', e);
+        ErrorHandler.handleError(e, 'Erreur lors de la sauvegarde de la clé API');
         toast.error('Erreur lors de la sauvegarde');
       }
     }
@@ -108,7 +108,7 @@ const OpenRouterSettings: React.FC = () => {
       setIsConfigured(false);
       toast.success('Clé API OpenRouter supprimée');
     } catch (e) {
-      console.error('Erreur lors de la suppression de la clé API:', e);
+      ErrorHandler.handleError(e, 'Erreur lors de la suppression de la clé API');
       toast.error('Erreur lors de la suppression');
     }
   };

@@ -1,6 +1,6 @@
-
+// Migration : utilisation du client Supabase global (plus de logique multi-instance)
+import { supabase } from '@/lib/supabaseClient';
 import React, { useState, useEffect } from 'react';
-import { useDynamicSupabase } from '@/providers/DynamicSupabaseProvider';
 import { useUser } from '@clerk/clerk-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,7 +15,9 @@ const RagDocumentsViewer: React.FC = () => {
   const [filteredDocuments, setFilteredDocuments] = useState<RagDocument[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const { supabase, loading: supabaseLoading, error: supabaseError } = useDynamicSupabase();
+  // On utilise le client global, donc pas de loading/error spécifique
+  const supabaseLoading = false;
+  const supabaseError = null;
 
   useEffect(() => {
     if (user && !supabaseLoading && !supabaseError) {

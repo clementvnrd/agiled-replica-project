@@ -1,6 +1,9 @@
-
+// Désactivé : logique multi-instance Supabase (connexion individuelle)
+// Tout ce fichier est désactivé, remplacé par le client global partagé (voir src/lib/supabaseClient.ts)
+/*
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '../integrations/supabase/types';
+import { ErrorHandler } from '../utils/errorHandler';
 
 // Configuration par défaut pour les clients Supabase, avec des options d'auth standard
 const defaultOptions = {
@@ -20,7 +23,7 @@ const defaultOptions = {
 export function createDynamicSupabaseClient(credentials: { supabaseUrl: string; supabaseAnonKey: string }) {
   // Vérifier que les credentials sont présents
   if (!credentials.supabaseUrl || !credentials.supabaseAnonKey) {
-    console.warn('Credentials Supabase incomplets ou manquants');
+    ErrorHandler.handleError('Credentials Supabase incomplets ou manquants', 'createDynamicSupabaseClient');
     return createEmptyClient();
   }
 
@@ -31,7 +34,7 @@ export function createDynamicSupabaseClient(credentials: { supabaseUrl: string; 
       defaultOptions
     );
   } catch (error) {
-    console.error('Erreur lors de la création du client Supabase:', error);
+    ErrorHandler.handleError(error, 'Erreur lors de la création du client Supabase');
     return createEmptyClient();
   }
 }
@@ -72,3 +75,4 @@ function createEmptyClient() {
     }
   });
 }
+*/

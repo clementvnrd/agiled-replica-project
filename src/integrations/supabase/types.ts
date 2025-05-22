@@ -170,27 +170,41 @@ export type Database = {
         }
         Relationships: []
       }
-      user_supabase_credentials: {
+      mcp_connections: {
         Row: {
-          clerk_user_id: string
-          created_at: string | null
-          supabase_anon_key: string
-          supabase_url: string
-        }
+          id: string;
+          name: string;
+          url: string;
+          status: string;
+          description?: string | null;
+          created_at: string;
+          user_id: string;
+        };
         Insert: {
-          clerk_user_id: string
-          created_at?: string | null
-          supabase_anon_key: string
-          supabase_url: string
-        }
+          id?: string;
+          name: string;
+          url: string;
+          status: string;
+          description?: string | null;
+          created_at?: string;
+          user_id: string;
+        };
         Update: {
-          clerk_user_id?: string
-          created_at?: string | null
-          supabase_anon_key?: string
-          supabase_url?: string
-        }
-        Relationships: []
-      }
+          id?: string;
+          name?: string;
+          url?: string;
+          status?: string;
+          description?: string | null;
+          created_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      },
+      // ---
+      // Les types relatifs à user_supabase_credentials sont désormais importés automatiquement
+      // depuis src/types/supabase.generated.ts (généré par Supabase CLI)
+      // Pour toute modification du schéma, régénérez ce fichier !
+      // ... existing code ...
     }
     Views: {
       [_ in never]: never

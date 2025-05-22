@@ -1,11 +1,11 @@
-
+// Migration : utilisation du client Supabase global (plus de logique multi-instance)
+import { supabase } from '@/lib/supabaseClient';
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useUser } from '@clerk/clerk-react';
-import { useDynamicSupabase } from '@/providers/DynamicSupabaseProvider';
 import MCPConnectionForm from './MCPConnectionForm';
 import MCPConnectionsList from './MCPConnectionsList';
 
@@ -20,7 +20,7 @@ interface MCPConnection {
 
 const MCPDashboard: React.FC = () => {
   const { user } = useUser();
-  const { dynamicSupabase } = useDynamicSupabase();
+  const dynamicSupabase = supabase;
   const [connections, setConnections] = useState<MCPConnection[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<string>("overview");

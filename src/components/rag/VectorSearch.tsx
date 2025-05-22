@@ -1,10 +1,10 @@
-
+// Migration : utilisation du client Supabase global (plus de logique multi-instance)
+import { supabase } from '@/lib/supabaseClient';
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Search, Loader2 } from 'lucide-react';
-import { useDynamicSupabase } from '@/providers/DynamicSupabaseProvider';
 import { useUser } from '@clerk/clerk-react';
 
 interface RagDocument {
@@ -18,7 +18,7 @@ interface RagDocument {
 
 const VectorSearch: React.FC = () => {
   const { user } = useUser();
-  const { dynamicSupabase } = useDynamicSupabase();
+  const dynamicSupabase = supabase;
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<RagDocument[]>([]);
   const [loading, setLoading] = useState(false);

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -39,7 +38,7 @@ const AgentManager = React.lazy(() => import('./pages/ai/AgentManager'));
 const MCPManager = React.lazy(() => import('./pages/settings/MCPManager'));
 const Profil = React.lazy(() => import('./pages/profil'));
 const SettingsPage = React.lazy(() => import('@/pages/settings/SettingsPage'));
-const SupabaseCredentialsForm = React.lazy(() => import('./components/SupabaseCredentialsForm'));
+//const SupabaseCredentialsForm = React.lazy(() => import('./components/SupabaseCredentialsForm'));"""
 const RagManagementPage = React.lazy(() => import('./pages/rag/RagManagementPage'));
 const SupabaseCredentialsPage = React.lazy(() => import('./pages/onboarding/SupabaseCredentialsPage'));
 
@@ -69,22 +68,22 @@ const App = () => (
             </SignedOut>
           } />
 
-          {/* Redirect to dashboard if signed in */}
+          {/* Redirection explicite de / vers /dashboard si connecté */}
           <Route path="/" element={
             <SignedIn>
               <Navigate to="/dashboard" replace />
             </SignedIn>
-          }/>
+          } />
 
           {/* Routes authentifiées */}
           <Route path="/" element={
             <SignedIn>
-              {/* Provide dynamic Supabase client to all authenticated routes */}
-              <DynamicSupabaseProvider>
+              {/* Désactivé : DynamicSupabaseProvider (logique multi-instance Supabase) */}
+              {/* <DynamicSupabaseProvider> */}
                 <OnboardingWrapper>
                   <MainLayout />
                 </OnboardingWrapper>
-              </DynamicSupabaseProvider>
+              {/* </DynamicSupabaseProvider> */}
             </SignedIn>
           }>
             <Route path="/dashboard" element={
@@ -212,11 +211,19 @@ const App = () => (
             <ResetPassword />
           } />
           
-          {/* Fallback */}
+          {/* Fallback pour utilisateurs connectés : toute route inconnue => page 404 */}
           <Route path="*" element={
-            <LazyLoad>
-              <NotFound />
-            </LazyLoad>
+            <SignedIn>
+              <LazyLoad>
+                <NotFound />
+              </LazyLoad>
+            </SignedIn>
+          } />
+          {/* Fallback pour non-connectés : redirection vers la landing page */}
+          <Route path="*" element={
+            <SignedOut>
+              <Navigate to="/" replace />
+            </SignedOut>
           } />
         </Routes>
       </BrowserRouter>
