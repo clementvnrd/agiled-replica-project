@@ -1,81 +1,218 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Settings, Users, Clock, Plug, Database, FileText, FolderOpen, Calendar } from 'lucide-react';
-import SidebarCategory from './navigation/SidebarCategory';
-import SidebarItem from './navigation/SidebarItem';
-import SidebarFooter from './navigation/SidebarFooter';
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import Logo from '@/components/Logo';
+import { 
+  Home,
+  Users, 
+  Calendar, 
+  DollarSign,
+  FileText,
+  Clock,
+  Settings,
+  UserCog,
+  Box,
+  FileBox,
+  Rocket,
+  BookOpen,
+  Activity,
+  User,
+  Bot,
+  Plug
+} from 'lucide-react';
 
-const Sidebar: React.FC = () => {
+interface NavItemProps {
+  to: string;
+  icon: React.ReactNode;
+  label: string;
+  expandable?: boolean;
+  active?: boolean;
+}
+
+const NavItem: React.FC<NavItemProps> = ({ to, icon, label, expandable = false, active = false }) => {
+  return (
+    <Link to={to} className={`nav-link ${active ? 'active' : ''}`}>
+      {icon}
+      <span>{label}</span>
+      {expandable && (
+        <span className="ml-auto">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M6 12L10 8L6 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </span>
+      )}
+    </Link>
+  );
+};
+
+const Sidebar = () => {
   const location = useLocation();
   const path = location.pathname;
+  const [categoryOpen, setCategoryOpen] = useState({
+    business: true,
+    personal: true,
+    ai: true
+  });
+
+  const toggleCategory = (category: keyof typeof categoryOpen) => {
+    setCategoryOpen(prev => ({
+      ...prev,
+      [category]: !prev[category]
+    }));
+  };
 
   return (
-    <div className="w-64 h-screen bg-white border-r border-agiled-lightBorder flex flex-col">
-      <div className="flex items-center justify-center h-16 border-b border-agiled-lightBorder">
-        <img src="/logo.svg" alt="Agiled Logo" className="h-8" />
+    <aside className="w-64 h-screen bg-agiled-sidebar border-r border-agiled-lightBorder flex flex-col">
+      <div className="p-4 border-b border-agiled-lightBorder">
+        <Logo />
       </div>
       
-      <div className="px-4 py-2 border-b border-agiled-lightBorder">
-        <div className="flex items-center space-x-3">
-          <Avatar className="h-9 w-9">
-            <AvatarImage src="https://github.com/shadcn.png" alt="Your Avatar" />
-            <AvatarFallback>CN</AvatarFallback>
-          </Avatar>
-          <div>
-            <p className="text-sm font-medium">John Doe</p>
-            <p className="text-xs text-agiled-lightText">john.doe@example.com</p>
+      <div className="flex-1 overflow-y-auto py-4">
+        <div className="px-3 sidebar-nav-group">
+          <NavItem 
+            to="/" 
+            icon={<Home size={20} />} 
+            label="Tableau de bord"
+            active={path === '/'} 
+          />
+        </div>
+        
+        <div className="py-2">
+          <div 
+            className="flex items-center px-4 py-2 text-sm font-medium cursor-pointer"
+            onClick={() => toggleCategory('business')}
+          >
+            <span className="mr-2">{categoryOpen.business ? '▼' : '►'}</span>
+            <span>Business</span>
           </div>
+          
+          {categoryOpen.business && (
+            <div className="pl-3">
+              <div className="px-3 sidebar-nav-group">
+                <NavItem 
+                  to="/crm" 
+                  icon={<Users size={20} />} 
+                  label="CRM" 
+                  expandable
+                  active={path.startsWith('/crm')}
+                />
+              </div>
+              
+              <div className="px-3 sidebar-nav-group">
+                <NavItem 
+                  to="/productivity" 
+                  icon={<Calendar size={20} />} 
+                  label="Productivity" 
+                  expandable
+                  active={path.startsWith('/productivity')}
+                />
+              </div>
+              
+              <div className="px-3 sidebar-nav-group">
+                <NavItem 
+                  to="/finance" 
+                  icon={<DollarSign size={20} />} 
+                  label="Finance" 
+                  expandable
+                  active={path.startsWith('/finance')}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+        
+        <div className="py-2">
+          <div 
+            className="flex items-center px-4 py-2 text-sm font-medium cursor-pointer"
+            onClick={() => toggleCategory('personal')}
+          >
+            <span className="mr-2">{categoryOpen.personal ? '▼' : '►'}</span>
+            <span>Personnel</span>
+          </div>
+          
+          {categoryOpen.personal && (
+            <div className="pl-3">
+              <div className="px-3 sidebar-nav-group">
+                <NavItem 
+                  to="/personal" 
+                  icon={<User size={20} />} 
+                  label="Vue générale" 
+                  active={path === '/personal'}
+                />
+              </div>
+              
+              <div className="px-3 sidebar-nav-group">
+                <NavItem 
+                  to="/studies" 
+                  icon={<BookOpen size={20} />} 
+                  label="Études" 
+                  expandable
+                  active={path.startsWith('/studies')}
+                />
+              </div>
+              
+              <div className="px-3 sidebar-nav-group">
+                <NavItem 
+                  to="/fitness" 
+                  icon={<Activity size={20} />} 
+                  label="Fitness" 
+                  expandable
+                  active={path.startsWith('/fitness')}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+        
+        <div className="py-2">
+          <div 
+            className="flex items-center px-4 py-2 text-sm font-medium cursor-pointer"
+            onClick={() => toggleCategory('ai')}
+          >
+            <span className="mr-2">{categoryOpen.ai ? '▼' : '►'}</span>
+            <span>Intelligence Artificielle</span>
+          </div>
+          
+          {categoryOpen.ai && (
+            <div className="pl-3">
+              <div className="px-3 sidebar-nav-group">
+                <NavItem 
+                  to="/agent" 
+                  icon={<Bot size={20} />} 
+                  label="Agent Manager" 
+                  active={path.startsWith('/agent')}
+                />
+              </div>
+              
+              <div className="px-3 sidebar-nav-group">
+                <NavItem 
+                  to="/mcp" 
+                  icon={<Plug size={20} />} 
+                  label="Connecteurs MCP" 
+                  active={path.startsWith('/mcp')}
+                />
+              </div>
+            </div>
+          )}
         </div>
       </div>
       
-      <nav className="flex-1 px-3 py-4">
-        <SidebarItem 
-          to="/dashboard" 
-          icon={<Home size={20} />} 
-          label="Dashboard"
-          active={path === '/dashboard'}
-        />
-        
-        <SidebarCategory title="Business">
-          <SidebarItem 
-            to="/projects" 
-            icon={<FolderOpen size={20} />} 
-            label="Projets"
-            active={path.startsWith('/projects')}
+      <div className="mt-auto">
+        <div className="px-4 py-3 bg-blue-50 border-t border-agiled-lightBorder">
+          <div className="text-sm">
+            <p className="text-center mb-1">Intégrations: Strava, OpenRouter</p>
+            <button className="btn-primary w-full">Connecter + d'outils</button>
+          </div>
+        </div>
+        <div className="p-3 border-t border-agiled-lightBorder">
+          <NavItem 
+            to="/settings" 
+            icon={<Settings size={20} />} 
+            label="Paramètres"
+            active={path.startsWith('/settings')}
           />
-          <SidebarItem 
-            to="/calendar" 
-            icon={<Calendar size={20} />} 
-            label="Calendrier"
-            active={path.startsWith('/calendar')}
-          />
-          <SidebarItem 
-            to="/customers" 
-            icon={<Users size={20} />} 
-            label="Clients"
-            active={path.startsWith('/customers')}
-          />
-          <SidebarItem 
-            to="/integrations" 
-            icon={<Plug size={20} />} 
-            label="Intégrations"
-            active={path.startsWith('/integrations')}
-          />
-        </SidebarCategory>
-
-        <SidebarCategory title="Système RAG">
-          <SidebarItem 
-            to="/rag" 
-            icon={<Database size={20} />} 
-            label="Documents RAG"
-            active={path.startsWith('/rag')}
-          />
-        </SidebarCategory>
-      </nav>
-
-      <SidebarFooter />
-    </div>
+        </div>
+      </div>
+    </aside>
   );
 };
 
