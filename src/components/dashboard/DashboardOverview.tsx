@@ -78,7 +78,7 @@ const DashboardOverview: React.FC = () => {
             label="Capacité utilisée"
             value={15}
             max={100}
-            color="info"
+            color="warning"
             className="mt-3"
           />
         </EnhancedCard>

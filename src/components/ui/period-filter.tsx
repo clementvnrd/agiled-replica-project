@@ -3,16 +3,16 @@ import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-export type Period = "7d" | "30d" | "3m" | "1y" | "all";
+export type PeriodType = "7d" | "30d" | "3m" | "1y" | "all";
 
 interface PeriodOption {
-  value: Period;
+  value: PeriodType;
   label: string;
 }
 
 interface PeriodFilterProps {
-  value: Period;
-  onChange: (period: Period) => void;
+  value: PeriodType;
+  onChange: (period: PeriodType) => void;
   className?: string;
 }
 
@@ -46,4 +46,4 @@ const PeriodFilter: React.FC<PeriodFilterProps> = ({
   );
 };
 
-export { PeriodFilter, type Period };
+export { PeriodFilter, type PeriodType };
