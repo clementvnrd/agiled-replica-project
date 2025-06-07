@@ -1,222 +1,87 @@
-
 import React from 'react';
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { SignedIn, SignedOut } from '@clerk/clerk-react';
-import { LazyLoad } from '@/utils/lazyImport.tsx';
-import MainLayout from "./layouts/MainLayout";
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { ClerkProvider, SignedIn, SignedOut } from '@clerk/clerk-react';
+import { ThemeProvider } from "@/components/theme-provider"
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 
-// Landing Page
-const LandingPage = React.lazy(() => import('./pages/LandingPage'));
-
-// Auth Components
+import LandingPage from './pages/LandingPage';
+import DashboardPage from './pages/DashboardPage';
+import NotFound from './pages/NotFound';
 import { LoginPage, SignupPage, VerifyEmail, ResetPassword, RedirectIfAuthenticated } from './components/routes/AuthRoutes';
 import { ProtectedRoute } from './components/routes/ProtectedRoute';
+import MainLayout from './components/MainLayout';
+import RagDocumentEditor from './components/rag/RagDocumentEditor';
+import VectorSearch from './components/rag/VectorSearch';
+import SettingsPage from './pages/SettingsPage';
 import OnboardingWrapper from './components/routes/OnboardingWrapper';
+import Sidebar from './components/Sidebar';
+import SidebarNavGroup from './components/navigation/SidebarNavGroup';
+import CalendarPage from './pages/calendar/CalendarPage';
+import ProjectsPage from './pages/projects/ProjectsPage';
 
-// Lazy loading pour les pages
-const DashboardPage = React.lazy(() => import('./pages/DashboardPage'));
-const NotFound = React.lazy(() => import('./pages/NotFound'));
+const queryClient = new QueryClient()
 
-// Business modules - lazy loaded
-const CRMDashboard = React.lazy(() => import('./pages/business/crm/CRMDashboard'));
-const ProductivityDashboard = React.lazy(() => import('./pages/business/productivity/ProductivityDashboard'));
-const FinanceDashboard = React.lazy(() => import('./pages/business/finance/FinanceDashboard'));
+// Composant pour afficher un message aux utilisateurs non connectés
+const NotSignedIn = () => {
+  return (
+    <div className="flex justify-center items-center min-h-screen bg-gray-50">
+      <div className="text-center">
+        <h1 className="text-3xl font-bold text-gray-800 mb-4">Bienvenue !</h1>
+        <p className="text-gray-600">Veuillez vous connecter pour accéder à votre espace personnel.</p>
+      </div>
+    </div>
+  );
+};
 
-// Personal modules - lazy loaded
-const PersonalDashboard = React.lazy(() => import('./pages/personal/PersonalDashboard'));
-const StudiesDashboard = React.lazy(() => import('./pages/personal/studies/StudiesDashboard'));
-const FitnessDashboard = React.lazy(() => import('./pages/personal/fitness/FitnessDashboard'));
+// Composant pour rediriger les utilisateurs déjà authentifiés
+const AlreadySignedIn = () => {
+  return (
+    <div className="flex justify-center items-center min-h-screen bg-gray-50">
+      <div className="text-center">
+        <h1 className="text-3xl font-bold text-gray-800 mb-4">Vous êtes déjà connecté !</h1>
+        <p className="text-gray-600">Redirection vers votre tableau de bord...</p>
+      </div>
+    </div>
+  );
+};
 
-// Agent / AI interface - lazy loaded
-const AgentManager = React.lazy(() => import('./pages/ai/AgentManager'));
-
-// Settings & Configuration - lazy loaded
-const MCPManager = React.lazy(() => import('./pages/settings/MCPManager'));
-const Profil = React.lazy(() => import('./pages/profil'));
-const SettingsPage = React.lazy(() => import('@/pages/settings/SettingsPage'));
-const RagManagementPage = React.lazy(() => import('./pages/rag/RagManagementPage'));
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      refetchOnWindowFocus: false,
-      retry: 1,
-      staleTime: 5 * 60 * 1000, // 5 minutes
-    },
-  },
-});
-
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          {/* Landing page accessible publiquement */}
-          <Route path="/" element={
-            <SignedOut>
-              <LazyLoad>
-                <LandingPage />
-              </LazyLoad>
-            </SignedOut>
-          } />
-
-          {/* Redirection explicite de / vers /dashboard si connecté */}
-          <Route path="/" element={
-            <SignedIn>
-              <Navigate to="/dashboard" replace />
-            </SignedIn>
-          } />
-
-          {/* Routes authentifiées - pas d'onboarding Supabase requis */}
-          <Route path="/" element={
-            <SignedIn>
-              <OnboardingWrapper>
-                <MainLayout />
-              </OnboardingWrapper>
-            </SignedIn>
-          }>
-            <Route path="/dashboard" element={
-              <ProtectedRoute>
-                <LazyLoad>
-                  <DashboardPage />
-                </LazyLoad>
-              </ProtectedRoute>
-            } />
-            
-            {/* Business Routes */}
-            <Route path="/crm" element={
-              <ProtectedRoute>
-                <LazyLoad>
-                  <CRMDashboard />
-                </LazyLoad>
-              </ProtectedRoute>
-            } />
-            <Route path="/productivity" element={
-              <ProtectedRoute>
-                <LazyLoad>
-                  <ProductivityDashboard />
-                </LazyLoad>
-              </ProtectedRoute>
-            } />
-            <Route path="/finance" element={
-              <ProtectedRoute>
-                <LazyLoad>
-                  <FinanceDashboard />
-                </LazyLoad>
-              </ProtectedRoute>
-            } />
-            
-            {/* Personal Routes */}
-            <Route path="/personal" element={
-              <ProtectedRoute>
-                <LazyLoad>
-                  <PersonalDashboard />
-                </LazyLoad>
-              </ProtectedRoute>
-            } />
-            <Route path="/studies" element={
-              <ProtectedRoute>
-                <LazyLoad>
-                  <StudiesDashboard />
-                </LazyLoad>
-              </ProtectedRoute>
-            } />
-            <Route path="/fitness" element={
-              <ProtectedRoute>
-                <LazyLoad>
-                  <FitnessDashboard />
-                </LazyLoad>
-              </ProtectedRoute>
-            } />
-            
-            {/* AI Routes */}
-            <Route path="/agent" element={
-              <ProtectedRoute>
-                <LazyLoad>
-                  <AgentManager />
-                </LazyLoad>
-              </ProtectedRoute>
-            } />
-            
-            {/* RAG System Routes */}
-            <Route path="/rag" element={
-              <ProtectedRoute>
-                <LazyLoad>
-                  <RagManagementPage />
-                </LazyLoad>
-              </ProtectedRoute>
-            } />
-            
-            {/* Settings Routes */}
-            <Route path="/mcp" element={
-              <ProtectedRoute>
-                <LazyLoad>
-                  <MCPManager />
-                </LazyLoad>
-              </ProtectedRoute>
-            } />
-            <Route path="/settings" element={
-              <ProtectedRoute>
-                <LazyLoad>
-                  <SettingsPage />
-                </LazyLoad>
-              </ProtectedRoute>
-            } />
-            
-            {/* Profil Route */}
-            <Route path="/profil" element={
-              <ProtectedRoute>
-                <LazyLoad>
-                  <Profil />
-                </LazyLoad>
-              </ProtectedRoute>
-            } />
-          </Route>
-          
-          {/* Routes d'authentification */}
-          <Route path="/login" element={
-            <RedirectIfAuthenticated>
-              <LoginPage />
-            </RedirectIfAuthenticated>
-          } />
-          <Route path="/signup" element={
-            <RedirectIfAuthenticated>
-              <SignupPage />
-            </RedirectIfAuthenticated>
-          } />
-          <Route path="/verify-email" element={
-            <SignedIn>
-              <VerifyEmail />
-            </SignedIn>
-          } />
-          <Route path="/reset-password" element={
-            <ResetPassword />
-          } />
-          
-          {/* Fallback pour utilisateurs connectés : toute route inconnue => page 404 */}
-          <Route path="*" element={
-            <SignedIn>
-              <LazyLoad>
-                <NotFound />
-              </LazyLoad>
-            </SignedIn>
-          } />
-          {/* Fallback pour non-connectés : redirection vers la landing page */}
-          <Route path="*" element={
-            <SignedOut>
-              <Navigate to="/" replace />
-            </SignedOut>
-          } />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+// Inside the Routes section, add the new routes:
+function App() {
+  return (
+    <ClerkProvider 
+      publishableKey={import.meta.env.VITE_CLERK_PUBLISHABLE_KEY}
+      afterSignOutUrl="/login"
+    >
+      <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
+        <QueryClientProvider client={queryClient}>
+          <Router>
+            <div className="min-h-screen bg-background">
+              <Routes>
+                {/* Public routes */}
+                <Route path="/" element={<LandingPage />} />
+                
+                {/* Auth routes */}
+                <Route path="/login" element={<RedirectIfAuthenticated><LoginPage /></RedirectIfAuthenticated>} />
+                <Route path="/signup" element={<RedirectIfAuthenticated><SignupPage /></RedirectIfAuthenticated>} />
+                <Route path="/verify-email" element={<VerifyEmail />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
+                
+                {/* Protected routes */}
+                <Route path="/dashboard" element={<ProtectedRoute><MainLayout><DashboardPage /></MainLayout></ProtectedRoute>} />
+                <Route path="/calendar" element={<ProtectedRoute><MainLayout><CalendarPage /></MainLayout></ProtectedRoute>} />
+                <Route path="/projects" element={<ProtectedRoute><MainLayout><ProjectsPage /></MainLayout></ProtectedRoute>} />
+                <Route path="/settings" element={<ProtectedRoute><MainLayout><SettingsPage /></MainLayout></ProtectedRoute>} />
+                <Route path="/rag" element={<ProtectedRoute><MainLayout><RagDocumentEditor /></MainLayout></ProtectedRoute>} />
+                <Route path="/search" element={<ProtectedRoute><MainLayout><VectorSearch /></MainLayout></ProtectedRoute>} />
+                
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </div>
+          </Router>
+        </QueryClientProvider>
+      </ThemeProvider>
+    </ClerkProvider>
+  );
+}
 
 export default App;

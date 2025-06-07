@@ -1,81 +1,91 @@
 
-import * as React from "react";
-import { Search } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { Input } from "@/components/ui/input";
+import React, { useState } from 'react';
+import { Search, X } from 'lucide-react';
+import { Input } from './input';
+import { Button } from './button';
+import { cn } from '@/lib/utils';
 
-export interface SearchResult {
+interface SearchResult {
   id: string;
   title: string;
-  category: string;
+  type: string;
   url: string;
 }
 
-interface SearchProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onSelect'> {
+interface SearchProps {
   placeholder?: string;
-  onSelect?: (result: SearchResult) => void;
+  className?: string;
   results?: SearchResult[];
-  isLoading?: boolean;
+  onSearch?: (query: string) => void;
+  onSelect?: (result: SearchResult) => void;
 }
 
-const SearchComponent = React.forwardRef<HTMLDivElement, SearchProps>(
-  ({ className, placeholder = "Rechercher...", onSelect, results = [], isLoading = false, ...props }, ref) => {
-    const [query, setQuery] = React.useState("");
-    const [showResults, setShowResults] = React.useState(false);
+export const GlobalSearch: React.FC<SearchProps> = ({
+  placeholder = "Rechercher...",
+  className,
+  results = [],
+  onSearch,
+  onSelect
+}) => {
+  const [query, setQuery] = useState('');
+  const [isOpen, setIsOpen] = useState(false);
 
-    const filteredResults = results.filter(result =>
-      result.title.toLowerCase().includes(query.toLowerCase()) ||
-      result.category.toLowerCase().includes(query.toLowerCase())
-    );
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setQuery(value);
+    setIsOpen(value.length > 0);
+    onSearch?.(value);
+  };
 
-    const handleSelect = (result: SearchResult) => {
-      onSelect?.(result);
-      setShowResults(false);
-      setQuery("");
-    };
+  const handleSelect = (result: SearchResult) => {
+    onSelect?.(result);
+    setQuery('');
+    setIsOpen(false);
+  };
 
-    return (
-      <div ref={ref} className={cn("relative", className)} {...props}>
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-          <Input
-            placeholder={placeholder}
-            value={query}
-            onChange={(e) => {
-              setQuery(e.target.value);
-              setShowResults(e.target.value.length > 0);
+  return (
+    <div className={cn("relative w-full max-w-md", className)}>
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          type="text"
+          placeholder={placeholder}
+          value={query}
+          onChange={handleInputChange}
+          className="pl-10 pr-10"
+          onFocus={() => setIsOpen(query.length > 0)}
+        />
+        {query && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
+            onClick={() => {
+              setQuery('');
+              setIsOpen(false);
             }}
-            onFocus={() => query.length > 0 && setShowResults(true)}
-            onBlur={() => setTimeout(() => setShowResults(false), 200)}
-            className="pl-10"
-          />
-        </div>
-        
-        {showResults && (
-          <div className="absolute top-full left-0 right-0 mt-1 bg-background border rounded-md shadow-lg z-50 max-h-64 overflow-y-auto">
-            {isLoading ? (
-              <div className="p-2 text-sm text-muted-foreground">Recherche...</div>
-            ) : filteredResults.length > 0 ? (
-              filteredResults.map((result) => (
-                <button
-                  key={result.id}
-                  className="w-full text-left p-2 hover:bg-accent hover:text-accent-foreground border-b last:border-b-0"
-                  onClick={() => handleSelect(result)}
-                >
-                  <div className="font-medium">{result.title}</div>
-                  <div className="text-xs text-muted-foreground">{result.category}</div>
-                </button>
-              ))
-            ) : query.length > 0 ? (
-              <div className="p-2 text-sm text-muted-foreground">Aucun résultat trouvé</div>
-            ) : null}
-          </div>
+          >
+            <X className="h-3 w-3" />
+          </Button>
         )}
       </div>
-    );
-  }
-);
 
-SearchComponent.displayName = "Search";
+      {isOpen && results.length > 0 && (
+        <div className="absolute top-full left-0 right-0 mt-1 bg-background border rounded-md shadow-lg z-50 max-h-64 overflow-y-auto">
+          {results.map((result) => (
+            <div
+              key={result.id}
+              className="px-3 py-2 hover:bg-muted cursor-pointer border-b last:border-b-0"
+              onClick={() => handleSelect(result)}
+            >
+              <div className="font-medium text-sm">{result.title}</div>
+              <div className="text-xs text-muted-foreground">{result.type}</div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
-export { SearchComponent as Search };
+export { type SearchResult };
