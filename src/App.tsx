@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -7,7 +8,6 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { SignedIn, SignedOut } from '@clerk/clerk-react';
 import { LazyLoad } from '@/utils/lazyImport.tsx';
 import MainLayout from "./layouts/MainLayout";
-import { DynamicSupabaseProvider } from '@/providers/DynamicSupabaseProvider';
 
 // Landing Page
 const LandingPage = React.lazy(() => import('./pages/LandingPage'));
@@ -38,9 +38,7 @@ const AgentManager = React.lazy(() => import('./pages/ai/AgentManager'));
 const MCPManager = React.lazy(() => import('./pages/settings/MCPManager'));
 const Profil = React.lazy(() => import('./pages/profil'));
 const SettingsPage = React.lazy(() => import('@/pages/settings/SettingsPage'));
-//const SupabaseCredentialsForm = React.lazy(() => import('./components/SupabaseCredentialsForm'));"""
 const RagManagementPage = React.lazy(() => import('./pages/rag/RagManagementPage'));
-const SupabaseCredentialsPage = React.lazy(() => import('./pages/onboarding/SupabaseCredentialsPage'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -75,15 +73,12 @@ const App = () => (
             </SignedIn>
           } />
 
-          {/* Routes authentifiées */}
+          {/* Routes authentifiées - pas d'onboarding Supabase requis */}
           <Route path="/" element={
             <SignedIn>
-              {/* Désactivé : DynamicSupabaseProvider (logique multi-instance Supabase) */}
-              {/* <DynamicSupabaseProvider> */}
-                <OnboardingWrapper>
-                  <MainLayout />
-                </OnboardingWrapper>
-              {/* </DynamicSupabaseProvider> */}
+              <OnboardingWrapper>
+                <MainLayout />
+              </OnboardingWrapper>
             </SignedIn>
           }>
             <Route path="/dashboard" element={
@@ -179,13 +174,6 @@ const App = () => (
               <ProtectedRoute>
                 <LazyLoad>
                   <Profil />
-                </LazyLoad>
-              </ProtectedRoute>
-            } />
-            <Route path="/onboarding/supabase" element={
-              <ProtectedRoute>
-                <LazyLoad>
-                  <SupabaseCredentialsPage />
                 </LazyLoad>
               </ProtectedRoute>
             } />

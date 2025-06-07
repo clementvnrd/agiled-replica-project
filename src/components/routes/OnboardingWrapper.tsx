@@ -1,22 +1,29 @@
-import React, { useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+
+import React from 'react';
 import { useUser } from '@clerk/clerk-react';
-// import { useUserSupabaseCredentials } from '@/hooks/useUserSupabaseCredentials'; // Désactivé : logique multi-instance Supabase supprimée
-import AuthLayout from '../auth/AuthLayout';
-import { LoadingScreen } from './ProtectedRoute';
-import { toast } from "sonner";
-import { ErrorHandler } from '@/utils/errorHandler';
 
-// Désactivé : toute la logique d'onboarding Supabase individuel (multi-instance)
-// Ce composant ne fait plus que vérifier l'utilisateur Clerk et rendre les enfants
+// Wrapper simplifié qui ne fait plus d'onboarding Supabase
+// Les utilisateurs connectés via Clerk arrivent directement sur le dashboard
 export default function OnboardingWrapper({ children }: { children: React.ReactNode }) {
-  const { user } = useUser();
+  const { user, isLoaded } = useUser();
 
-  // Si pas d'utilisateur Clerk, ne rien afficher
+  // Si Clerk n'a pas encore chargé, on affiche un loading
+  if (!isLoaded) {
+    return (
+      <div className="flex justify-center items-center min-h-screen bg-gray-50">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-t-blue-500 border-r-transparent border-b-blue-500 border-l-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Chargement en cours...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Si pas d'utilisateur Clerk, ne rien afficher (sera géré par ProtectedRoute)
   if (!user) {
     return null;
   }
 
-  // Onboarding Supabase désactivé : on rend toujours les enfants
+  // Utilisateur connecté : on rend directement les enfants (dashboard)
   return <>{children}</>;
 }
