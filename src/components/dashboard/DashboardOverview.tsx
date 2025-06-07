@@ -1,65 +1,98 @@
 
-import React from 'react';
-import { Users, Clock } from 'lucide-react';
-import EmptyCard from '@/components/EmptyCard';
+import React, { useState } from 'react';
+import { Users, Clock, Plug, Database } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { EnhancedCard } from '@/components/ui/enhanced-card';
+import { ProgressIndicator } from '@/components/ui/progress-indicator';
+import InteractiveChart from '@/components/enhanced-dashboard/InteractiveChart';
+import EnhancedActivityFeed from '@/components/enhanced-dashboard/EnhancedActivityFeed';
+
+// Mock data for charts
+const taskData = [
+  { name: 'Lun', value: 12 },
+  { name: 'Mar', value: 19 },
+  { name: 'Mer', value: 8 },
+  { name: 'Jeu', value: 15 },
+  { name: 'Ven', value: 22 },
+  { name: 'Sam', value: 5 },
+  { name: 'Dim', value: 3 },
+];
 
 const DashboardOverview: React.FC = () => {
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-6">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Tâches en attente</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">0</div>
-            <p className="text-xs text-muted-foreground">Business et personnel</p>
-          </CardContent>
-        </Card>
+        <EnhancedCard
+          title="Tâches en attente"
+          subtitle="Business et personnel"
+          icon={<Clock className="h-5 w-5" />}
+          hover
+          interactive
+        >
+          <div className="text-2xl font-bold">0</div>
+          <ProgressIndicator
+            label="Progression hebdomadaire"
+            value={7}
+            max={10}
+            color="success"
+            className="mt-3"
+          />
+        </EnhancedCard>
         
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">MCPs connectés</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">0</div>
-            <p className="text-xs text-muted-foreground">Connectez vos outils préférés</p>
-          </CardContent>
-        </Card>
+        <EnhancedCard
+          title="MCPs connectés"
+          subtitle="Connectez vos outils préférés"
+          icon={<Plug className="h-5 w-5" />}
+          hover
+          interactive
+        >
+          <div className="text-2xl font-bold">2</div>
+          <div className="flex items-center gap-2 mt-3">
+            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+            <span className="text-sm text-muted-foreground">OpenRouter, Strava</span>
+          </div>
+        </EnhancedCard>
         
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Évènements aujourd'hui</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">0</div>
-            <p className="text-xs text-muted-foreground">Réunions et rendez-vous</p>
-          </CardContent>
-        </Card>
+        <EnhancedCard
+          title="Évènements aujourd'hui"
+          subtitle="Réunions et rendez-vous"
+          icon={<Users className="h-5 w-5" />}
+          hover
+          interactive
+        >
+          <div className="text-2xl font-bold">3</div>
+          <div className="text-sm text-muted-foreground mt-1">
+            Prochaine réunion dans 2h
+          </div>
+        </EnhancedCard>
         
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Documents RAG</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">0</div>
-            <p className="text-xs text-muted-foreground">Base de connaissances</p>
-          </CardContent>
-        </Card>
+        <EnhancedCard
+          title="Documents RAG"
+          subtitle="Base de connaissances"
+          icon={<Database className="h-5 w-5" />}
+          hover
+          interactive
+        >
+          <div className="text-2xl font-bold">15</div>
+          <ProgressIndicator
+            label="Capacité utilisée"
+            value={15}
+            max={100}
+            color="info"
+            className="mt-3"
+          />
+        </EnhancedCard>
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <EmptyCard
-          title="Agent Manager"
-          message="Connectez votre Agent IA pour gérer vos tâches et informations."
-          icon={<Users size={24} />}
+        <InteractiveChart
+          title="Activité des tâches"
+          data={taskData}
+          dataKey="value"
+          color="#3b82f6"
+          category="Productivité"
         />
-        <EmptyCard
-          title="Prochains évènements"
-          message="Synchronisez votre calendrier pour voir vos évènements."
-          icon={<Clock size={24} />}
-        />
+        <EnhancedActivityFeed />
       </div>
     </>
   );

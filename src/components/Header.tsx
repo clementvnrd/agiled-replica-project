@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { 
   Search, 
@@ -16,22 +17,60 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useNavigate } from 'react-router-dom';
 import { useUser, SignOutButton } from '@clerk/clerk-react';
+import { GlobalSearch, SearchResult } from '@/components/ui/search';
+import { NotificationsCenter } from '@/components/ui/notifications-center';
+import { useNotifications } from '@/hooks/use-notifications';
 
 const Header: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useUser();
+  const { notifications, markAsRead, markAllAsRead, dismiss } = useNotifications();
+
+  const handleSearch = async (query: string): Promise<SearchResult[]> => {
+    // Mock search - replace with actual search implementation
+    const mockResults: SearchResult[] = [
+      {
+        id: '1',
+        title: 'Dashboard',
+        description: 'Vue d\'ensemble de votre plateforme',
+        category: 'Navigation',
+        url: '/dashboard'
+      },
+      {
+        id: '2',
+        title: 'Agent Manager',
+        description: 'Votre assistant IA personnel',
+        category: 'IA',
+        url: '/agent'
+      },
+      {
+        id: '3',
+        title: 'CRM',
+        description: 'Gestion de la relation client',
+        category: 'Business',
+        url: '/crm'
+      }
+    ].filter(result => 
+      result.title.toLowerCase().includes(query.toLowerCase()) ||
+      result.description.toLowerCase().includes(query.toLowerCase())
+    );
+
+    return mockResults;
+  };
+
+  const handleSearchSelect = (result: SearchResult) => {
+    navigate(result.url);
+  };
 
   return (
     <header className="h-16 bg-white border-b border-agiled-lightBorder flex items-center px-4">
       <div className="flex-1 flex items-center">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-agiled-lightText" size={18} />
-          <input
-            type="text"
-            placeholder="Chercher..."
-            className="pl-10 pr-4 py-2 rounded-md border border-agiled-lightBorder w-64 focus:outline-none focus:ring-2 focus:ring-agiled-primary/20"
-          />
-        </div>
+        <GlobalSearch
+          placeholder="Chercher dans l'application..."
+          onSearch={handleSearch}
+          onSelect={handleSearchSelect}
+          className="w-64"
+        />
       </div>
       
       <div className="flex items-center space-x-4">
@@ -43,10 +82,12 @@ const Header: React.FC = () => {
           <Moon size={20} />
         </Button>
         
-        <Button variant="ghost" size="icon" className="text-agiled-lightText relative">
-          <Bell size={20} />
-          <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-        </Button>
+        <NotificationsCenter
+          notifications={notifications}
+          onMarkAsRead={markAsRead}
+          onMarkAllAsRead={markAllAsRead}
+          onDismiss={dismiss}
+        />
         
         <div className="flex items-center gap-2">
           <Button className="bg-agiled-primary hover:bg-agiled-primary/90">
