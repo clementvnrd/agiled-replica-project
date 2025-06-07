@@ -1,3 +1,4 @@
+
 export { default as SidebarContent } from './SidebarContent';
 export { default as SidebarFooter } from './SidebarFooter';
 export { default as SidebarGroup } from './SidebarGroup';
@@ -21,5 +22,4 @@ export { default as SidebarSeparator } from './SidebarSeparator';
 export { default as SidebarTrigger } from './SidebarTrigger';
 export * from './SidebarProvider';
 export * from './Sidebar';
-export * from './useSidebar';
 export * from './constants';

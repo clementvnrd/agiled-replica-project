@@ -1,7 +1,9 @@
 
 import React from 'react';
 import { AlertTriangle, Check } from 'lucide-react';
-import { ConnectionTestStatus } from '@/services/supabaseConnectionService';
+
+// Type local puisque le service supabaseConnectionService est désactivé
+type ConnectionTestStatus = 'idle' | 'testing' | 'success' | 'error';
 
 interface SupabaseConnectionTestProps {
   status: ConnectionTestStatus;

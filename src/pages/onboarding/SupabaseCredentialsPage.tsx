@@ -21,7 +21,8 @@ const SupabaseCredentialsPage: React.FC = () => {
     console.log("Tentative d'enregistrement des credentials pour userId:", user?.id, creds);
     
     try {
-      const success = await saveCredentials(creds);
+      // La fonction saveCredentials ne prend plus d'arguments maintenant
+      const success = await saveCredentials();
       
       if (success) {
         toast.success('Connexion à Supabase établie avec succès', {
