@@ -1,8 +1,7 @@
-
 import React, { useState } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, LineChart, Line } from 'recharts';
 import { EnhancedCard } from '@/components/ui/enhanced-card';
-import { PeriodFilter, Period } from '@/components/ui/period-filter';
+import { PeriodFilter, PeriodType } from '@/components/ui/period-filter';
 import { Button } from '@/components/ui/button';
 import { BarChart3, TrendingUp, PieChart } from 'lucide-react';
 
@@ -21,7 +20,7 @@ const InteractiveChart: React.FC<InteractiveChartProps> = ({
   color = "#2563eb",
   category
 }) => {
-  const [period, setPeriod] = useState<Period>("30d");
+  const [period, setPeriod] = useState<PeriodType>("30d");
   const [chartType, setChartType] = useState<"area" | "bar" | "line">("area");
 
   const renderChart = () => {

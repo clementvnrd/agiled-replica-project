@@ -1,4 +1,3 @@
-
 import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -46,4 +45,4 @@ const PeriodFilter: React.FC<PeriodFilterProps> = ({
   );
 };
 
-export { PeriodFilter, type PeriodType };
+export { PeriodFilter };

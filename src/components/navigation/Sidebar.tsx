@@ -7,11 +7,12 @@ import {
 import { Menu } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Book, Calendar, Settings, Users, FileText, Database, Bot, Plug } from 'lucide-react';
+import { Home, Book, Calendar, Settings, Users, FileText, Database, Bot, Plug, Sparkles } from 'lucide-react';
 import { SidebarNavItem, SidebarNavGroup, ragNavGroup } from './SidebarNavGroup';
 import { StatusIndicator } from '@/components/ui/status-indicator';
 import SidebarMenuBadge from '@/components/ui/sidebar/SidebarMenuBadge';
 import { cn } from '@/lib/utils';
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 const navItems = [
   {
@@ -138,7 +139,7 @@ const Sidebar: React.FC = () => {
   const location = useLocation();
 
   return (
-    <div className="border-r flex-shrink-0 w-64 hidden md:block">
+    <div className="border-r flex-shrink-0 w-64 hidden md:block h-screen bg-white flex flex-col">
       <div className="p-6">
         <Link to="/dashboard" className="flex items-center gap-2 font-bold">
           <img src="/logo.png" alt="Agiled Logo" className="w-8 h-8" />
@@ -146,7 +147,7 @@ const Sidebar: React.FC = () => {
         </Link>
       </div>
       <Separator />
-      <nav className="p-6 space-y-4">
+      <nav className="p-6 space-y-4 flex-1">
         {navItems.map((item) => (
           <EnhancedSidebarNavItem
             key={item.to}
@@ -157,6 +158,13 @@ const Sidebar: React.FC = () => {
             status={item.status}
           />
         ))}
+        <EnhancedSidebarNavItem
+          key="/llm"
+          icon={<Sparkles size={16} />}
+          label="LLM"
+          to="/llm"
+          isActive={location.pathname.startsWith('/llm')}
+        />
         <SidebarNavGroup
           title="Business"
           icon={<Book size={16} />}
@@ -198,6 +206,15 @@ const Sidebar: React.FC = () => {
           }))}
         />
       </nav>
+      {/* Footer custom (intégrations, bouton, paramètres) */}
+      <div className="mt-auto">
+        <div className="px-4 py-3 bg-blue-50 border-t border-agiled-lightBorder">
+          <div className="text-sm">
+            <p className="text-center mb-1">Intégrations: Strava, OpenRouter</p>
+            <button className="btn-primary w-full">Connecter + d'outils</button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
@@ -229,6 +246,13 @@ export const MobileSidebar: React.FC = () => {
               status={item.status}
             />
           ))}
+          <EnhancedSidebarNavItem
+            key="/llm"
+            icon={<Sparkles size={16} />}
+            label="LLM"
+            to="/llm"
+            isActive={location.pathname.startsWith('/llm')}
+          />
           <SidebarNavGroup
             title="Business"
             icon={<Book size={16} />}

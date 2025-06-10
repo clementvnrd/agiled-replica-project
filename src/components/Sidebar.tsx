@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Settings, Users, Clock, Plug, Database, FileText, FolderOpen, Calendar } from 'lucide-react';
+import { Home, Settings, Users, Clock, Plug, Database, FileText, FolderOpen, Calendar, Sparkles } from 'lucide-react';
 import SidebarCategory from './navigation/SidebarCategory';
 import SidebarItem from './navigation/SidebarItem';
 import SidebarFooter from './navigation/SidebarFooter';
@@ -72,8 +72,14 @@ const Sidebar: React.FC = () => {
             active={path.startsWith('/rag')}
           />
         </SidebarCategory>
-      </nav>
 
+        <SidebarItem
+          to="/llm"
+          icon={<Sparkles size={20} />}
+          label="LLM"
+          active={path.startsWith('/llm')}
+        />
+      </nav>
       <SidebarFooter />
     </div>
   );

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { 
   Search, 
@@ -32,27 +31,24 @@ const Header: React.FC = () => {
       {
         id: '1',
         title: 'Dashboard',
-        description: 'Vue d\'ensemble de votre plateforme',
-        category: 'Navigation',
+        type: 'Navigation',
         url: '/dashboard'
       },
       {
         id: '2',
         title: 'Agent Manager',
-        description: 'Votre assistant IA personnel',
-        category: 'IA',
+        type: 'IA',
         url: '/agent'
       },
       {
         id: '3',
         title: 'CRM',
-        description: 'Gestion de la relation client',
-        category: 'Business',
+        type: 'Business',
         url: '/crm'
       }
     ].filter(result => 
       result.title.toLowerCase().includes(query.toLowerCase()) ||
-      result.description.toLowerCase().includes(query.toLowerCase())
+      (result.type && result.type.toLowerCase().includes(query.toLowerCase()))
     );
 
     return mockResults;
