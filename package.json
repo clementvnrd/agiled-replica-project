@@ -47,6 +47,7 @@
     "@supabase/auth-ui-shared": "^0.1.8",
     "@supabase/supabase-js": "^2.49.4",
     "@tanstack/react-query": "^5.80.6",
+    "@types/react-beautiful-dnd": "^13.1.8",
     "axios": "^1.9.0",
     "body-parser": "^2.2.0",
     "class-variance-authority": "^0.7.1",

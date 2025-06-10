@@ -16,7 +16,8 @@ import OnboardingWrapper from './components/routes/OnboardingWrapper';
 import Sidebar from './components/Sidebar';
 import SidebarNavGroup from './components/navigation/SidebarNavGroup';
 import CalendarPage from './pages/calendar/CalendarPage';
-import ProjectsPage from './pages/projects/ProjectsPage';
+import ProjectsPage from '@/pages/projects/ProjectsPage';
+import ProjectDetail from '@/pages/projects/ProjectDetail';
 import LLMPage from './pages/LLMPage';
 
 const queryClient = new QueryClient()

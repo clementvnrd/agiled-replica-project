@@ -1,5 +1,5 @@
-
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,7 +19,8 @@ import {
   AlertCircle,
   MoreHorizontal,
   Star,
-  Archive
+  Archive,
+  ExternalLink
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -56,9 +57,31 @@ interface Task {
 }
 
 const ProjectsPage: React.FC = () => {
+  const navigate = useNavigate();
+  
+  // Mettre à jour les données d'exemple pour inclure notre projet principal
   const [projects, setProjects] = useState<Project[]>([
     {
       id: '1',
+      name: 'Build the all-in-one management platform',
+      description: 'Développement d\'une plateforme de gestion complète intégrant CRM, gestion de projets, finances, RH et outils de productivité',
+      status: 'active',
+      priority: 'high',
+      progress: 35,
+      startDate: new Date(2024, 4, 1),
+      endDate: new Date(2024, 11, 31),
+      team: [
+        { id: '1', name: 'Alice Martin', role: 'Chef de projet' },
+        { id: '2', name: 'Bob Durand', role: 'Développeur Full-Stack' },
+        { id: '3', name: 'Claire Dubois', role: 'UI/UX Designer' },
+        { id: '4', name: 'David Chen', role: 'Architecte Système' }
+      ],
+      category: 'Platform Development',
+      budget: 150000,
+      client: 'Internal'
+    },
+    {
+      id: '2',
       name: 'Refonte Site Web Entreprise',
       description: 'Modernisation complète du site web avec nouveau design et fonctionnalités',
       status: 'active',
@@ -76,7 +99,7 @@ const ProjectsPage: React.FC = () => {
       client: 'TechCorp'
     },
     {
-      id: '2',
+      id: '3',
       name: 'Application Mobile E-commerce',
       description: 'Développement d\'une application mobile pour la vente en ligne',
       status: 'planning',
@@ -193,6 +216,10 @@ const ProjectsPage: React.FC = () => {
 
   const getProjectTasks = (projectId: string) => {
     return tasks.filter(task => task.projectId === projectId);
+  };
+
+  const handleOpenProject = (projectId: string) => {
+    navigate(`/projects/${projectId}`);
   };
 
   return (
@@ -368,10 +395,20 @@ const ProjectsPage: React.FC = () => {
                     </div>
 
                     <div className="flex gap-2">
-                      <Button variant="outline" size="sm" className="flex-1">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex-1"
+                        onClick={() => handleOpenProject(project.id)}
+                      >
+                        <ExternalLink className="h-4 w-4 mr-2" />
                         Voir détails
                       </Button>
-                      <Button size="sm" className="flex-1">
+                      <Button 
+                        size="sm" 
+                        className="flex-1"
+                        onClick={() => handleOpenProject(project.id)}
+                      >
                         Ouvrir
                       </Button>
                     </div>
