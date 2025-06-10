@@ -8,21 +8,27 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   ArrowLeft, 
   Edit3, 
   Save, 
   X, 
   Plus, 
-  Calendar, 
+  Calendar as CalendarIcon, 
   Users, 
   Target,
   MoreHorizontal,
-  Settings
+  Settings,
+  CheckSquare,
+  FileText,
+  BarChart3
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import TodoBoard from '@/components/projects/TodoBoard';
+import NotesEditor from '@/components/projects/NotesEditor';
+import ProjectCalendar from '@/components/projects/ProjectCalendar';
 
 interface Project {
   id: string;
@@ -62,92 +68,196 @@ const ProjectDetail: React.FC = () => {
   const [editingField, setEditingField] = useState<string | null>(null);
   const [tempValue, setTempValue] = useState('');
 
-  // Données du projet exemple
-  const [project, setProject] = useState<Project>({
-    id: '1',
-    name: 'Build the all-in-one management platform',
-    description: 'Développement d\'une plateforme de gestion complète intégrant CRM, gestion de projets, finances, RH et outils de productivité. L\'objectif est de créer une solution unifiée qui permet aux entreprises de centraliser tous leurs processus métier.',
-    status: 'active',
-    priority: 'high',
-    progress: 35,
-    startDate: new Date(2024, 4, 1),
-    endDate: new Date(2024, 11, 31),
-    team: [
-      { id: '1', name: 'Alice Martin', role: 'Chef de projet' },
-      { id: '2', name: 'Bob Durand', role: 'Développeur Full-Stack' },
-      { id: '3', name: 'Claire Dubois', role: 'UI/UX Designer' },
-      { id: '4', name: 'David Chen', role: 'Architecte Système' }
-    ],
-    category: 'Platform Development',
-    budget: 150000,
-    client: 'Internal'
-  });
+  // Données des projets avec des données différentes selon l'ID
+  const getProjectData = (projectId: string): Project => {
+    const projects: Record<string, Project> = {
+      '1': {
+        id: '1',
+        name: 'Build the all-in-one management platform',
+        description: 'Développement d\'une plateforme de gestion complète intégrant CRM, gestion de projets, finances, RH et outils de productivité. L\'objectif est de créer une solution unifiée qui permet aux entreprises de centraliser tous leurs processus métier.',
+        status: 'active',
+        priority: 'high',
+        progress: 35,
+        startDate: new Date(2024, 4, 1),
+        endDate: new Date(2024, 11, 31),
+        team: [
+          { id: '1', name: 'Alice Martin', role: 'Chef de projet' },
+          { id: '2', name: 'Bob Durand', role: 'Développeur Full-Stack' },
+          { id: '3', name: 'Claire Dubois', role: 'UI/UX Designer' },
+          { id: '4', name: 'David Chen', role: 'Architecte Système' }
+        ],
+        category: 'Platform Development',
+        budget: 150000,
+        client: 'Internal'
+      },
+      '2': {
+        id: '2',
+        name: 'Marketing Campaign Q4',
+        description: 'Campagne marketing pour le lancement du nouveau produit au quatrième trimestre. Cette campagne vise à accroître la notoriété de la marque et à générer des leads qualifiés.',
+        status: 'planning',
+        priority: 'medium',
+        progress: 15,
+        startDate: new Date(2024, 9, 1),
+        endDate: new Date(2024, 11, 15),
+        team: [
+          { id: '3', name: 'Claire Dubois', role: 'Marketing Manager' },
+          { id: '4', name: 'David Chen', role: 'Content Creator' },
+          { id: '5', name: 'Emma Wilson', role: 'Social Media Manager' }
+        ],
+        category: 'Marketing',
+        budget: 80000,
+        client: 'External'
+      },
+      '3': {
+        id: '3',
+        name: 'Mobile App Redesign',
+        description: 'Refonte complète de l\'application mobile avec une nouvelle interface utilisateur et de nouvelles fonctionnalités pour améliorer l\'expérience utilisateur.',
+        status: 'active',
+        priority: 'high',
+        progress: 60,
+        startDate: new Date(2024, 2, 15),
+        endDate: new Date(2024, 7, 30),
+        team: [
+          { id: '5', name: 'Emma Wilson', role: 'UI/UX Designer' },
+          { id: '6', name: 'Frank Taylor', role: 'Mobile Developer' },
+          { id: '7', name: 'Grace Kim', role: 'QA Engineer' }
+        ],
+        category: 'Mobile Development',
+        budget: 120000,
+        client: 'Internal'
+      }
+    };
 
-  // État initial des tâches TODO
-  const [todoTasks, setTodoTasks] = useState<TodoTask[]>([
-    {
-      id: '1',
-      title: 'Analyser les besoins fonctionnels',
-      description: 'Définir précisément tous les modules nécessaires et leurs interactions',
-      status: 'done',
-      priority: 'high',
-      assignee: 'Alice Martin',
-      dueDate: new Date(2024, 5, 15),
-      tags: ['analyse', 'specs'],
-      createdAt: new Date(2024, 4, 5)
-    },
-    {
-      id: '2',
-      title: 'Concevoir l\'architecture système',
-      description: 'Définir l\'architecture technique, base de données et APIs',
-      status: 'done',
-      priority: 'high',
-      assignee: 'David Chen',
-      dueDate: new Date(2024, 5, 20),
-      tags: ['architecture', 'technique'],
-      createdAt: new Date(2024, 4, 8)
-    },
-    {
-      id: '3',
-      title: 'Créer les maquettes UI/UX',
-      description: 'Designer l\'interface utilisateur complète de la plateforme',
-      status: 'in-progress',
-      priority: 'high',
-      assignee: 'Claire Dubois',
-      dueDate: new Date(2024, 6, 10),
-      tags: ['design', 'ui/ux'],
-      createdAt: new Date(2024, 5, 1)
-    },
-    {
-      id: '4',
-      title: 'Développer le module CRM',
-      description: 'Implémenter la gestion des contacts, leads et opportunités',
-      status: 'todo',
-      priority: 'high',
-      assignee: 'Bob Durand',
-      dueDate: new Date(2024, 7, 15),
-      tags: ['développement', 'crm'],
-      createdAt: new Date(2024, 5, 10)
-    },
-    {
-      id: '5',
-      title: 'Intégration système de notifications',
-      description: 'Système de notifications en temps réel avec WebSockets',
-      status: 'idea',
-      priority: 'medium',
-      tags: ['feature', 'notifications'],
-      createdAt: new Date(2024, 5, 12)
-    },
-    {
-      id: '6',
-      title: 'Module de rapports avancés',
-      description: 'Tableaux de bord et rapports personnalisables avec charts',
-      status: 'idea',
-      priority: 'medium',
-      tags: ['analytics', 'reports'],
-      createdAt: new Date(2024, 5, 14)
-    }
-  ]);
+    return projects[projectId] || projects['1'];
+  };
+
+  const [project, setProject] = useState<Project>(getProjectData(id || '1'));
+
+  // Tâches TODO spécifiques au projet
+  const getProjectTasks = (projectId: string): TodoTask[] => {
+    const tasksByProject: Record<string, TodoTask[]> = {
+      '1': [
+        {
+          id: '1',
+          title: 'Analyser les besoins fonctionnels',
+          description: 'Définir précisément tous les modules nécessaires et leurs interactions',
+          status: 'done',
+          priority: 'high',
+          assignee: 'Alice Martin',
+          dueDate: new Date(2024, 5, 15),
+          tags: ['analyse', 'specs'],
+          createdAt: new Date(2024, 4, 5)
+        },
+        {
+          id: '2',
+          title: 'Concevoir l\'architecture système',
+          description: 'Définir l\'architecture technique, base de données et APIs',
+          status: 'done',
+          priority: 'high',
+          assignee: 'David Chen',
+          dueDate: new Date(2024, 5, 20),
+          tags: ['architecture', 'technique'],
+          createdAt: new Date(2024, 4, 8)
+        },
+        {
+          id: '3',
+          title: 'Créer les maquettes UI/UX',
+          description: 'Designer l\'interface utilisateur complète de la plateforme',
+          status: 'in-progress',
+          priority: 'high',
+          assignee: 'Claire Dubois',
+          dueDate: new Date(2024, 6, 10),
+          tags: ['design', 'ui/ux'],
+          createdAt: new Date(2024, 5, 1)
+        },
+        {
+          id: '4',
+          title: 'Développer le module CRM',
+          description: 'Implémenter la gestion des contacts, leads et opportunités',
+          status: 'todo',
+          priority: 'high',
+          assignee: 'Bob Durand',
+          dueDate: new Date(2024, 7, 15),
+          tags: ['développement', 'crm'],
+          createdAt: new Date(2024, 5, 10)
+        }
+      ],
+      '2': [
+        {
+          id: '5',
+          title: 'Définir la stratégie marketing',
+          description: 'Élaborer la stratégie globale pour la campagne Q4',
+          status: 'done',
+          priority: 'high',
+          assignee: 'Claire Dubois',
+          dueDate: new Date(2024, 9, 5),
+          tags: ['stratégie', 'marketing'],
+          createdAt: new Date(2024, 8, 1)
+        },
+        {
+          id: '6',
+          title: 'Créer le contenu publicitaire',
+          description: 'Développer les visuels et textes pour toutes les plateformes',
+          status: 'in-progress',
+          priority: 'medium',
+          assignee: 'David Chen',
+          dueDate: new Date(2024, 9, 20),
+          tags: ['contenu', 'créatif'],
+          createdAt: new Date(2024, 8, 15)
+        },
+        {
+          id: '7',
+          title: 'Lancer les campagnes social media',
+          description: 'Programmer et lancer les publications sur tous les réseaux',
+          status: 'todo',
+          priority: 'medium',
+          assignee: 'Emma Wilson',
+          dueDate: new Date(2024, 10, 1),
+          tags: ['social media', 'lancement'],
+          createdAt: new Date(2024, 9, 1)
+        }
+      ],
+      '3': [
+        {
+          id: '8',
+          title: 'Audit UX de l\'app actuelle',
+          description: 'Analyser les points de friction dans l\'interface actuelle',
+          status: 'done',
+          priority: 'high',
+          assignee: 'Emma Wilson',
+          dueDate: new Date(2024, 3, 1),
+          tags: ['audit', 'ux'],
+          createdAt: new Date(2024, 2, 15)
+        },
+        {
+          id: '9',
+          title: 'Prototyper la nouvelle interface',
+          description: 'Créer des prototypes interactifs pour les nouvelles fonctionnalités',
+          status: 'in-progress',
+          priority: 'high',
+          assignee: 'Emma Wilson',
+          dueDate: new Date(2024, 6, 15),
+          tags: ['prototype', 'design'],
+          createdAt: new Date(2024, 4, 1)
+        },
+        {
+          id: '10',
+          title: 'Développer les nouveaux écrans',
+          description: 'Implémenter la nouvelle interface mobile',
+          status: 'todo',
+          priority: 'high',
+          assignee: 'Frank Taylor',
+          dueDate: new Date(2024, 7, 1),
+          tags: ['développement', 'mobile'],
+          createdAt: new Date(2024, 5, 1)
+        }
+      ]
+    };
+
+    return tasksByProject[projectId] || [];
+  };
+
+  const [todoTasks, setTodoTasks] = useState<TodoTask[]>(getProjectTasks(id || '1'));
 
   const handleEditField = (field: string, currentValue: string) => {
     setEditingField(field);
@@ -242,7 +352,7 @@ const ProjectDetail: React.FC = () => {
                 </Badge>
                 <Badge variant="outline">{project.category}</Badge>
                 <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                  <Calendar className="h-4 w-4" />
+                  <CalendarIcon className="h-4 w-4" />
                   {format(project.startDate, 'dd/MM/yyyy', { locale: fr })} - {format(project.endDate, 'dd/MM/yyyy', { locale: fr })}
                 </div>
                 <div className="flex items-center gap-1 text-sm text-muted-foreground">
@@ -345,12 +455,57 @@ const ProjectDetail: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Board TODO */}
-      <TodoBoard 
-        tasks={todoTasks} 
-        onTasksChange={setTodoTasks}
-        teamMembers={project.team}
-      />
+      {/* Onglets pour les différentes sections */}
+      <Tabs defaultValue="tasks" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="tasks" className="flex items-center gap-2">
+            <CheckSquare className="h-4 w-4" />
+            Tâches
+          </TabsTrigger>
+          <TabsTrigger value="notes" className="flex items-center gap-2">
+            <FileText className="h-4 w-4" />
+            Notes
+          </TabsTrigger>
+          <TabsTrigger value="calendar" className="flex items-center gap-2">
+            <CalendarIcon className="h-4 w-4" />
+            Calendrier
+          </TabsTrigger>
+          <TabsTrigger value="analytics" className="flex items-center gap-2">
+            <BarChart3 className="h-4 w-4" />
+            Analytiques
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="tasks">
+          <TodoBoard 
+            tasks={todoTasks} 
+            onTasksChange={setTodoTasks}
+            teamMembers={project.team}
+          />
+        </TabsContent>
+
+        <TabsContent value="notes">
+          <NotesEditor projectId={project.id} />
+        </TabsContent>
+
+        <TabsContent value="calendar">
+          <ProjectCalendar projectId={project.id} />
+        </TabsContent>
+
+        <TabsContent value="analytics">
+          <Card>
+            <CardHeader>
+              <CardTitle>Analytiques du projet</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-12 text-muted-foreground">
+                <BarChart3 className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>Les analytiques détaillées du projet seront bientôt disponibles</p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
