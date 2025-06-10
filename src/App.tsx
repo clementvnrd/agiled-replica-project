@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { ThemeProvider } from "@/providers/ThemeProvider"
@@ -68,6 +69,7 @@ function App() {
                 <Route path="/dashboard" element={<DashboardPage />} />
                 <Route path="/calendar" element={<CalendarPage />} />
                 <Route path="/projects" element={<ProjectsPage />} />
+                <Route path="/projects/:id" element={<ProjectDetail />} />
                 <Route path="/settings" element={<SettingsPage />} />
                 <Route path="/llm" element={<LLMPage />} />
                 <Route path="/rag" element={<RagDocumentEditor />} />
