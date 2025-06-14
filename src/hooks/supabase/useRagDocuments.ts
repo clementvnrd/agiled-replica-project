@@ -1,52 +1,48 @@
+
 import { useState, useEffect } from 'react';
 import { useUser } from '@clerk/clerk-react';
-import { supabase } from '@/lib/supabaseClient';
+import { supabase } from '@/integrations/supabase/client';
 import { RagDocument } from '@/types';
 
 /**
- * Hook to manage RAG documents for the current user using their dynamic Supabase client.
+ * Hook to manage RAG documents for the current user.
  */
 export function useRagDocuments() {
   const { user } = useUser();
-  const dynamicSupabase = supabase;
-  const supabaseLoading = false;
-  const supabaseError = null;
   const [documents, setDocuments] = useState<RagDocument[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
 
   // Utilitaire pour convertir un objet brut en RagDocument typé
-  function toRagDocument(doc: Record<string, unknown>, fallbackUserId: string): RagDocument {
+  function toRagDocument(doc: Record<string, any>, fallbackUserId: string): RagDocument {
     return {
-      id: typeof doc.id === 'string' ? doc.id : String(doc.id ?? `doc-${crypto.randomUUID()}`),
-      user_id: typeof doc.user_id === 'string' ? doc.user_id : fallbackUserId,
-      content: typeof doc.content === 'string' ? doc.content : doc.content === null ? null : '',
-      metadata: typeof doc.metadata === 'object' && doc.metadata !== null ? doc.metadata as Record<string, any> : {},
-      embedding: Array.isArray(doc.embedding) || typeof doc.embedding === 'string' || doc.embedding === null ? doc.embedding as number[] | string | null : null,
-      created_at: typeof doc.created_at === 'string' ? doc.created_at : doc.created_at === null ? null : '',
+      id: String(doc.id ?? `doc-${crypto.randomUUID()}`),
+      user_id: doc.user_id || fallbackUserId,
+      content: doc.content || null,
+      metadata: doc.metadata || {},
+      embedding: doc.embedding || null,
+      created_at: doc.created_at || null,
     };
   }
 
   useEffect(() => {
-    if (!user) return;
-    if (supabaseLoading) return;
-    if (supabaseError) {
-      setError(new Error(supabaseError));
+    if (!user) {
+      setDocuments([]);
       setIsLoading(false);
       return;
     }
+
     const fetchDocuments = async () => {
       try {
         setIsLoading(true);
         setError(null);
-        if (!dynamicSupabase) throw new Error('Supabase client not available');
-        const { data, error } = await dynamicSupabase
+        const { data, error } = await supabase
           .from('rag_documents')
           .select('*')
           .eq('user_id', user.id);
         if (error) throw error;
         
-        const processedData: RagDocument[] = (data || []).map((doc: Record<string, unknown>) => toRagDocument(doc, user?.id || ''));
+        const processedData: RagDocument[] = (data || []).map((doc) => toRagDocument(doc, user.id));
         
         setDocuments(processedData);
       } catch (err) {
@@ -57,27 +53,25 @@ export function useRagDocuments() {
       }
     };
     fetchDocuments();
-  }, [user, dynamicSupabase, supabaseLoading, supabaseError]);
+  }, [user]);
 
   const addDocument = async (content: string, metadata: Record<string, any> = {}) => {
     if (!user) return null;
-    if (supabaseLoading || supabaseError) return null;
-    if (!dynamicSupabase) return null;
+
     try {
       const newDocument = {
         user_id: user.id,
         content,
         metadata
       };
-      const { data, error } = await dynamicSupabase
+      const { data, error } = await supabase
         .from('rag_documents')
         .insert([newDocument])
         .select()
         .single();
       if (error) throw error;
       
-      // Ensure the document has an ID and required fields
-      const processedDoc: RagDocument = toRagDocument(data as Record<string, unknown>, user?.id || '');
+      const processedDoc: RagDocument = toRagDocument(data, user.id);
       
       setDocuments(prev => [...prev, processedDoc]);
       return processedDoc;
@@ -88,10 +82,8 @@ export function useRagDocuments() {
   };
 
   const deleteDocument = async (id: string) => {
-    if (supabaseLoading || supabaseError) return false;
-    if (!dynamicSupabase) return false;
     try {
-      const { error } = await dynamicSupabase
+      const { error } = await supabase
         .from('rag_documents')
         .delete()
         .match({ id });
@@ -106,8 +98,8 @@ export function useRagDocuments() {
 
   return {
     documents,
-    isLoading: isLoading || supabaseLoading,
-    error: error || (supabaseError ? new Error(supabaseError) : null),
+    isLoading,
+    error,
     addDocument,
     deleteDocument
   };

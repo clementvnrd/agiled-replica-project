@@ -1,75 +1,20 @@
-// Migration : utilisation du client Supabase global (plus de logique multi-instance)
-import { supabase } from '@/lib/supabaseClient';
-import React, { useState, useEffect } from 'react';
+
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useUser } from '@clerk/clerk-react';
 import MCPConnectionForm from './MCPConnectionForm';
 import MCPConnectionsList from './MCPConnectionsList';
-
-interface MCPConnection {
-  id: string;
-  name: string;
-  url: string;
-  status: string;
-  description?: string;
-  created_at: string;
-}
+import { useMcpConnections, McpConnection } from '@/hooks/supabase/useMcpConnections';
 
 const MCPDashboard: React.FC = () => {
-  const { user } = useUser();
-  const dynamicSupabase = supabase;
-  const [connections, setConnections] = useState<MCPConnection[]>([]);
-  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<string>("overview");
+  const { connections, isLoading, addConnection, refreshConnections } = useMcpConnections();
 
-  const fetchConnections = async () => {
-    if (!dynamicSupabase || !user) return;
-    
-    try {
-      setLoading(true);
-      const { data, error } = await dynamicSupabase
-        .from('mcp_connections')
-        .select('*')
-        .eq('user_id', user.id);
-      
-      if (error) throw error;
-      
-      setConnections(data || []);
-    } catch (err) {
-      console.error('Failed to fetch MCP connections:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchConnections();
-  }, [dynamicSupabase, user]);
-
-  const handleAddConnection = async (connection: Omit<MCPConnection, 'id' | 'created_at'>) => {
-    if (!dynamicSupabase || !user) return;
-    
-    try {
-      const { data, error } = await dynamicSupabase
-        .from('mcp_connections')
-        .insert([
-          { 
-            ...connection, 
-            user_id: user.id 
-          }
-        ])
-        .select('*')
-        .single();
-      
-      if (error) throw error;
-      
-      setConnections(prev => [...prev, data as MCPConnection]);
+  const handleAddConnection = async (connection: Omit<McpConnection, 'id' | 'created_at' | 'user_id' | 'status' | 'updated_at'>) => {
+    const newConnection = await addConnection(connection.name, connection.url, connection.description);
+    if (newConnection) {
       setActiveTab("connections");
-    } catch (err) {
-      console.error('Failed to add MCP connection:', err);
     }
   };
 
@@ -135,8 +80,8 @@ const MCPDashboard: React.FC = () => {
             <CardContent>
               <MCPConnectionsList 
                 connectionsList={connections} 
-                isLoading={loading} 
-                onRefresh={fetchConnections}
+                isLoading={isLoading} 
+                onRefresh={refreshConnections}
               />
             </CardContent>
             <CardFooter className="flex justify-end">
