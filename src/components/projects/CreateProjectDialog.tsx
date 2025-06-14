@@ -1,5 +1,6 @@
+
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -63,6 +64,7 @@ const CreateProjectDialog: React.FC<CreateProjectDialogProps> = ({ trigger }) =>
       setEndDate(undefined);
       setOpen(false);
     } catch (error) {
+      console.error("Failed to create project:", error);
       toast({
         title: "Erreur",
         description: "Impossible de créer le projet.",
@@ -84,6 +86,9 @@ const CreateProjectDialog: React.FC<CreateProjectDialogProps> = ({ trigger }) =>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>Créer un nouveau projet</DialogTitle>
+          <DialogDescription>
+            Remplissez les champs ci-dessous pour démarrer votre nouveau projet. Les champs marqués d'un * sont obligatoires.
+          </DialogDescription>
         </DialogHeader>
         
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">

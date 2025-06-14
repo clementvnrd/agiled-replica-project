@@ -1,6 +1,6 @@
 
-import { useState, useEffect } from 'react';
-import { useUser } from '@clerk/clerk-react';
+import { useState, useEffect, useCallback } from 'react';
+import { useUser, useAuth } from '@clerk/clerk-react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 
@@ -10,16 +10,26 @@ type ProjectUpdate = Database['public']['Tables']['projects']['Update'];
 
 export const useProjects = () => {
   const { user } = useUser();
+  const { getToken } = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchProjects = async () => {
+  const getSupabaseWithAuth = useCallback(async () => {
+    const token = await getToken({ template: 'supabase' });
+    if (token) {
+      supabase.global.headers['Authorization'] = `Bearer ${token}`;
+    }
+    return supabase;
+  }, [getToken]);
+
+  const fetchProjects = useCallback(async () => {
     if (!user) return;
 
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      const authedSupabase = await getSupabaseWithAuth();
+      const { data, error } = await authedSupabase
         .from('projects')
         .select('*')
         .eq('user_id', user.id)
@@ -32,29 +42,36 @@ export const useProjects = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, getSupabaseWithAuth]);
 
   const createProject = async (projectData: Omit<ProjectInsert, 'user_id'>) => {
     if (!user) throw new Error('Utilisateur non connecté');
 
     try {
-      const { data, error } = await supabase
+      const authedSupabase = await getSupabaseWithAuth();
+      const { data, error } = await authedSupabase
         .from('projects')
         .insert([{ ...projectData, user_id: user.id }])
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase error creating project:", error);
+        throw error;
+      }
       setProjects(prev => [data, ...prev]);
       return data;
     } catch (err) {
+      console.error("Error creating project:", err);
       throw err instanceof Error ? err : new Error('Erreur lors de la création du projet');
     }
   };
 
   const updateProject = async (id: string, updates: ProjectUpdate) => {
+    if (!user) throw new Error('Utilisateur non connecté');
     try {
-      const { data, error } = await supabase
+      const authedSupabase = await getSupabaseWithAuth();
+      const { data, error } = await authedSupabase
         .from('projects')
         .update(updates)
         .eq('id', id)
@@ -70,8 +87,10 @@ export const useProjects = () => {
   };
 
   const deleteProject = async (id: string) => {
+    if (!user) throw new Error('Utilisateur non connecté');
     try {
-      const { error } = await supabase
+      const authedSupabase = await getSupabaseWithAuth();
+      const { error } = await authedSupabase
         .from('projects')
         .delete()
         .eq('id', id);
@@ -84,8 +103,10 @@ export const useProjects = () => {
   };
 
   useEffect(() => {
-    fetchProjects();
-  }, [user]);
+    if(user) {
+      fetchProjects();
+    }
+  }, [user, fetchProjects]);
 
   return {
     projects,
