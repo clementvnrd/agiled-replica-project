@@ -18,7 +18,8 @@ export const useProjects = () => {
   const getSupabaseWithAuth = useCallback(async () => {
     const token = await getToken({ template: 'supabase' });
     if (token) {
-      supabase.global.headers['Authorization'] = `Bearer ${token}`;
+      // Remplacer l'ancienne méthode incorrecte par la bonne
+      supabase.rest.setAuth(token);
     }
     return supabase;
   }, [getToken]);
