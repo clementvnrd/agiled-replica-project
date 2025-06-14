@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -19,93 +18,18 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { useProjectNotes } from '@/hooks/useProjectNotes';
+import type { Database } from '@/integrations/supabase/types';
 
-interface Note {
-  id: string;
-  title: string;
-  content: string;
-  tags: string[];
-  createdAt: Date;
-  updatedAt: Date;
-}
+type ProjectNote = Database['public']['Tables']['project_notes']['Row'];
 
 interface NotesEditorProps {
   projectId: string;
 }
 
 const NotesEditor: React.FC<NotesEditorProps> = ({ projectId }) => {
-  const [notes, setNotes] = useState<Note[]>([
-    {
-      id: '1',
-      title: 'Réunion de lancement',
-      content: `# Réunion de lancement du projet
-
-## Participants
-- Alice Martin (Chef de projet)
-- Bob Durand (Développeur)
-- Claire Dubois (Designer)
-
-## Objectifs discutés
-+ Définir l'architecture technique
-+ Créer les maquettes UI/UX
-+ Valider le cahier des charges
-+ Planifier les sprints
-
-## Actions à suivre
-1. **Architecture** - David doit finaliser les schémas d'architecture d'ici vendredi
-2. **Design** - Claire commence les wireframes la semaine prochaine
-3. **Planning** - Organiser les sprints sur 2 semaines
-
-## Notes importantes
-===La deadline du projet est fixée au 31 décembre 2024===
-
-### Ressources
-- [Documentation technique](https://example.com)
-- [Maquettes Figma](https://figma.com)
-
-#réunion #lancement #planning`,
-      tags: ['réunion', 'lancement', 'planning'],
-      createdAt: new Date(2024, 5, 1),
-      updatedAt: new Date(2024, 5, 1)
-    },
-    {
-      id: '2',
-      title: 'Documentation Technique',
-      content: `# Spécifications techniques
-
-## Stack technologique
-- **Frontend**: React + TypeScript + Tailwind CSS
-- **Backend**: Supabase (PostgreSQL + Auth)
-- **Déploiement**: Vercel
-- **State Management**: TanStack Query
-
-## Base de données
-### Tables principales
-\`\`\`sql
--- Users table (Supabase Auth)
--- Projects table
--- Tasks table  
--- Notes table
--- Calendar events table
-\`\`\`
-
-===IMPORTANT: Cette documentation est critique pour le développement===
-
-## APIs à développer
-+ CRUD projets
-+ CRUD tâches
-+ Système de notes markdown
-+ Gestion du calendrier
-+ Gestion des équipes
-
-#technique #specs #architecture #Ressource`,
-      tags: ['technique', 'specs', 'architecture', 'Ressource'],
-      createdAt: new Date(2024, 5, 3),
-      updatedAt: new Date(2024, 5, 5)
-    }
-  ]);
-
-  const [selectedNote, setSelectedNote] = useState<Note | null>(null);
+  const { notes, createNote, updateNote, deleteNote } = useProjectNotes(projectId);
+  const [selectedNote, setSelectedNote] = useState<ProjectNote | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState('');
   const [editTitle, setEditTitle] = useState('');
@@ -131,15 +55,15 @@ const NotesEditor: React.FC<NotesEditorProps> = ({ projectId }) => {
   const filteredNotes = notes.filter(note =>
     note.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     note.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    note.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+    (note.tags && note.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase())))
   );
 
   // Obtenir les notes ressources
   const resourceNotes = notes.filter(note => 
-    note.tags.includes('Ressource')
+    note.tags && note.tags.includes('Ressource')
   );
 
-  const handleNoteSelect = (note: Note) => {
+  const handleNoteSelect = (note: ProjectNote) => {
     if (isEditing) {
       // Si on est en mode édition, sauvegarder d'abord
       handleSave();
@@ -156,60 +80,62 @@ const NotesEditor: React.FC<NotesEditorProps> = ({ projectId }) => {
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (selectedNote) {
-      // Extraire les hashtags du contenu
-      const extractedTags = extractHashtags(editContent);
-      
-      const updatedNotes = notes.map(note =>
-        note.id === selectedNote.id
-          ? { 
-              ...note, 
-              title: editTitle, 
-              content: editContent, 
-              tags: extractedTags,
-              updatedAt: new Date() 
-            }
-          : note
-      );
-      setNotes(updatedNotes);
-      
-      const updatedNote = {
-        ...selectedNote, 
-        title: editTitle, 
-        content: editContent, 
-        tags: extractedTags,
-        updatedAt: new Date()
-      };
-      setSelectedNote(updatedNote);
-      setIsEditing(false);
+      try {
+        // Extraire les hashtags du contenu
+        const extractedTags = extractHashtags(editContent);
+        
+        await updateNote(selectedNote.id, {
+          title: editTitle,
+          content: editContent,
+          tags: extractedTags
+        });
+        
+        setSelectedNote({
+          ...selectedNote,
+          title: editTitle,
+          content: editContent,
+          tags: extractedTags
+        });
+        setIsEditing(false);
+      } catch (error) {
+        console.error('Erreur lors de la sauvegarde:', error);
+      }
     }
   };
 
-  const handleCreateNote = () => {
+  const handleCreateNote = async () => {
     if (newNoteTitle.trim()) {
-      const newNote: Note = {
-        id: Date.now().toString(),
-        title: newNoteTitle,
-        content: `# ${newNoteTitle}\n\nCommencez à écrire votre note ici...\n\n#nouvelle-note`,
-        tags: ['nouvelle-note'],
-        createdAt: new Date(),
-        updatedAt: new Date()
-      };
-      setNotes([newNote, ...notes]);
-      setSelectedNote(newNote);
-      setNewNoteTitle('');
-      setIsEditing(true);
-      setEditTitle(newNote.title);
-      setEditContent(newNote.content);
+      try {
+        const content = `# ${newNoteTitle}\n\nCommencez à écrire votre note ici...\n\n#nouvelle-note`;
+        const extractedTags = extractHashtags(content);
+        
+        const newNote = await createNote({
+          title: newNoteTitle,
+          content,
+          tags: extractedTags
+        });
+        
+        setSelectedNote(newNote);
+        setNewNoteTitle('');
+        setIsEditing(true);
+        setEditTitle(newNote.title);
+        setEditContent(newNote.content);
+      } catch (error) {
+        console.error('Erreur lors de la création:', error);
+      }
     }
   };
 
-  const handleDeleteNote = (noteId: string) => {
-    const updatedNotes = notes.filter(note => note.id !== noteId);
-    setNotes(updatedNotes);
-    if (selectedNote?.id === noteId) {
-      setSelectedNote(updatedNotes[0] || null);
+  const handleDeleteNote = async (noteId: string) => {
+    try {
+      await deleteNote(noteId);
+      if (selectedNote?.id === noteId) {
+        setSelectedNote(notes.find(n => n.id !== noteId) || null);
+      }
+    } catch (error) {
+      console.error('Erreur lors de la suppression:', error);
     }
   };
 
@@ -238,41 +164,9 @@ const NotesEditor: React.FC<NotesEditorProps> = ({ projectId }) => {
           );
         }
         
-        // Cases à cocher markdown standard
-        if (line.startsWith('- [x] ')) {
-          return (
-            <div key={index} className="flex items-center gap-2 my-1">
-              <input type="checkbox" checked readOnly className="rounded" />
-              <span className="line-through text-muted-foreground">{line.slice(6)}</span>
-            </div>
-          );
-        }
-        if (line.startsWith('- [ ] ')) {
-          return (
-            <div key={index} className="flex items-center gap-2 my-1">
-              <input type="checkbox" readOnly className="rounded" />
-              <span>{line.slice(6)}</span>
-            </div>
-          );
-        }
-        
         // Listes
         if (line.startsWith('- ')) {
           return <li key={index} className="ml-4 my-1">• {line.slice(2)}</li>;
-        }
-        
-        // Citations
-        if (line.startsWith('> ')) {
-          return (
-            <blockquote key={index} className="border-l-4 border-blue-500 pl-4 my-3 italic text-muted-foreground bg-muted/30 py-2 rounded-r">
-              {line.slice(2)}
-            </blockquote>
-          );
-        }
-        
-        // Listes numérotées
-        if (line.match(/^\d+\. /)) {
-          return <li key={index} className="ml-4 my-1 list-decimal">{line.replace(/^\d+\. /, '')}</li>;
         }
         
         // Lignes vides
@@ -288,11 +182,9 @@ const NotesEditor: React.FC<NotesEditorProps> = ({ projectId }) => {
         let match;
         
         while ((match = highlightRegex.exec(line)) !== null) {
-          // Ajouter le texte avant le surlignage
           if (match.index > lastIndex) {
             parts.push(line.slice(lastIndex, match.index));
           }
-          // Ajouter le texte surligné
           parts.push(
             <mark key={`highlight-${index}-${match.index}`} className="bg-yellow-200 px-1 rounded">
               {match[1]}
@@ -301,12 +193,10 @@ const NotesEditor: React.FC<NotesEditorProps> = ({ projectId }) => {
           lastIndex = match.index + match[0].length;
         }
         
-        // Ajouter le reste du texte
         if (lastIndex < line.length) {
           parts.push(line.slice(lastIndex));
         }
         
-        // Si aucun surlignage trouvé, utiliser la ligne originale
         const finalContent = parts.length > 0 ? parts : processedLine;
         
         return <p key={index} className="my-2">{finalContent}</p>;
@@ -375,9 +265,9 @@ const NotesEditor: React.FC<NotesEditorProps> = ({ projectId }) => {
                         <h4 className="font-medium text-sm truncate">{note.title}</h4>
                         <p className="text-xs text-muted-foreground mt-1">
                           <Clock className="h-3 w-3 inline mr-1" />
-                          {format(note.updatedAt, 'dd/MM/yyyy HH:mm', { locale: fr })}
+                          {format(new Date(note.updated_at || ''), 'dd/MM/yyyy HH:mm', { locale: fr })}
                         </p>
-                        {note.tags.length > 0 && (
+                        {note.tags && note.tags.length > 0 && (
                           <div className="flex flex-wrap gap-1 mt-2">
                             {note.tags.slice(0, 2).map(tag => (
                               <Badge key={tag} variant="outline" className="text-xs">
@@ -512,9 +402,9 @@ Syntaxe supportée:
                       </p>
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
                         <Clock className="h-3 w-3" />
-                        {format(note.updatedAt, 'dd/MM/yyyy', { locale: fr })}
+                        {format(new Date(note.updated_at || ''), 'dd/MM/yyyy', { locale: fr })}
                         <div className="flex gap-1 ml-2">
-                          {note.tags.map(tag => (
+                          {note.tags?.map(tag => (
                             <Badge key={tag} variant="outline" className="text-xs">
                               #{tag}
                             </Badge>

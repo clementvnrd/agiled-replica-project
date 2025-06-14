@@ -19,123 +19,61 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-
-interface Project {
-  id: string;
-  name: string;
-  description: string;
-  status: 'active' | 'completed' | 'on-hold' | 'planning';
-  priority: 'low' | 'medium' | 'high';
-  progress: number;
-  startDate: Date;
-  endDate: Date;
-  team: Array<{
-    id: string;
-    name: string;
-    avatar?: string;
-    role: string;
-  }>;
-  category: string;
-  budget?: number;
-  client?: string;
-}
+import { useProjects } from '@/hooks/useProjects';
+import { useTeamMembers } from '@/hooks/useTeamMembers';
 
 const ProjectsPage: React.FC = () => {
   const navigate = useNavigate();
+  const { projects, loading } = useProjects();
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Données exemple des projets
-  const [projects] = useState<Project[]>([
-    {
-      id: '1',
-      name: 'Build the all-in-one management platform',
-      description: 'Développement d\'une plateforme de gestion complète intégrant CRM, gestion de projets, finances, RH et outils de productivité.',
-      status: 'active',
-      priority: 'high',
-      progress: 35,
-      startDate: new Date(2024, 4, 1),
-      endDate: new Date(2024, 11, 31),
-      team: [
-        { id: '1', name: 'Alice Martin', role: 'Chef de projet' },
-        { id: '2', name: 'Bob Durand', role: 'Développeur Full-Stack' },
-      ],
-      category: 'Platform Development',
-      budget: 150000,
-      client: 'Internal'
-    },
-    {
-      id: '2',
-      name: 'Marketing Campaign Q4',
-      description: 'Campagne marketing pour le lancement du nouveau produit au quatrième trimestre.',
-      status: 'planning',
-      priority: 'medium',
-      progress: 15,
-      startDate: new Date(2024, 9, 1),
-      endDate: new Date(2024, 11, 15),
-      team: [
-        { id: '3', name: 'Claire Dubois', role: 'Marketing Manager' },
-        { id: '4', name: 'David Chen', role: 'Content Creator' },
-      ],
-      category: 'Marketing',
-      budget: 80000,
-      client: 'External'
-    },
-    {
-      id: '3',
-      name: 'Mobile App Redesign',
-      description: 'Refonte complète de l\'application mobile avec une nouvelle interface utilisateur et de nouvelles fonctionnalités.',
-      status: 'active',
-      priority: 'high',
-      progress: 60,
-      startDate: new Date(2024, 2, 15),
-      endDate: new Date(2024, 7, 30),
-      team: [
-        { id: '5', name: 'Emma Wilson', role: 'UI/UX Designer' },
-        { id: '6', name: 'Frank Taylor', role: 'Mobile Developer' },
-      ],
-      category: 'Mobile Development',
-      budget: 120000,
-      client: 'Internal'
-    }
-  ]);
-
-  const getStatusColor = (status: Project['status']) => {
+  const getStatusColor = (status: string) => {
     const colors = {
       active: 'bg-green-500',
       completed: 'bg-blue-500',
       'on-hold': 'bg-yellow-500',
       planning: 'bg-purple-500'
     };
-    return colors[status];
+    return colors[status as keyof typeof colors] || 'bg-gray-500';
   };
 
-  const getStatusLabel = (status: Project['status']) => {
+  const getStatusLabel = (status: string) => {
     const labels = {
       active: 'Actif',
       completed: 'Terminé',
       'on-hold': 'En pause',
       planning: 'Planification'
     };
-    return labels[status];
+    return labels[status as keyof typeof labels] || status;
   };
 
-  const getPriorityColor = (priority: Project['priority']) => {
+  const getPriorityColor = (priority: string) => {
     const colors = {
       low: 'bg-green-100 text-green-800 border-green-200',
       medium: 'bg-yellow-100 text-yellow-800 border-yellow-200',
       high: 'bg-red-100 text-red-800 border-red-200'
     };
-    return colors[priority];
+    return colors[priority as keyof typeof colors] || 'bg-gray-100 text-gray-800';
   };
 
   const filteredProjects = projects.filter(project =>
     project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    project.description.toLowerCase().includes(searchTerm.toLowerCase())
+    (project.description && project.description.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const handleOpenProject = (projectId: string) => {
     navigate(`/projects/${projectId}`);
   };
+
+  if (loading) {
+    return (
+      <div className="p-6 space-y-6 max-w-7xl mx-auto">
+        <div className="text-center py-12">
+          <p>Chargement des projets...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 space-y-6 max-w-7xl mx-auto">
@@ -247,59 +185,39 @@ const ProjectsPage: React.FC = () => {
 
             <CardContent className="space-y-4">
               {/* Description */}
-              <p className="text-sm text-muted-foreground line-clamp-2">
-                {project.description}
-              </p>
+              {project.description && (
+                <p className="text-sm text-muted-foreground line-clamp-2">
+                  {project.description}
+                </p>
+              )}
 
               {/* Progression */}
               <div>
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-sm font-medium">Progression</span>
-                  <span className="text-sm text-muted-foreground">{project.progress}%</span>
+                  <span className="text-sm text-muted-foreground">{project.progress || 0}%</span>
                 </div>
-                <Progress value={project.progress} className="h-2" />
+                <Progress value={project.progress || 0} className="h-2" />
               </div>
 
               {/* Métadonnées */}
               <div className="space-y-2 text-sm text-muted-foreground">
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4" />
-                  <span>
-                    {format(project.startDate, 'dd/MM/yyyy', { locale: fr })} - {format(project.endDate, 'dd/MM/yyyy', { locale: fr })}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Users className="h-4 w-4" />
-                  <span>{project.team.length} membre{project.team.length > 1 ? 's' : ''}</span>
-                </div>
+                {(project.start_date || project.end_date) && (
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
+                    <span>
+                      {project.start_date && format(new Date(project.start_date), 'dd/MM/yyyy', { locale: fr })}
+                      {project.start_date && project.end_date && ' - '}
+                      {project.end_date && format(new Date(project.end_date), 'dd/MM/yyyy', { locale: fr })}
+                    </span>
+                  </div>
+                )}
                 {project.budget && (
                   <div className="flex items-center gap-2">
                     <Target className="h-4 w-4" />
-                    <span>{project.budget.toLocaleString('fr-FR')} €</span>
+                    <span>{Number(project.budget).toLocaleString('fr-FR')} €</span>
                   </div>
                 )}
-              </div>
-
-              {/* Équipe */}
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-sm font-medium">Équipe</span>
-                </div>
-                <div className="flex -space-x-2">
-                  {project.team.slice(0, 3).map(member => (
-                    <Avatar key={member.id} className="h-8 w-8 border-2 border-background">
-                      <AvatarImage src={member.avatar} />
-                      <AvatarFallback className="text-xs">
-                        {member.name.split(' ').map(n => n[0]).join('')}
-                      </AvatarFallback>
-                    </Avatar>
-                  ))}
-                  {project.team.length > 3 && (
-                    <div className="h-8 w-8 bg-muted border-2 border-background rounded-full flex items-center justify-center">
-                      <span className="text-xs font-medium">+{project.team.length - 3}</span>
-                    </div>
-                  )}
-                </div>
               </div>
 
               {/* Actions */}
