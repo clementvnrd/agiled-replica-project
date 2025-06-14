@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { useUser, useAuth } from '@clerk/clerk-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -18,8 +17,7 @@ export const useProjects = () => {
   const getSupabaseWithAuth = useCallback(async () => {
     const token = await getToken({ template: 'supabase' });
     if (token) {
-      // Remplacer l'ancienne méthode incorrecte par la bonne
-      supabase.rest.setAuth(token);
+      supabase.global.headers['Authorization'] = `Bearer ${token}`;
     }
     return supabase;
   }, [getToken]);
