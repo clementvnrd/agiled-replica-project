@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,16 +20,42 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useProjects } from '@/hooks/useProjects';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
+import { useTasks } from '@/hooks/useTasks';
 import TodoBoard from '@/components/projects/TodoBoard';
 import NotesEditor from '@/components/projects/NotesEditor';
+import { Skeleton } from '@/components/ui/skeleton';
+import type { Database } from '@/integrations/supabase/types';
+
+// Interfaces for TodoBoard data structure
+type TodoTaskStatus = 'idea' | 'todo' | 'in-progress' | 'done';
+type TodoTaskPriority = 'low' | 'medium' | 'high';
+interface TodoTask {
+  id: string;
+  title: string;
+  description: string;
+  status: TodoTaskStatus;
+  priority: TodoTaskPriority;
+  assignee?: string;
+  dueDate?: Date;
+  tags: string[];
+  createdAt: Date;
+}
 
 const ProjectDetailPage: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
   const { projects } = useProjects();
   const { teamMembers } = useTeamMembers(projectId || '');
+  const { 
+    tasks: dbTasks, 
+    loading: tasksLoading, 
+    error: tasksError, 
+    createTask, 
+    updateTask, 
+    deleteTask 
+  } = useTasks(projectId);
 
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState('tasks');
 
   const project = projects.find(p => p.id === projectId);
 
@@ -77,7 +102,18 @@ const ProjectDetailPage: React.FC = () => {
   };
 
   // Convertir les données pour le TodoBoard
-  const convertedTasks = [];
+  const convertedTasks: TodoTask[] = dbTasks.map(task => ({
+    id: task.id,
+    title: task.title,
+    description: task.description || '',
+    status: task.status as TodoTaskStatus,
+    priority: task.priority as TodoTaskPriority,
+    assignee: task.assignee || undefined,
+    dueDate: task.due_date ? new Date(task.due_date) : undefined,
+    tags: task.tags || [],
+    createdAt: new Date(task.created_at || new Date()),
+  }));
+
   const convertedTeamMembers = teamMembers.map(member => ({
     id: member.id,
     name: member.name,
@@ -85,9 +121,53 @@ const ProjectDetailPage: React.FC = () => {
     role: member.role
   }));
 
-  const handleTasksChange = (tasks: any[]) => {
-    // Cette fonction sera appelée quand les tâches changent dans le TodoBoard
-    console.log('Tasks updated:', tasks);
+  const handleCreateTask = async (taskData: Omit<TodoTask, 'id' | 'createdAt'>) => {
+    if (!projectId) return;
+    try {
+      await createTask({
+        project_id: projectId,
+        title: taskData.title,
+        description: taskData.description,
+        status: taskData.status,
+        priority: taskData.priority,
+        assignee: taskData.assignee,
+        due_date: taskData.dueDate ? taskData.dueDate.toISOString().split('T')[0] : null,
+        tags: taskData.tags,
+      });
+    } catch (error) {
+      console.error("Failed to create task:", error);
+      // TODO: Add user-facing error notification
+    }
+  };
+  
+  const handleUpdateTask = async (taskId: string, updates: Partial<TodoTask>) => {
+    try {
+      const dbUpdates: Partial<Database['public']['Tables']['tasks']['Update']> = {};
+      
+      if (updates.hasOwnProperty('title')) dbUpdates.title = updates.title;
+      if (updates.hasOwnProperty('description')) dbUpdates.description = updates.description;
+      if (updates.hasOwnProperty('status')) dbUpdates.status = updates.status;
+      if (updates.hasOwnProperty('priority')) dbUpdates.priority = updates.priority;
+      if (updates.hasOwnProperty('assignee')) dbUpdates.assignee = updates.assignee;
+      if (updates.hasOwnProperty('dueDate')) dbUpdates.due_date = updates.dueDate ? updates.dueDate.toISOString().split('T')[0] : null;
+      if (updates.hasOwnProperty('tags')) dbUpdates.tags = updates.tags;
+
+      if (Object.keys(dbUpdates).length > 0) {
+        await updateTask(taskId, dbUpdates);
+      }
+    } catch (error) {
+      console.error("Failed to update task:", error);
+      // TODO: Add user-facing error notification
+    }
+  };
+  
+  const handleDeleteTask = async (taskId: string) => {
+    try {
+      await deleteTask(taskId);
+    } catch (error) {
+      console.error("Failed to delete task:", error);
+      // TODO: Add user-facing error notification
+    }
   };
 
   return (
@@ -249,11 +329,33 @@ const ProjectDetailPage: React.FC = () => {
         </TabsContent>
 
         <TabsContent value="tasks">
-          <TodoBoard
-            tasks={convertedTasks}
-            onTasksChange={handleTasksChange}
-            teamMembers={convertedTeamMembers}
-          />
+          {tasksLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {[...Array(4)].map((_, i) => (
+                <Card key={i}>
+                  <CardHeader><Skeleton className="h-6 w-3/4" /></CardHeader>
+                  <CardContent className="space-y-4">
+                    <Skeleton className="h-20 w-full" />
+                    <Skeleton className="h-20 w-full" />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : tasksError ? (
+            <Card>
+              <CardContent className="p-6 text-center text-red-600">
+                <p>Erreur lors du chargement des tâches : {tasksError}</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <TodoBoard
+              tasks={convertedTasks}
+              teamMembers={convertedTeamMembers}
+              onCreateTask={handleCreateTask}
+              onUpdateTask={handleUpdateTask}
+              onDeleteTask={handleDeleteTask}
+            />
+          )}
         </TabsContent>
 
         <TabsContent value="notes">

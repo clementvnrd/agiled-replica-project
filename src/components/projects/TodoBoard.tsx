@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -29,11 +28,19 @@ interface TeamMember {
 
 interface TodoBoardProps {
   tasks: TodoTask[];
-  onTasksChange: (tasks: TodoTask[]) => void;
   teamMembers: TeamMember[];
+  onCreateTask: (taskData: Omit<TodoTask, 'id' | 'createdAt'>) => Promise<void>;
+  onUpdateTask: (taskId: string, updates: Partial<TodoTask>) => Promise<void>;
+  onDeleteTask: (taskId: string) => Promise<void>;
 }
 
-const TodoBoard: React.FC<TodoBoardProps> = ({ tasks, onTasksChange, teamMembers }) => {
+const TodoBoard: React.FC<TodoBoardProps> = ({ 
+  tasks, 
+  teamMembers,
+  onCreateTask,
+  onUpdateTask,
+  onDeleteTask 
+}) => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [createInColumn, setCreateInColumn] = useState<TodoTask['status']>('idea');
 
@@ -75,40 +82,25 @@ const TodoBoard: React.FC<TodoBoardProps> = ({ tasks, onTasksChange, teamMembers
   const handleDragEnd = (result: DropResult) => {
     if (!result.destination) return;
 
-    const { source, destination } = result;
+    const { source, destination, draggableId } = result;
     
     if (source.droppableId === destination.droppableId && source.index === destination.index) {
       return;
     }
 
-    const updatedTasks = [...tasks];
-    const taskToMove = updatedTasks.find(task => task.id === result.draggableId);
-    
-    if (taskToMove) {
-      taskToMove.status = destination.droppableId as TodoTask['status'];
-      onTasksChange(updatedTasks);
-    }
+    onUpdateTask(draggableId, { status: destination.droppableId as TodoTask['status'] });
   };
 
-  const handleCreateTask = (newTask: Omit<TodoTask, 'id' | 'createdAt'>) => {
-    const task: TodoTask = {
-      ...newTask,
-      id: Date.now().toString(),
-      createdAt: new Date()
-    };
-    onTasksChange([...tasks, task]);
+  const handleCreateTask = async (newTask: Omit<TodoTask, 'id' | 'createdAt'>) => {
+    await onCreateTask(newTask);
   };
 
-  const handleUpdateTask = (taskId: string, updates: Partial<TodoTask>) => {
-    const updatedTasks = tasks.map(task =>
-      task.id === taskId ? { ...task, ...updates } : task
-    );
-    onTasksChange(updatedTasks);
+  const handleUpdateTask = async (taskId: string, updates: Partial<TodoTask>) => {
+    await onUpdateTask(taskId, updates);
   };
 
-  const handleDeleteTask = (taskId: string) => {
-    const updatedTasks = tasks.filter(task => task.id !== taskId);
-    onTasksChange(updatedTasks);
+  const handleDeleteTask = async (taskId: string) => {
+    await onDeleteTask(taskId);
   };
 
   const openCreateDialog = (status: TodoTask['status']) => {
