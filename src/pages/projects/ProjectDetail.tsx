@@ -29,6 +29,7 @@ import { fr } from 'date-fns/locale';
 import TodoBoard from '@/components/projects/TodoBoard';
 import NotesEditor from '@/components/projects/NotesEditor';
 import ProjectCalendar from '@/components/projects/ProjectCalendar';
+import CreateTaskDialog from '@/components/projects/CreateTaskDialog';
 
 interface Project {
   id: string;
@@ -369,6 +370,15 @@ const ProjectDetail: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-2">
+              <CreateTaskDialog 
+                projectId={project.id}
+                trigger={
+                  <Button variant="outline" size="sm">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Nouvelle tâche
+                  </Button>
+                }
+              />
               <Button variant="outline" size="sm">
                 <Settings className="h-4 w-4 mr-2" />
                 Paramètres
