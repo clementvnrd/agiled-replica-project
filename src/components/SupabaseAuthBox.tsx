@@ -1,6 +1,7 @@
+
 import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
-import { supabase } from '@/lib/supabaseClient';
+import { supabase } from '@/integrations/supabase/client';
 import React from 'react';
 
 const SupabaseAuthBox: React.FC = () => {

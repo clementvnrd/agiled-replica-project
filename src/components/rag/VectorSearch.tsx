@@ -1,5 +1,6 @@
+
 // Migration : utilisation du client Supabase global (plus de logique multi-instance)
-import { supabase } from '@/lib/supabaseClient';
+import { supabase } from '@/integrations/supabase/client';
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
