@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -260,6 +259,25 @@ const ProjectDetail: React.FC = () => {
 
   const [todoTasks, setTodoTasks] = useState<TodoTask[]>(getProjectTasks(id || '1'));
 
+  const handleCreateTask = async (taskData: Omit<TodoTask, 'id' | 'createdAt'>) => {
+    const newTask: TodoTask = {
+      ...taskData,
+      id: `new-${Date.now()}`, // mock id
+      createdAt: new Date(),
+    };
+    setTodoTasks(prev => [...prev, newTask]);
+  };
+  
+  const handleUpdateTask = async (taskId: string, updates: Partial<TodoTask>) => {
+    setTodoTasks(prev => prev.map(task => 
+      task.id === taskId ? { ...task, ...updates } : task
+    ));
+  };
+  
+  const handleDeleteTask = async (taskId: string) => {
+    setTodoTasks(prev => prev.filter(task => task.id !== taskId));
+  };
+
   const handleEditField = (field: string, currentValue: string) => {
     setEditingField(field);
     setTempValue(currentValue);
@@ -489,8 +507,10 @@ const ProjectDetail: React.FC = () => {
         <TabsContent value="tasks">
           <TodoBoard 
             tasks={todoTasks} 
-            onTasksChange={setTodoTasks}
             teamMembers={project.team}
+            onCreateTask={handleCreateTask}
+            onUpdateTask={handleUpdateTask}
+            onDeleteTask={handleDeleteTask}
           />
         </TabsContent>
 
