@@ -17,7 +17,14 @@ export const useProjects = () => {
   const getSupabaseWithAuth = useCallback(async () => {
     const token = await getToken({ template: 'supabase' });
     if (token) {
-      supabase.global.headers['Authorization'] = `Bearer ${token}`;
+      const { error } = await supabase.auth.setSession({
+        access_token: token,
+        refresh_token: token, // Pas utilisé par Supabase dans ce flux, mais requis par la méthode
+      });
+      if (error) {
+        console.error('Error setting Supabase session:', error);
+        throw new Error('Impossible de configurer la session Supabase.');
+      }
     }
     return supabase;
   }, [getToken]);
