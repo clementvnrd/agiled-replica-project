@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -27,8 +26,6 @@ interface ProjectFormData {
   category: string;
   client: string;
   budget: number;
-  start_date: Date | null;
-  end_date: Date | null;
 }
 
 const CreateProjectDialog: React.FC<CreateProjectDialogProps> = ({ trigger }) => {
@@ -50,6 +47,7 @@ const CreateProjectDialog: React.FC<CreateProjectDialogProps> = ({ trigger }) =>
     try {
       await createProject({
         ...data,
+        budget: isNaN(data.budget) ? null : data.budget,
         start_date: startDate?.toISOString().split('T')[0] || null,
         end_date: endDate?.toISOString().split('T')[0] || null,
         progress: 0
@@ -155,6 +153,7 @@ const CreateProjectDialog: React.FC<CreateProjectDialogProps> = ({ trigger }) =>
               <Input
                 id="budget"
                 type="number"
+                step="any"
                 {...register('budget', { valueAsNumber: true })}
                 placeholder="0"
               />

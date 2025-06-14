@@ -1,4 +1,5 @@
-import React, { useState, useRef } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -21,7 +22,8 @@ import {
   Settings,
   CheckSquare,
   FileText,
-  BarChart3
+  BarChart3,
+  Loader2
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -29,7 +31,15 @@ import TodoBoard from '@/components/projects/TodoBoard';
 import NotesEditor from '@/components/projects/NotesEditor';
 import ProjectCalendar from '@/components/projects/ProjectCalendar';
 import CreateTaskDialog from '@/components/projects/CreateTaskDialog';
+import { supabase } from '@/integrations/supabase/client';
+import type { Database } from '@/integrations/supabase/types';
+import { useUser } from '@clerk/clerk-react';
 
+type DbProject = Database['public']['Tables']['projects']['Row'];
+type DbTask = Database['public']['Tables']['tasks']['Row'];
+type DbTeamMember = Database['public']['Tables']['team_members']['Row'];
+
+// Ces interfaces sont conservées pour la compatibilité avec les composants enfants non modifiables.
 interface Project {
   id: string;
   name: string;
@@ -65,232 +75,129 @@ interface TodoTask {
 const ProjectDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { user } = useUser();
+
+  const [project, setProject] = useState<DbProject | null>(null);
+  const [tasks, setTasks] = useState<DbTask[]>([]);
+  const [team, setTeam] = useState<DbTeamMember[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
   const [editingField, setEditingField] = useState<string | null>(null);
   const [tempValue, setTempValue] = useState('');
 
-  // Données des projets avec des données différentes selon l'ID
-  const getProjectData = (projectId: string): Project => {
-    const projects: Record<string, Project> = {
-      '1': {
-        id: '1',
-        name: 'Build the all-in-one management platform',
-        description: 'Développement d\'une plateforme de gestion complète intégrant CRM, gestion de projets, finances, RH et outils de productivité. L\'objectif est de créer une solution unifiée qui permet aux entreprises de centraliser tous leurs processus métier.',
-        status: 'active',
-        priority: 'high',
-        progress: 35,
-        startDate: new Date(2024, 4, 1),
-        endDate: new Date(2024, 11, 31),
-        team: [
-          { id: '1', name: 'Alice Martin', role: 'Chef de projet' },
-          { id: '2', name: 'Bob Durand', role: 'Développeur Full-Stack' },
-          { id: '3', name: 'Claire Dubois', role: 'UI/UX Designer' },
-          { id: '4', name: 'David Chen', role: 'Architecte Système' }
-        ],
-        category: 'Platform Development',
-        budget: 150000,
-        client: 'Internal'
-      },
-      '2': {
-        id: '2',
-        name: 'Marketing Campaign Q4',
-        description: 'Campagne marketing pour le lancement du nouveau produit au quatrième trimestre. Cette campagne vise à accroître la notoriété de la marque et à générer des leads qualifiés.',
-        status: 'planning',
-        priority: 'medium',
-        progress: 15,
-        startDate: new Date(2024, 9, 1),
-        endDate: new Date(2024, 11, 15),
-        team: [
-          { id: '3', name: 'Claire Dubois', role: 'Marketing Manager' },
-          { id: '4', name: 'David Chen', role: 'Content Creator' },
-          { id: '5', name: 'Emma Wilson', role: 'Social Media Manager' }
-        ],
-        category: 'Marketing',
-        budget: 80000,
-        client: 'External'
-      },
-      '3': {
-        id: '3',
-        name: 'Mobile App Redesign',
-        description: 'Refonte complète de l\'application mobile avec une nouvelle interface utilisateur et de nouvelles fonctionnalités pour améliorer l\'expérience utilisateur.',
-        status: 'active',
-        priority: 'high',
-        progress: 60,
-        startDate: new Date(2024, 2, 15),
-        endDate: new Date(2024, 7, 30),
-        team: [
-          { id: '5', name: 'Emma Wilson', role: 'UI/UX Designer' },
-          { id: '6', name: 'Frank Taylor', role: 'Mobile Developer' },
-          { id: '7', name: 'Grace Kim', role: 'QA Engineer' }
-        ],
-        category: 'Mobile Development',
-        budget: 120000,
-        client: 'Internal'
+  useEffect(() => {
+    const fetchProjectDetails = async () => {
+      if (!id || !user) return;
+      
+      setLoading(true);
+      setError(null);
+      
+      try {
+        const projectPromise = supabase.from('projects').select('*').eq('id', id).single();
+        const tasksPromise = supabase.from('tasks').select('*').eq('project_id', id).order('created_at');
+        const teamPromise = supabase.from('team_members').select('*').eq('project_id', id);
+
+        const [
+          { data: projectData, error: projectError }, 
+          { data: tasksData, error: tasksError }, 
+          { data: teamData, error: teamError }
+        ] = await Promise.all([projectPromise, tasksPromise, teamPromise]);
+
+        if (projectError) throw new Error(`Projet: ${projectError.message}`);
+        if (tasksError) throw new Error(`Tâches: ${tasksError.message}`);
+        if (teamError) throw new Error(`Équipe: ${teamError.message}`);
+
+        if (!projectData) {
+          throw new Error("Projet non trouvé.");
+        }
+
+        setProject(projectData);
+        setTasks(tasksData || []);
+        setTeam(teamData || []);
+
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Une erreur est survenue.');
+        console.error(err);
+      } finally {
+        setLoading(false);
       }
     };
-
-    return projects[projectId] || projects['1'];
-  };
-
-  const [project, setProject] = useState<Project>(getProjectData(id || '1'));
-
-  // Tâches TODO spécifiques au projet
-  const getProjectTasks = (projectId: string): TodoTask[] => {
-    const tasksByProject: Record<string, TodoTask[]> = {
-      '1': [
-        {
-          id: '1',
-          title: 'Analyser les besoins fonctionnels',
-          description: 'Définir précisément tous les modules nécessaires et leurs interactions',
-          status: 'done',
-          priority: 'high',
-          assignee: 'Alice Martin',
-          dueDate: new Date(2024, 5, 15),
-          tags: ['analyse', 'specs'],
-          createdAt: new Date(2024, 4, 5)
-        },
-        {
-          id: '2',
-          title: 'Concevoir l\'architecture système',
-          description: 'Définir l\'architecture technique, base de données et APIs',
-          status: 'done',
-          priority: 'high',
-          assignee: 'David Chen',
-          dueDate: new Date(2024, 5, 20),
-          tags: ['architecture', 'technique'],
-          createdAt: new Date(2024, 4, 8)
-        },
-        {
-          id: '3',
-          title: 'Créer les maquettes UI/UX',
-          description: 'Designer l\'interface utilisateur complète de la plateforme',
-          status: 'in-progress',
-          priority: 'high',
-          assignee: 'Claire Dubois',
-          dueDate: new Date(2024, 6, 10),
-          tags: ['design', 'ui/ux'],
-          createdAt: new Date(2024, 5, 1)
-        },
-        {
-          id: '4',
-          title: 'Développer le module CRM',
-          description: 'Implémenter la gestion des contacts, leads et opportunités',
-          status: 'todo',
-          priority: 'high',
-          assignee: 'Bob Durand',
-          dueDate: new Date(2024, 7, 15),
-          tags: ['développement', 'crm'],
-          createdAt: new Date(2024, 5, 10)
-        }
-      ],
-      '2': [
-        {
-          id: '5',
-          title: 'Définir la stratégie marketing',
-          description: 'Élaborer la stratégie globale pour la campagne Q4',
-          status: 'done',
-          priority: 'high',
-          assignee: 'Claire Dubois',
-          dueDate: new Date(2024, 9, 5),
-          tags: ['stratégie', 'marketing'],
-          createdAt: new Date(2024, 8, 1)
-        },
-        {
-          id: '6',
-          title: 'Créer le contenu publicitaire',
-          description: 'Développer les visuels et textes pour toutes les plateformes',
-          status: 'in-progress',
-          priority: 'medium',
-          assignee: 'David Chen',
-          dueDate: new Date(2024, 9, 20),
-          tags: ['contenu', 'créatif'],
-          createdAt: new Date(2024, 8, 15)
-        },
-        {
-          id: '7',
-          title: 'Lancer les campagnes social media',
-          description: 'Programmer et lancer les publications sur tous les réseaux',
-          status: 'todo',
-          priority: 'medium',
-          assignee: 'Emma Wilson',
-          dueDate: new Date(2024, 10, 1),
-          tags: ['social media', 'lancement'],
-          createdAt: new Date(2024, 9, 1)
-        }
-      ],
-      '3': [
-        {
-          id: '8',
-          title: 'Audit UX de l\'app actuelle',
-          description: 'Analyser les points de friction dans l\'interface actuelle',
-          status: 'done',
-          priority: 'high',
-          assignee: 'Emma Wilson',
-          dueDate: new Date(2024, 3, 1),
-          tags: ['audit', 'ux'],
-          createdAt: new Date(2024, 2, 15)
-        },
-        {
-          id: '9',
-          title: 'Prototyper la nouvelle interface',
-          description: 'Créer des prototypes interactifs pour les nouvelles fonctionnalités',
-          status: 'in-progress',
-          priority: 'high',
-          assignee: 'Emma Wilson',
-          dueDate: new Date(2024, 6, 15),
-          tags: ['prototype', 'design'],
-          createdAt: new Date(2024, 4, 1)
-        },
-        {
-          id: '10',
-          title: 'Développer les nouveaux écrans',
-          description: 'Implémenter la nouvelle interface mobile',
-          status: 'todo',
-          priority: 'high',
-          assignee: 'Frank Taylor',
-          dueDate: new Date(2024, 7, 1),
-          tags: ['développement', 'mobile'],
-          createdAt: new Date(2024, 5, 1)
-        }
-      ]
-    };
-
-    return tasksByProject[projectId] || [];
-  };
-
-  const [todoTasks, setTodoTasks] = useState<TodoTask[]>(getProjectTasks(id || '1'));
+    
+    fetchProjectDetails();
+  }, [id, user]);
 
   const handleCreateTask = async (taskData: Omit<TodoTask, 'id' | 'createdAt'>) => {
-    const newTask: TodoTask = {
-      ...taskData,
-      id: `new-${Date.now()}`, // mock id
-      createdAt: new Date(),
+    if (!user || !project) return;
+    
+    const taskToInsert = {
+        title: taskData.title,
+        description: taskData.description,
+        status: taskData.status,
+        priority: taskData.priority,
+        assignee: taskData.assignee,
+        due_date: taskData.dueDate ? taskData.dueDate.toISOString() : null,
+        tags: taskData.tags,
+        project_id: project.id,
+        user_id: user.id,
     };
-    setTodoTasks(prev => [...prev, newTask]);
+
+    const { data: newTask, error } = await supabase.from('tasks').insert([taskToInsert]).select().single();
+
+    if (error) {
+      console.error("Erreur lors de la création de la tâche:", error);
+    } else if (newTask) {
+      setTasks(prev => [...prev, newTask]);
+    }
   };
   
   const handleUpdateTask = async (taskId: string, updates: Partial<TodoTask>) => {
-    setTodoTasks(prev => prev.map(task => 
-      task.id === taskId ? { ...task, ...updates } : task
-    ));
+    const dbUpdates: Partial<DbTask> = {};
+    if (updates.title) dbUpdates.title = updates.title;
+    if (updates.description) dbUpdates.description = updates.description;
+    if (updates.status) dbUpdates.status = updates.status;
+    if (updates.priority) dbUpdates.priority = updates.priority;
+    if (updates.assignee) dbUpdates.assignee = updates.assignee;
+    if (updates.dueDate) dbUpdates.due_date = updates.dueDate.toISOString();
+    if (updates.tags) dbUpdates.tags = updates.tags;
+
+    const { data: updatedTask, error } = await supabase.from('tasks').update(dbUpdates).eq('id', taskId).select().single();
+    
+    if (error) {
+      console.error("Erreur lors de la mise à jour de la tâche:", error);
+    } else if (updatedTask) {
+      setTasks(prev => prev.map(t => t.id === taskId ? updatedTask : t));
+    }
   };
   
   const handleDeleteTask = async (taskId: string) => {
-    setTodoTasks(prev => prev.filter(task => task.id !== taskId));
-  };
-
-  const handleEditField = (field: string, currentValue: string) => {
-    setEditingField(field);
-    setTempValue(currentValue);
-  };
-
-  const handleSaveField = (field: string) => {
-    if (field === 'name') {
-      setProject({ ...project, name: tempValue });
-    } else if (field === 'description') {
-      setProject({ ...project, description: tempValue });
+    const { error } = await supabase.from('tasks').delete().eq('id', taskId);
+    if (error) {
+      console.error("Erreur lors de la suppression de la tâche:", error);
+    } else {
+      setTasks(prev => prev.filter(task => task.id !== taskId));
     }
+  };
+
+  const handleEditField = (field: string, currentValue: string | null) => {
+    setEditingField(field);
+    setTempValue(currentValue || '');
+  };
+
+  const handleSaveField = async (field: string) => {
+    if (!project) return;
+    
+    let updates: Partial<DbProject> = {};
+    if (field === 'name') {
+      updates = { name: tempValue };
+    } else if (field === 'description') {
+      updates = { description: tempValue };
+    }
+    
     setEditingField(null);
-    setTempValue('');
+    const { data, error } = await supabase.from('projects').update(updates).eq('id', project.id).select().single();
+    if (data) setProject(data);
+    if (error) console.error("Erreur de mise à jour:", error);
   };
 
   const handleCancelEdit = () => {
@@ -317,6 +224,44 @@ const ProjectDetail: React.FC = () => {
     };
     return labels[status];
   };
+
+  if (loading) {
+    return (
+      <div className="p-6 space-y-6 max-w-7xl mx-auto flex justify-center items-center h-screen">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  if (error || !project) {
+    return (
+      <div className="p-6 space-y-6 max-w-7xl mx-auto text-center">
+        <h2 className="text-2xl font-bold text-red-600">Erreur</h2>
+        <p>{error || 'Le projet n\'a pas pu être chargé.'}</p>
+        <Button onClick={() => navigate('/projects')}>Retour aux projets</Button>
+      </div>
+    );
+  }
+
+  // Mappage pour les composants enfants qui attendent les anciens types
+  const todoTasksForBoard: TodoTask[] = tasks.map(task => ({
+    id: task.id,
+    title: task.title,
+    description: task.description || '',
+    status: task.status as TodoTask['status'],
+    priority: task.priority as TodoTask['priority'],
+    assignee: task.assignee || undefined,
+    dueDate: task.due_date ? new Date(task.due_date) : undefined,
+    tags: task.tags || [],
+    createdAt: task.created_at ? new Date(task.created_at) : new Date(),
+  }));
+
+  const teamForBoard = team.map(member => ({
+      id: member.id,
+      name: member.name,
+      avatar: member.avatar || undefined,
+      role: member.role,
+  }));
 
   return (
     <div className="p-6 space-y-6 max-w-7xl mx-auto">
@@ -366,17 +311,19 @@ const ProjectDetail: React.FC = () => {
 
               {/* Badges et métadonnées */}
               <div className="flex items-center gap-3 flex-wrap">
-                <Badge variant="secondary" className={`text-white ${getStatusColor(project.status)}`}>
-                  {getStatusLabel(project.status)}
+                <Badge variant="secondary" className={`text-white ${getStatusColor(project.status as any)}`}>
+                  {getStatusLabel(project.status as any)}
                 </Badge>
                 <Badge variant="outline">{project.category}</Badge>
-                <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                  <CalendarIcon className="h-4 w-4" />
-                  {format(project.startDate, 'dd/MM/yyyy', { locale: fr })} - {format(project.endDate, 'dd/MM/yyyy', { locale: fr })}
-                </div>
+                {project.start_date && project.end_date && (
+                  <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                    <CalendarIcon className="h-4 w-4" />
+                    {format(new Date(project.start_date), 'dd/MM/yyyy', { locale: fr })} - {format(new Date(project.end_date), 'dd/MM/yyyy', { locale: fr })}
+                  </div>
+                )}
                 <div className="flex items-center gap-1 text-sm text-muted-foreground">
                   <Users className="h-4 w-4" />
-                  {project.team.length} membres
+                  {team.length} membres
                 </div>
                 {project.budget && (
                   <div className="flex items-center gap-1 text-sm text-muted-foreground">
@@ -451,16 +398,16 @@ const ProjectDetail: React.FC = () => {
           <div>
             <div className="flex justify-between items-center mb-2">
               <h3 className="font-medium">Progression</h3>
-              <span className="text-sm text-muted-foreground">{project.progress}%</span>
+              <span className="text-sm text-muted-foreground">{project.progress || 0}%</span>
             </div>
-            <Progress value={project.progress} className="h-3" />
+            <Progress value={project.progress || 0} className="h-3" />
           </div>
 
           {/* Équipe */}
           <div>
             <h3 className="font-medium mb-3">Équipe projet</h3>
             <div className="flex items-center gap-3 flex-wrap">
-              {project.team.map(member => (
+              {teamForBoard.map(member => (
                 <div key={member.id} className="flex items-center gap-2 bg-muted/50 rounded-lg p-2">
                   <Avatar className="h-8 w-8">
                     <AvatarImage src={member.avatar} />
@@ -506,8 +453,8 @@ const ProjectDetail: React.FC = () => {
 
         <TabsContent value="tasks">
           <TodoBoard 
-            tasks={todoTasks} 
-            teamMembers={project.team}
+            tasks={todoTasksForBoard} 
+            teamMembers={teamForBoard}
             onCreateTask={handleCreateTask}
             onUpdateTask={handleUpdateTask}
             onDeleteTask={handleDeleteTask}
