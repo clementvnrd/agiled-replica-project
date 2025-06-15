@@ -12,6 +12,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useRagDocuments } from '@/hooks/supabase/useRagDocuments';
+import { useTasks } from '@/hooks/useTasks';
+import { useTeamMembers } from '@/hooks/useTeamMembers';
 
 // Utiliser les types de useProjects
 type Project = ReturnType<typeof useProjects>['projects'][0];
@@ -39,6 +41,13 @@ const ProjectAIAgent: React.FC<ProjectAIAgentProps> = ({ projects, createProject
   const { user } = useSupabaseAuth();
   const { addDocument: addRagDocument, documents: ragDocuments } = useRagDocuments();
   const location = useLocation();
+  const { createTask } = useTasks();
+
+  const pathname = location.pathname;
+  const isProjectDetailPage = pathname.startsWith('/projects/') && pathname.split('/')[2];
+  const currentProjectId = isProjectDetailPage ? pathname.split('/')[2] : undefined;
+  
+  const { teamMembers } = useTeamMembers(currentProjectId);
 
   const handleSendMessage = async (messageText: string) => {
     setIsLoading(true);
@@ -69,6 +78,7 @@ const ProjectAIAgent: React.FC<ProjectAIAgentProps> = ({ projects, createProject
 
       // 2. Page-specific context
       let pageContext = "";
+      let teamMembersContext = "";
       const pathname = location.pathname;
 
       if (pathname.startsWith('/projects/')) {
@@ -80,6 +90,12 @@ const ProjectAIAgent: React.FC<ProjectAIAgentProps> = ({ projects, createProject
 <current_project_data>
 ${JSON.stringify(currentProject, null, 2)}
 </current_project_data>\n\n`;
+            if (teamMembers && teamMembers.length > 0) {
+              teamMembersContext = `The following team members are part of this project. You can assign tasks to them by name:
+<team_members_data>
+${JSON.stringify(teamMembers.map(m => ({ name: m.name, role: m.role })), null, 2)}
+</team_members_data>\n\n`;
+            }
           }
         }
       } else if (pathname.startsWith('/projects')) {
@@ -101,6 +117,7 @@ ${JSON.stringify(ragDocuments.slice(0, 5), null, 2)}
       You are omniscient about the user's projects and what they are currently doing in the app.
 
       ${pageContext}
+      ${teamMembersContext}
 
       Here is the current list of all projects:
       <projects_data>
@@ -114,6 +131,7 @@ ${JSON.stringify(ragDocuments.slice(0, 5), null, 2)}
       Available tools:
       - "createProject": { "description": "Creates a new project.", "arguments": { "name": "string", "description": "string" (optional), "priority": "'low'|'medium'|'high'" (optional) } }
       - "updateProject": { "description": "Updates an existing project.", "arguments": { "id": "string", "updates": { "name": "string" (optional), "description": "string" (optional), "status": "'planning'|'active'|'on-hold'|'completed'" (optional) } } }
+      - "createTask": { "description": "Creates a new task in a specific project. You must provide the project_id from the projects list.", "arguments": { "project_id": "string", "title": "string", "description": "string (optional)", "assignee": "string (the name of a team member, if available in the context)" (optional), "status": "'idea'|'todo'|'in-progress'|'done'" (optional, defaults to 'todo'), "priority": "'low'|'medium'|'high'" (optional, defaults to 'medium'), "due_date": "string (YYYY-MM-DD)" (optional), "tags": "string[]" (optional) } }
       - "addRagDocument": { "description": "Adds a new piece of information to the long-term knowledge base (RAG). Use this when you learn new, important, and permanent information from the user that should be remembered for future conversations. For example, user preferences, project goals, specific instructions, etc.", "arguments": { "content": "string (the piece of information to remember)", "title": "string (a short, descriptive title for the information)" } }
       
       If the user asks a general question, answer it naturally. If they ask to perform an action, use the appropriate tool.
@@ -148,6 +166,11 @@ ${JSON.stringify(ragDocuments.slice(0, 5), null, 2)}
             const updatedProject = await updateProject(id, updates);
             aiResponseContent = `Le projet "${updatedProject.name}" a bien été mis à jour.`;
             refetchProjects();
+          } else if (toolCall.tool_name === 'createTask') {
+            const newTask = await createTask(toolCall.arguments);
+            aiResponseContent = `J'ai créé la tâche "${newTask.title}" avec succès.`;
+            toast.success("Tâche créée avec succès !");
+            window.dispatchEvent(new Event('tasks-updated'));
           } else if (toolCall.tool_name === 'addRagDocument') {
             const { content, title } = toolCall.arguments;
             if (!content) {

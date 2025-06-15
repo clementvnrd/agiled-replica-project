@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useTasks } from '@/hooks/useTasks';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
 import TodoBoard from './TodoBoard';
@@ -26,9 +26,21 @@ interface ProjectTasksBoardProps {
 }
 
 const ProjectTasksBoard: React.FC<ProjectTasksBoardProps> = ({ projectId }) => {
-  const { tasks, loading: tasksLoading, error: tasksError, updateTask, deleteTask } = useTasks(projectId);
+  const { tasks, loading: tasksLoading, error: tasksError, updateTask, deleteTask, refetch } = useTasks(projectId);
   const { teamMembers, loading: membersLoading, error: membersError } = useTeamMembers(projectId);
   const { toast } = useToast();
+
+  useEffect(() => {
+    const handleTasksUpdate = () => {
+      refetch();
+    };
+
+    window.addEventListener('tasks-updated', handleTasksUpdate);
+
+    return () => {
+      window.removeEventListener('tasks-updated', handleTasksUpdate);
+    };
+  }, [refetch]);
 
   const handleUpdateTask = async (taskId: string, updates: Partial<TodoTask>) => {
     try {
