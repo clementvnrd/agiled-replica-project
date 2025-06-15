@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, X, Frown } from 'lucide-react';
+import { Search, X, Frown, FolderPlus, ListPlus } from 'lucide-react';
 import { Input } from './input';
 import { Button } from './button';
 import { cn } from '@/lib/utils';
@@ -9,6 +8,9 @@ import { useProjects } from '@/hooks/useProjects';
 import { useTasks } from '@/hooks/useTasks';
 import { useRagDocuments } from '@/hooks/supabase/useRagDocuments';
 import { useDebounce } from '@/hooks/useDebounce';
+import { CommandDialog, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from 'cmdk';
+import CreateProjectDialog from '@/components/projects/CreateProjectDialog';
+import CreateTaskDialog from '@/components/projects/CreateTaskDialog';
 
 interface SearchResult {
   id: string;
@@ -31,6 +33,13 @@ export const GlobalSearch: React.FC<SearchProps> = ({
   const debouncedQuery = useDebounce(query, 300);
   const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // --- State for Create Command Menu ---
+  const [createMenuOpen, setCreateMenuOpen] = useState(false);
+  const [projectDialogOpen, setProjectDialogOpen] = useState(false);
+  const [taskDialogState, setTaskDialogState] = useState<{ open: boolean; projectId: string | null }>({ open: false, projectId: null });
+  const [commandPage, setCommandPage] = useState('root');
+  // ---
 
   const { projects } = useProjects();
   const { tasks } = useTasks();
@@ -85,9 +94,18 @@ export const GlobalSearch: React.FC<SearchProps> = ({
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
+      // Cmd+K for search
       if (event.key === 'k' && (event.metaKey || event.ctrlKey)) {
         event.preventDefault();
         inputRef.current?.focus();
+      }
+
+      // 'n' for create menu
+      const target = event.target as HTMLElement;
+      const isEditing = target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName);
+      if (event.key === 'n' && !isEditing) {
+        event.preventDefault();
+        setCreateMenuOpen(true);
       }
     };
 
@@ -106,6 +124,16 @@ export const GlobalSearch: React.FC<SearchProps> = ({
   const handleClear = () => {
     setQuery('');
     setIsOpen(false);
+  };
+
+  const handleCreateProject = () => {
+    setCreateMenuOpen(false);
+    setProjectDialogOpen(true);
+  };
+
+  const handleSelectProjectForTask = (projectId: string) => {
+    setCreateMenuOpen(false);
+    setTaskDialogState({ open: true, projectId });
   };
 
   const defaultPlaceholder = "Rechercher... (⌘K)";
@@ -157,6 +185,63 @@ export const GlobalSearch: React.FC<SearchProps> = ({
             </div>
           )}
         </div>
+      )}
+
+      {/* --- Create Command Menu (triggered by 'n') --- */}
+      <CommandDialog open={createMenuOpen} onOpenChange={(open) => {
+        setCreateMenuOpen(open);
+        if (!open) {
+          setTimeout(() => setCommandPage('root'), 100); // Reset page on close
+        }
+      }}>
+        <CommandInput placeholder="Que voulez-vous créer ?" />
+        <CommandList>
+          <CommandEmpty>Aucune action trouvée.</CommandEmpty>
+          
+          {commandPage === 'root' && (
+            <CommandGroup heading="Actions">
+              <CommandItem onSelect={handleCreateProject} className="cursor-pointer">
+                <FolderPlus className="mr-2 h-4 w-4" />
+                <span>Nouveau Projet</span>
+              </CommandItem>
+              <CommandItem onSelect={() => setCommandPage('projects')} className="cursor-pointer">
+                <ListPlus className="mr-2 h-4 w-4" />
+                <span>Nouvelle Tâche</span>
+              </CommandItem>
+            </CommandGroup>
+          )}
+
+          {commandPage === 'projects' && (
+            <CommandGroup heading="Choisir un projet pour la tâche">
+              {(projects || []).length > 0 ? (
+                (projects || []).map((project) => (
+                  <CommandItem
+                    key={project.id}
+                    onSelect={() => handleSelectProjectForTask(project.id)}
+                    className="cursor-pointer"
+                  >
+                    <span>{project.name}</span>
+                  </CommandItem>
+                ))
+              ) : (
+                <div className="px-4 py-6 text-center text-sm text-muted-foreground">
+                  <p>Créez d'abord un projet.</p>
+                </div>
+              )}
+            </CommandGroup>
+          )}
+        </CommandList>
+      </CommandDialog>
+
+      {/* --- Dialogs triggered by create menu --- */}
+      <CreateProjectDialog open={projectDialogOpen} onOpenChange={setProjectDialogOpen} />
+
+      {taskDialogState.projectId && (
+        <CreateTaskDialog 
+          open={taskDialogState.open} 
+          onOpenChange={(open) => setTaskDialogState(prev => ({ ...prev, open: open, projectId: open ? prev.projectId : null }))}
+          projectId={taskDialogState.projectId} 
+        />
       )}
     </div>
   );

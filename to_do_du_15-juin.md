@@ -37,4 +37,4 @@ Liste des améliorations à apporter à l'application, basée sur l'audit comple
 ## 5. Ergonomie (Expérience Utilisateur - UX)
 
 - [ ] **Agent IA Proactif :** Rendre l'agent plus proactif avec des messages d'accueil contextuels.
-- [~] **Raccourcis Clavier :** Intégrer des raccourcis (`Cmd+K` pour la recherche, `N` pour créer). **(Cmd+K FAIT)**
+- [x] **Raccourcis Clavier :** Intégrer des raccourcis (`Cmd+K` pour la recherche, `N` pour créer). **(FAIT)**
