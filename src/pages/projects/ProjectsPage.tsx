@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -37,6 +36,8 @@ const ProjectsPage: React.FC = () => {
   const { projects, loading, createProject, updateProject, refetch } = useProjects();
   const { tasks } = useTasks();
   const [searchTerm, setSearchTerm] = useState('');
+  const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
+  const [isCreateProjectOpen, setIsCreateProjectOpen] = useState(false);
 
   const getStatusColor = (status: string) => {
     const colors = {
@@ -95,7 +96,9 @@ const ProjectsPage: React.FC = () => {
           <p className="text-muted-foreground">Gérez et suivez tous vos projets</p>
         </div>
         <div className="flex items-center gap-3">
-          <CreateTaskDialog 
+          <CreateTaskDialog
+            open={isCreateTaskOpen}
+            onOpenChange={setIsCreateTaskOpen}
             trigger={
               <Button variant="outline">
                 <Plus className="h-4 w-4 mr-2" />
@@ -103,7 +106,10 @@ const ProjectsPage: React.FC = () => {
               </Button>
             }
           />
-          <CreateProjectDialog />
+          <Button onClick={() => setIsCreateProjectOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Nouveau projet
+          </Button>
         </div>
       </div>
 
@@ -295,7 +301,10 @@ const ProjectsPage: React.FC = () => {
                 <p className="text-muted-foreground mb-4">
                   {searchTerm ? 'Aucun projet ne correspond à votre recherche.' : 'Commencez par créer votre premier projet.'}
                 </p>
-                <CreateProjectDialog />
+                <Button onClick={() => setIsCreateProjectOpen(true)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Créer un projet
+                </Button>
               </CardContent>
             </Card>
           )}
@@ -319,6 +328,7 @@ const ProjectsPage: React.FC = () => {
       </Tabs>
 
       {/* Agent IA Flottant */}
+      <CreateProjectDialog open={isCreateProjectOpen} onOpenChange={setIsCreateProjectOpen} />
       <ProjectAIAgent
         projects={projects}
         createProject={createProject}

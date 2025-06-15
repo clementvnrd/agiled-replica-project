@@ -24,6 +24,8 @@ const ProjectCalendarView: React.FC = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const { projects } = useProjects();
   const { tasks } = useTasks();
+  const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
+  const [isProjectDialogOpen, setIsProjectDialogOpen] = useState(false);
 
   // Générer les événements du calendrier
   const events = useMemo((): CalendarEvent[] => {
@@ -110,7 +112,9 @@ const ProjectCalendarView: React.FC = () => {
               Calendrier des projets
             </CardTitle>
             <div className="flex items-center gap-2">
-              <CreateTaskDialog 
+              <CreateTaskDialog
+                open={isTaskDialogOpen}
+                onOpenChange={setIsTaskDialogOpen}
                 trigger={
                   <Button variant="outline" size="sm">
                     <Plus className="h-4 w-4 mr-2" />
@@ -118,7 +122,9 @@ const ProjectCalendarView: React.FC = () => {
                   </Button>
                 }
               />
-              <CreateProjectDialog 
+              <CreateProjectDialog
+                open={isProjectDialogOpen}
+                onOpenChange={setIsProjectDialogOpen}
                 trigger={
                   <Button size="sm">
                     <Plus className="h-4 w-4 mr-2" />

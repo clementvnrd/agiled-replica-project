@@ -84,6 +84,7 @@ const ProjectDetail: React.FC = () => {
   
   const [editingField, setEditingField] = useState<string | null>(null);
   const [tempValue, setTempValue] = useState('');
+  const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
 
   useEffect(() => {
     const fetchProjectDetails = async () => {
@@ -312,10 +313,12 @@ const ProjectDetail: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-2">
-              <CreateTaskDialog 
+              <CreateTaskDialog
+                open={isCreateTaskOpen}
+                onOpenChange={setIsCreateTaskOpen}
                 projectId={project.id}
                 trigger={
-                  <Button variant="outline" size="sm" disabled>
+                  <Button variant="outline" size="sm">
                     <Plus className="h-4 w-4 mr-2" />
                     Nouvelle tâche
                   </Button>

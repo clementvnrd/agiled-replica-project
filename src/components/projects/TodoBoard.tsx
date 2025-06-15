@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -42,6 +41,9 @@ const TodoBoard: React.FC<TodoBoardProps> = ({
   onDeleteTask,
   projectId
 }) => {
+  const [isCreateTaskDialogOpen, setIsCreateTaskDialogOpen] = useState(false);
+  const [initialStatusForDialog, setInitialStatusForDialog] = useState<'idea' | 'todo' | 'in-progress' | 'done'>('todo');
+
   const columns = [
     {
       id: 'idea',
@@ -97,6 +99,11 @@ const TodoBoard: React.FC<TodoBoardProps> = ({
     await onDeleteTask(taskId);
   };
 
+  const openCreateTaskDialog = (status: TodoTask['status']) => {
+    setInitialStatusForDialog(status);
+    setIsCreateTaskDialogOpen(true);
+  };
+
   return (
     <div className="space-y-6">
       <Card className="glass-card">
@@ -135,16 +142,15 @@ const TodoBoard: React.FC<TodoBoardProps> = ({
                       {columnTasks.length}
                     </Badge>
                   </div>
-                  <CreateTaskDialog
-                    trigger={
-                      <Button size="sm" variant="outline" className="w-full">
-                        <Plus className="h-4 w-4 mr-2" />
-                        Ajouter une tâche
-                      </Button>
-                    }
-                    initialStatus={column.id as 'idea' | 'todo' | 'in-progress' | 'done'}
-                    projectId={projectId}
-                  />
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => openCreateTaskDialog(column.id as 'idea' | 'todo' | 'in-progress' | 'done')}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Ajouter une tâche
+                  </Button>
                 </CardHeader>
 
                 <CardContent>
@@ -187,6 +193,13 @@ const TodoBoard: React.FC<TodoBoardProps> = ({
           })}
         </div>
       </DragDropContext>
+
+      <CreateTaskDialog
+        open={isCreateTaskDialogOpen}
+        onOpenChange={setIsCreateTaskDialogOpen}
+        initialStatus={initialStatusForDialog}
+        projectId={projectId}
+      />
     </div>
   );
 };
