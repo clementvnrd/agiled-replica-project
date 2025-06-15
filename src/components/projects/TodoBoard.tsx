@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -91,13 +91,13 @@ const TodoBoard: React.FC<TodoBoardProps> = ({
     onUpdateTask(draggableId, { status: destination.droppableId as TodoTask['status'] });
   };
 
-  const handleUpdateTask = async (taskId: string, updates: Partial<TodoTask>) => {
+  const handleUpdateTask = useCallback(async (taskId: string, updates: Partial<TodoTask>) => {
     await onUpdateTask(taskId, updates);
-  };
+  }, [onUpdateTask]);
 
-  const handleDeleteTask = async (taskId: string) => {
+  const handleDeleteTask = useCallback(async (taskId: string) => {
     await onDeleteTask(taskId);
-  };
+  }, [onDeleteTask]);
 
   const openCreateTaskDialog = (status: TodoTask['status']) => {
     setInitialStatusForDialog(status);

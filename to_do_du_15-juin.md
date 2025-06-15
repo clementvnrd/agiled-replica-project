@@ -25,7 +25,7 @@ Liste des améliorations à apporter à l'application, basée sur l'audit comple
 
 - [ ] **Chargement Paresseux (Lazy Loading) :** Utiliser `React.lazy` et `Suspense` pour le chargement des pages.
 - [x] **Mises à Jour Optimistes :** Implémenter des mises à jour optimistes pour les actions fréquentes (création de tâches). **(FAIT)**
-- [ ] **Memoization :** Utiliser `React.memo` et `useCallback` pour optimiser les rendus inutiles. **(EN COURS - ProjectCalendarView)**
+- [x] **Memoization :** Utiliser `React.memo` et `useCallback` pour optimiser les rendus inutiles. **(FAIT - ProjectCalendarView, TodoBoard/TodoCard)**
 
 ## 4. Visuel (Design et Cohérence de l'UI)
 

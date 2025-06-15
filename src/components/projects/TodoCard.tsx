@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -245,4 +244,4 @@ const TodoCard: React.FC<TodoCardProps> = ({ task, teamMembers, onUpdate, onDele
   );
 };
 
-export default TodoCard;
+export default React.memo(TodoCard);

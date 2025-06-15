@@ -1,4 +1,5 @@
-import React, { useEffect } from 'react';
+
+import React, { useEffect, useCallback } from 'react';
 import { useTasks } from '@/hooks/useTasks';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
 import TodoBoard from './TodoBoard';
@@ -41,7 +42,7 @@ const ProjectTasksBoard: React.FC<ProjectTasksBoardProps> = ({ projectId }) => {
     };
   }, [refetch]);
 
-  const handleUpdateTask = async (taskId: string, updates: Partial<TodoTask>) => {
+  const handleUpdateTask = useCallback(async (taskId: string, updates: Partial<TodoTask>) => {
     try {
       const dbUpdates: TaskUpdate = { ...updates };
 
@@ -57,16 +58,16 @@ const ProjectTasksBoard: React.FC<ProjectTasksBoardProps> = ({ projectId }) => {
       // L'erreur est déjà gérée par le hook useTasks (log + toast).
       // Ce bloc try/catch empêche l'affichage du toast de succès en cas d'échec.
     }
-  };
+  }, [updateTask, toast]);
 
-  const handleDeleteTask = async (taskId: string) => {
+  const handleDeleteTask = useCallback(async (taskId: string) => {
     try {
       await deleteTask(taskId);
       toast({ title: 'Tâche supprimée', description: 'La tâche a été supprimée avec succès.' });
     } catch (error) {
       // L'erreur est déjà gérée par le hook useTasks.
     }
-  };
+  }, [deleteTask, toast]);
 
   if (tasksLoading || membersLoading) {
     return (
