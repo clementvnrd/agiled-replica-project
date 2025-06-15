@@ -53,7 +53,8 @@ const ProactiveAIAgent: React.FC = () => {
               description: `Examiner et traiter ${overdueActivities.length} activité(s) en retard`,
               priority: 'high',
               status: 'pending',
-              category: 'follow_up'
+              category: 'follow_up',
+              due_date: null
             });
           }
         });
@@ -82,7 +83,8 @@ const ProactiveAIAgent: React.FC = () => {
               description: `Contacter les prospects pour ${dealsWithoutRecentActivity.length} deal(s) sans activité récente`,
               priority: 'medium',
               status: 'pending',
-              category: 'follow_up'
+              category: 'follow_up',
+              due_date: null
             });
           }
         });
@@ -111,7 +113,8 @@ const ProactiveAIAgent: React.FC = () => {
               description: 'Organiser une campagne pour réactiver les contacts dormants',
               priority: 'low',
               status: 'pending',
-              category: 'marketing'
+              category: 'marketing',
+              due_date: null
             });
           }
         });

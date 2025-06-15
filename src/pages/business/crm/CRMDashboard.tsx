@@ -20,7 +20,7 @@ const CRMDashboard: React.FC = () => {
   const { todos } = useCrmTodos();
 
   // Calculer les statistiques
-  const totalRevenue = deals?.filter(deal => deal.status === 'closed_won')
+  const totalRevenue = deals?.filter(deal => deal.stage === 'closed_won')
     .reduce((sum, deal) => sum + (deal.value || 0), 0) || 0;
 
   const pendingTodos = todos.filter(todo => todo.status === 'pending');

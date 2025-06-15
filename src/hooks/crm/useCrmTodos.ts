@@ -33,7 +33,12 @@ const fetchCrmTodos = async (userId: string | undefined): Promise<CrmTodo[]> => 
     throw new Error(error.message);
   }
 
-  return data || [];
+  // Assurer le bon typage des données reçues de la base
+  return (data || []).map(todo => ({
+    ...todo,
+    priority: todo.priority as 'low' | 'medium' | 'high',
+    status: todo.status as 'pending' | 'in_progress' | 'completed'
+  }));
 };
 
 const createCrmTodo = async (todo: Omit<CrmTodo, 'id' | 'created_at' | 'updated_at'>) => {
