@@ -2,7 +2,7 @@
 // Migration : utilisation du client Supabase global (plus de logique multi-instance)
 import { supabase } from '@/integrations/supabase/client';
 import React, { useState, useEffect } from 'react';
-import { useUser } from '@clerk/clerk-react';
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RagDocument } from '@/types';
 import DocumentForm from './DocumentForm';
@@ -10,7 +10,7 @@ import DocumentList from './DocumentList';
 import FileUploader from './FileUploader';
 
 const RagDocumentEditor: React.FC = () => {
-  const { user } = useUser();
+  const { user } = useSupabaseAuth();
   const [activeTab, setActiveTab] = useState<string>('editor');
   const [documents, setDocuments] = useState<RagDocument[]>([]);
   const [isLoading, setIsLoading] = useState(true);

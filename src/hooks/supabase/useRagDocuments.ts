@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { useUser } from '@clerk/clerk-react';
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { RagDocument } from '@/types';
 
@@ -8,7 +8,7 @@ import { RagDocument } from '@/types';
  * Hook to manage RAG documents for the current user.
  */
 export function useRagDocuments() {
-  const { user } = useUser();
+  const { user } = useSupabaseAuth();
   const [documents, setDocuments] = useState<RagDocument[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
