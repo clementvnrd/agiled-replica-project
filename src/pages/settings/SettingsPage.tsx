@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -5,6 +6,7 @@ import OpenRouterSettings from '@/components/settings/OpenRouterSettings';
 import MCPManager from '@/pages/settings/MCPManager';
 import SupabaseStatusBadge from '@/components/supabase/SupabaseStatusBadge';
 import { Button } from '@/components/ui/button';
+import OpenAISettings from '@/components/settings/OpenAISettings';
 
 const SettingsPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('general');
@@ -39,6 +41,7 @@ const SettingsPage: React.FC = () => {
           <TabsTrigger value="general">Général</TabsTrigger>
           <TabsTrigger value="supabase" disabled>Supabase</TabsTrigger>
           <TabsTrigger value="openRouter">OpenRouter</TabsTrigger>
+          <TabsTrigger value="openai">OpenAI</TabsTrigger>
           <TabsTrigger value="mcp">MCP</TabsTrigger>
           {/* <TabsTrigger value="supabase-update" className="hidden">Modifier Supabase</TabsTrigger> */}
         </TabsList>
@@ -75,6 +78,10 @@ const SettingsPage: React.FC = () => {
 
         <TabsContent value="openRouter">
           <OpenRouterSettings />
+        </TabsContent>
+
+        <TabsContent value="openai">
+          <OpenAISettings />
         </TabsContent>
 
         <TabsContent value="mcp">
