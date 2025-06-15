@@ -1,12 +1,13 @@
-
 import React from 'react';
-import { Users, Building, DollarSign, PieChart, Activity } from 'lucide-react';
+import { Users, Building, DollarSign, PieChart, Activity, Mail, Phone, Handshake, ListTodo } from 'lucide-react';
 import DashboardChart from '@/components/DashboardChart';
 import StatCardGroup from '@/components/dashboard/StatCardGroup';
 import type { StatItem } from '@/components/dashboard/StatCardGroup';
 import { useCrmAccounts } from '@/hooks/crm/useCrmAccounts';
 import { useCrmContacts } from '@/hooks/crm/useCrmContacts';
 import { useCrmDeals } from '@/hooks/crm/useCrmDeals';
+import { useCrmActivities, type CrmActivity } from '@/hooks/crm/useCrmActivities';
+import { ActivityFeed, type ActivityItem } from '@/components/ui/activity-feed';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -22,8 +23,9 @@ const CRMDashboard: React.FC = () => {
   const { data: accounts, isLoading: isLoadingAccounts } = useCrmAccounts();
   const { data: contacts, isLoading: isLoadingContacts } = useCrmContacts();
   const { data: deals, isLoading: isLoadingDeals } = useCrmDeals();
+  const { data: activities, isLoading: isLoadingActivities } = useCrmActivities();
 
-  const isLoading = isLoadingAccounts || isLoadingContacts || isLoadingDeals;
+  const isLoading = isLoadingAccounts || isLoadingContacts || isLoadingDeals || isLoadingActivities;
 
   const totalRevenue = deals
     ?.filter(deal => deal.stage === 'won' && deal.value)
@@ -78,6 +80,25 @@ const CRMDashboard: React.FC = () => {
   
   const latestDeals = deals?.slice(0, 5) ?? [];
   const latestContacts = contacts?.slice(0, 5) ?? [];
+
+  const mapActivityToFeedItem = (activity: CrmActivity): ActivityItem => {
+    const iconMap: { [key: string]: React.ReactNode } = {
+      email: <Mail size={14} />,
+      call: <Phone size={14} />,
+      meeting: <Handshake size={14} />,
+      todo: <ListTodo size={14} />,
+    };
+
+    return {
+      id: activity.id,
+      type: activity.activity_type,
+      title: activity.title,
+      description: activity.description ?? undefined,
+      timestamp: new Date(activity.created_at),
+      icon: iconMap[activity.activity_type] || <Activity size={14} />,
+      category: activity.status === 'completed' ? 'success' : 'info',
+    };
+  };
 
   return (
     <div className="p-6">
@@ -155,7 +176,11 @@ const CRMDashboard: React.FC = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-muted-foreground text-center py-4 text-sm">Le suivi des activités sera bientôt disponible.</p>
+            {activities && activities.length > 0 ? (
+              <ActivityFeed activities={activities.slice(0, 5).map(mapActivityToFeedItem)} />
+            ) : (
+              <p className="text-muted-foreground text-center py-4 text-sm">Aucune activité pour le moment.</p>
+            )}
           </CardContent>
         </Card>
       </div>

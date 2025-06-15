@@ -42,6 +42,73 @@ export type Database = {
         }
         Relationships: []
       }
+      crm_activities: {
+        Row: {
+          activity_type: string
+          created_at: string
+          description: string | null
+          due_date: string | null
+          id: string
+          related_to_account_id: string | null
+          related_to_contact_id: string | null
+          related_to_deal_id: string | null
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          activity_type: string
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          related_to_account_id?: string | null
+          related_to_contact_id?: string | null
+          related_to_deal_id?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          activity_type?: string
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          related_to_account_id?: string | null
+          related_to_contact_id?: string | null
+          related_to_deal_id?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_activities_related_to_account_id_fkey"
+            columns: ["related_to_account_id"]
+            isOneToOne: false
+            referencedRelation: "crm_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_activities_related_to_contact_id_fkey"
+            columns: ["related_to_contact_id"]
+            isOneToOne: false
+            referencedRelation: "crm_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_activities_related_to_deal_id_fkey"
+            columns: ["related_to_deal_id"]
+            isOneToOne: false
+            referencedRelation: "crm_deals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       crm_contacts: {
         Row: {
           account_id: string | null
