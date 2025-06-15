@@ -1,188 +1,98 @@
+
 import React from 'react';
-import { Users, Building, DollarSign, PieChart, Activity, Mail, Phone, Handshake, ListTodo } from 'lucide-react';
-import DashboardChart from '@/components/DashboardChart';
-import StatCardGroup from '@/components/dashboard/StatCardGroup';
-import type { StatItem } from '@/components/dashboard/StatCardGroup';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useCrmAccounts } from '@/hooks/crm/useCrmAccounts';
 import { useCrmContacts } from '@/hooks/crm/useCrmContacts';
 import { useCrmDeals } from '@/hooks/crm/useCrmDeals';
-import { useCrmActivities, type CrmActivity } from '@/hooks/crm/useCrmActivities';
-import { ActivityFeed, type ActivityItem } from '@/components/ui/activity-feed';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-
-const chartData = [
-  { name: 'Jan', value: 0 },
-  { name: 'Feb', value: 0 },
-  { name: 'Mar', value: 0 },
-  { name: 'Apr', value: 0 },
-  { name: 'May', value: 0 },
-];
+import { useCrmTickets } from '@/hooks/crm/useCrmTickets';
+import { useCrmActivities } from '@/hooks/crm/useCrmActivities';
+import { useCrmTodos } from '@/hooks/crm/useCrmTodos';
+import { Building, Users, DollarSign, Ticket, Calendar, CheckSquare } from 'lucide-react';
+import ProactiveAIAgent from '@/components/crm/ProactiveAIAgent';
+import CrmTodoList from '@/components/crm/CrmTodoList';
 
 const CRMDashboard: React.FC = () => {
-  const { data: accounts, isLoading: isLoadingAccounts } = useCrmAccounts();
-  const { data: contacts, isLoading: isLoadingContacts } = useCrmContacts();
-  const { data: deals, isLoading: isLoadingDeals } = useCrmDeals();
-  const { data: activities, isLoading: isLoadingActivities } = useCrmActivities();
+  const { data: accounts } = useCrmAccounts();
+  const { data: contacts } = useCrmContacts();
+  const { data: deals } = useCrmDeals();
+  const { data: tickets } = useCrmTickets();
+  const { data: activities } = useCrmActivities();
+  const { todos } = useCrmTodos();
 
-  const isLoading = isLoadingAccounts || isLoadingContacts || isLoadingDeals || isLoadingActivities;
+  // Calculer les statistiques
+  const totalRevenue = deals?.filter(deal => deal.status === 'closed_won')
+    .reduce((sum, deal) => sum + (deal.value || 0), 0) || 0;
 
-  const totalRevenue = deals
-    ?.filter(deal => deal.stage === 'won' && deal.value)
-    .reduce((sum, deal) => sum + Number(deal.value || 0), 0) || 0;
+  const pendingTodos = todos.filter(todo => todo.status === 'pending');
+  const completedTodos = todos.filter(todo => todo.status === 'completed');
 
-  const crmStats: StatItem[] = [
+  const stats = [
     {
       title: "Comptes",
-      value: isLoading ? "..." : (accounts?.length ?? 0).toString(),
-      icon: <Building size={18} className="text-blue-600" />
+      value: accounts?.length || 0,
+      icon: <Building className="h-4 w-4" />,
     },
     {
       title: "Contacts",
-      value: isLoading ? "..." : (contacts?.length ?? 0).toString(),
-      icon: <Users size={18} className="text-green-600" />,
-      iconBg: "bg-green-100"
+      value: contacts?.length || 0,
+      icon: <Users className="h-4 w-4" />,
     },
     {
       title: "Deals",
-      value: isLoading ? "..." : (deals?.length ?? 0).toString(),
-      icon: <DollarSign size={18} className="text-purple-600" />,
-      iconBg: "bg-purple-100"
+      value: deals?.length || 0,
+      icon: <DollarSign className="h-4 w-4" />,
+      subtitle: `${new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(totalRevenue)} de revenus`,
     },
     {
-      title: "Revenu",
-      value: isLoading ? "..." : `${totalRevenue.toLocaleString('fr-FR')} €`,
-      icon: <PieChart size={18} className="text-orange-600" />,
-      iconBg: "bg-orange-100"
-    }
+      title: "Tickets",
+      value: tickets?.length || 0,
+      icon: <Ticket className="h-4 w-4" />,
+    },
+    {
+      title: "Activités",
+      value: activities?.length || 0,
+      icon: <Calendar className="h-4 w-4" />,
+    },
+    {
+      title: "Tâches",
+      value: todos.length,
+      icon: <CheckSquare className="h-4 w-4" />,
+      subtitle: `${pendingTodos.length} en attente, ${completedTodos.length} terminées`,
+    },
   ];
-
-  if (isLoading) {
-    return (
-      <div className="p-6">
-        <div className="mb-8">
-          <Skeleton className="h-8 w-1/3 mb-2" />
-          <Skeleton className="h-4 w-1/2" />
-        </div>
-        <StatCardGroup items={crmStats} />
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 my-6">
-          <Skeleton className="h-64 rounded-lg" />
-          <Skeleton className="h-64 rounded-lg" />
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <Skeleton className="h-48 rounded-lg" />
-          <Skeleton className="h-48 rounded-lg" />
-          <Skeleton className="h-48 rounded-lg" />
-        </div>
-      </div>
-    )
-  }
-  
-  const latestDeals = deals?.slice(0, 5) ?? [];
-  const latestContacts = contacts?.slice(0, 5) ?? [];
-
-  const mapActivityToFeedItem = (activity: CrmActivity): ActivityItem => {
-    const iconMap: { [key: string]: React.ReactNode } = {
-      email: <Mail size={14} />,
-      call: <Phone size={14} />,
-      meeting: <Handshake size={14} />,
-      todo: <ListTodo size={14} />,
-    };
-
-    return {
-      id: activity.id,
-      type: activity.activity_type,
-      title: activity.title,
-      description: activity.description ?? undefined,
-      timestamp: new Date(activity.created_at),
-      icon: iconMap[activity.activity_type] || <Activity size={14} />,
-      category: activity.status === 'completed' ? 'success' : 'info',
-    };
-  };
 
   return (
     <div className="p-6">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold mb-1">CRM Dashboard</h1>
-        <p className="text-agiled-lightText">Gérez vos relations clients, contacts et opportunités</p>
+        <h1 className="text-2xl font-bold mb-1">Dashboard CRM</h1>
+        <p className="text-agiled-lightText">Vue d'ensemble de votre activité commerciale</p>
       </div>
-      
-      <StatCardGroup items={crmStats} />
-      
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 my-6">
-        <DashboardChart 
-          title="Entonnoir de ventes" 
-          data={chartData} 
-          dataKey="value"
-          color="#3b82f6"
-        />
-        <DashboardChart 
-          title="Leads par source" 
-          data={chartData} 
-          dataKey="value"
-          color="#10b981"
-        />
-      </div>
-      
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base font-semibold">
-              <DollarSign size={16} /> Derniers deals
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {latestDeals.length > 0 ? (
-              <ul className="space-y-3 text-sm">
-                {latestDeals.map(deal => (
-                  <li key={deal.id} className="flex justify-between items-center">
-                    <span>{deal.name}</span>
-                    <span className="font-medium text-muted-foreground">{deal.value ? `${Number(deal.value).toLocaleString('fr-FR')} €` : ''}</span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-muted-foreground text-center py-4 text-sm">Aucun deal pour le moment.</p>
-            )}
-          </CardContent>
-        </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base font-semibold">
-              <Users size={16} /> Derniers contacts
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {latestContacts.length > 0 ? (
-               <ul className="space-y-3 text-sm">
-                {latestContacts.map(contact => (
-                  <li key={contact.id} className="flex items-center justify-between">
-                    <span>{contact.name}</span>
-                    <span className="text-muted-foreground">{contact.role}</span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-muted-foreground text-center py-4 text-sm">Aucun contact pour le moment.</p>
-            )}
-          </CardContent>
-        </Card>
+      {/* Statistiques */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        {stats.map((stat, index) => (
+          <Card key={index}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
+              {stat.icon}
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stat.value}</div>
+              {stat.subtitle && (
+                <p className="text-xs text-muted-foreground">{stat.subtitle}</p>
+              )}
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Grille principale */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Agent IA Proactif */}
+        <ProactiveAIAgent />
         
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base font-semibold">
-              <Activity size={16} /> Activités récentes
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {activities && activities.length > 0 ? (
-              <ActivityFeed activities={activities.slice(0, 5).map(mapActivityToFeedItem)} />
-            ) : (
-              <p className="text-muted-foreground text-center py-4 text-sm">Aucune activité pour le moment.</p>
-            )}
-          </CardContent>
-        </Card>
+        {/* To Do Liste */}
+        <CrmTodoList />
       </div>
     </div>
   );
