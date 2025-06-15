@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Bot, X, Loader2, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -36,7 +37,8 @@ const ProjectAIAgent: React.FC<ProjectAIAgentProps> = ({ projects, createProject
   const [isLoading, setIsLoading] = useState(false);
   const [model, setModel] = useState('openai/gpt-4o-mini');
   const { user } = useSupabaseAuth();
-  const { addDocument: addRagDocument } = useRagDocuments();
+  const { addDocument: addRagDocument, documents: ragDocuments } = useRagDocuments();
+  const location = useLocation();
 
   const handleSendMessage = async (messageText: string) => {
     setIsLoading(true);
@@ -65,9 +67,42 @@ const ProjectAIAgent: React.FC<ProjectAIAgentProps> = ({ projects, createProject
         console.warn("La recherche RAG a échoué, je continue sans contexte.", e);
       }
 
+      // 2. Page-specific context
+      let pageContext = "";
+      const pathname = location.pathname;
+
+      if (pathname.startsWith('/projects/')) {
+        const projectId = pathname.split('/')[2];
+        if (projectId) {
+          const currentProject = projects.find(p => p.id === projectId);
+          if (currentProject) {
+            pageContext = `The user is currently viewing the details of the project "${currentProject.name}". Here is the full data for this project:
+<current_project_data>
+${JSON.stringify(currentProject, null, 2)}
+</current_project_data>\n\n`;
+          }
+        }
+      } else if (pathname.startsWith('/projects')) {
+        pageContext = "The user is currently viewing the list of all their projects.\n\n";
+      } else if (pathname.startsWith('/rag')) {
+        pageContext = `The user is currently on the RAG document management page. They can see a list of their documents. Here are the first 5 documents in their knowledge base:
+<rag_documents_sample>
+${JSON.stringify(ragDocuments.slice(0, 5), null, 2)}
+</rag_documents_sample>\n\n`;
+      } else if (pathname.startsWith('/dashboard')) {
+        pageContext = "The user is currently on the main dashboard page.\n\n";
+      } else if (pathname.startsWith('/calendar')) {
+        pageContext = "The user is currently viewing their calendar.\n\n";
+      }
+
+
       const systemPrompt = `
       You are a project management AI assistant. Your goal is to help the user manage their projects.
-      You are omniscient about the user's projects. Here is the current list of projects:
+      You are omniscient about the user's projects and what they are currently doing in the app.
+
+      ${pageContext}
+
+      Here is the current list of all projects:
       <projects_data>
       ${JSON.stringify(projects, null, 2)}
       </projects_data>
