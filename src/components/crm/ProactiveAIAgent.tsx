@@ -62,11 +62,10 @@ const ProactiveAIAgent: React.FC = () => {
       // Analyser les deals sans activité récente
       const dealsWithoutRecentActivity = deals?.filter(deal => {
         const recentActivities = activities?.filter(activity => 
-          activity.related_entity_type === 'deal' && 
-          activity.related_entity_id === deal.id &&
+          activity.related_to_deal_id === deal.id &&
           new Date(activity.created_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) // 7 jours
         ) || [];
-        return recentActivities.length === 0 && deal.status !== 'closed_won' && deal.status !== 'closed_lost';
+        return recentActivities.length === 0 && deal.stage !== 'closed_won' && deal.stage !== 'closed_lost';
       }) || [];
 
       if (dealsWithoutRecentActivity.length > 0) {
@@ -92,8 +91,7 @@ const ProactiveAIAgent: React.FC = () => {
       // Analyser les contacts sans interaction récente
       const contactsWithoutRecentInteraction = contacts?.filter(contact => {
         const recentActivities = activities?.filter(activity => 
-          activity.related_entity_type === 'contact' && 
-          activity.related_entity_id === contact.id &&
+          activity.related_to_contact_id === contact.id &&
           new Date(activity.created_at) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) // 30 jours
         ) || [];
         return recentActivities.length === 0;

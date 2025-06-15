@@ -2,10 +2,20 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
-import { Tables } from '@/integrations/supabase/types';
 import { toast } from 'sonner';
 
-export type CrmTodo = Tables<'crm_todos'>;
+export interface CrmTodo {
+  id: string;
+  user_id: string;
+  title: string;
+  description: string | null;
+  priority: 'low' | 'medium' | 'high';
+  status: 'pending' | 'in_progress' | 'completed';
+  category: string | null;
+  due_date: string | null;
+  created_at: string;
+  updated_at: string;
+}
 
 const fetchCrmTodos = async (userId: string | undefined): Promise<CrmTodo[]> => {
   if (!userId) {
