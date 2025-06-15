@@ -154,40 +154,54 @@ ${JSON.stringify(ragDocuments.slice(0, 5), null, 2)}
       let aiResponseContent = response.choices[0].message.content;
 
       // Check if the AI wants to use a tool
-      if (aiResponseContent.trim().startsWith('{')) {
-        try {
-          const toolCall = JSON.parse(aiResponseContent);
-          if (toolCall.tool_name === 'createProject') {
-            const newProject = await createProject(toolCall.arguments);
-            aiResponseContent = `J'ai créé le projet "${newProject.name}" avec succès !`;
-            refetchProjects();
-          } else if (toolCall.tool_name === 'updateProject') {
-            const { id, updates } = toolCall.arguments;
-            const updatedProject = await updateProject(id, updates);
-            aiResponseContent = `Le projet "${updatedProject.name}" a bien été mis à jour.`;
-            refetchProjects();
-          } else if (toolCall.tool_name === 'createTask') {
-            const newTask = await createTask(toolCall.arguments);
-            aiResponseContent = `J'ai créé la tâche "${newTask.title}" avec succès.`;
-            toast.success("Tâche créée avec succès !");
-            window.dispatchEvent(new Event('tasks-updated'));
-          } else if (toolCall.tool_name === 'addRagDocument') {
-            const { content, title } = toolCall.arguments;
-            if (!content) {
-                throw new Error("Le contenu est requis pour ajouter un document RAG.");
+      let isToolCallAttempt = false;
+      try {
+        // More robustly find a JSON object in the response
+        const jsonMatch = aiResponseContent.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          const toolCall = JSON.parse(jsonMatch[0]);
+          
+          if (toolCall.tool_name) {
+            isToolCallAttempt = true; // We assume it's a tool call and will handle errors
+            if (toolCall.tool_name === 'createProject') {
+              const newProject = await createProject(toolCall.arguments);
+              aiResponseContent = `J'ai créé le projet "${newProject.name}" avec succès !`;
+              refetchProjects();
+            } else if (toolCall.tool_name === 'updateProject') {
+              const { id, updates } = toolCall.arguments;
+              const updatedProject = await updateProject(id, updates);
+              aiResponseContent = `Le projet "${updatedProject.name}" a bien été mis à jour.`;
+              refetchProjects();
+            } else if (toolCall.tool_name === 'createTask') {
+              const newTask = await createTask(toolCall.arguments);
+              aiResponseContent = `J'ai créé la tâche "${newTask.title}" avec succès.`;
+              toast.success("Tâche créée avec succès !");
+              window.dispatchEvent(new Event('tasks-updated'));
+            } else if (toolCall.tool_name === 'addRagDocument') {
+              const { content, title } = toolCall.arguments;
+              if (!content) {
+                  throw new Error("Le contenu est requis pour ajouter un document RAG.");
+              }
+              await addRagDocument({
+                  content,
+                  metadata: { title: title || 'Information apprise', source: 'ProjectAIAgent' }
+              });
+              aiResponseContent = "J'ai bien noté cette information et l'ai ajoutée à ma base de connaissances pour le futur.";
+              toast.success("Nouvelle information ajoutée au RAG.");
+            } else {
+              // Not a recognized tool, so we'll just display the AI's message.
+              isToolCallAttempt = false;
             }
-            await addRagDocument({
-                content,
-                metadata: { title: title || 'Information apprise', source: 'ProjectAIAgent' }
-            });
-            aiResponseContent = "J'ai bien noté cette information et l'ai ajoutée à ma base de connaissances pour le futur.";
-            toast.success("Nouvelle information ajoutée au RAG.");
           }
-        } catch (toolError) {
-          console.error("Error executing tool:", toolError);
-          aiResponseContent = "Désolé, une erreur est survenue lors de l'exécution de l'action demandée.";
-          toast.error("Erreur de l'agent IA : " + (toolError instanceof Error ? toolError.message : String(toolError)));
         }
+      } catch (toolError) {
+        if (isToolCallAttempt) {
+            console.error("Error executing tool:", toolError);
+            aiResponseContent = "Désolé, une erreur est survenue lors de l'exécution de l'action demandée.";
+            toast.error("Erreur de l'agent IA : " + (toolError instanceof Error ? toolError.message : String(toolError)));
+        }
+        // If it wasn't a tool call attempt, or JSON parsing failed,
+        // we suppress the error and just show the raw response from the AI.
       }
 
       setMessages(prev => [...prev, { role: 'assistant', content: aiResponseContent, timestamp: Date.now() }]);
@@ -238,7 +252,7 @@ ${JSON.stringify(ragDocuments.slice(0, 5), null, 2)}
                   </Button>
                 </div>
             </CardHeader>
-            <CardContent className="flex-1 p-0">
+            <CardContent className="flex-1 p-0 min-h-0">
                 <ModernChatInterface
                     messages={messages}
                     onSendMessage={handleSendMessage}
