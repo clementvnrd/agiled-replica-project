@@ -119,11 +119,13 @@ const ProjectDetailPage: React.FC = () => {
     createdAt: new Date(task.created_at || new Date()),
   }));
 
-  const convertedTeamMembers = teamMembers.map(member => ({
-    id: member.id,
-    name: member.name,
-    avatar: member.avatar || undefined,
-    role: member.role
+  const convertedTeamMembers = teamMembers
+    .filter(member => member && member.id)
+    .map(member => ({
+      id: member.id,
+      name: member.name,
+      avatar: member.avatar || undefined,
+      role: member.role
   }));
 
   const handleCreateTask = async (taskData: Omit<TodoTask, 'id' | 'createdAt'>) => {

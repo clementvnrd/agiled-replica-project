@@ -256,7 +256,9 @@ const ProjectDetail: React.FC = () => {
     createdAt: task.created_at ? new Date(task.created_at) : new Date(),
   }));
 
-  const teamForBoard = team.map(member => ({
+  const teamForBoard = team
+    .filter(member => member && member.id)
+    .map(member => ({
       id: member.id,
       name: member.name,
       avatar: member.avatar || undefined,
