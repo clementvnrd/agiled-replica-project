@@ -3,7 +3,6 @@ import { useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 
 import { openRouterService, Message as OpenRouterMessage } from '@/services/openrouter';
-import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { useRagDocuments } from '@/hooks/supabase/useRagDocuments';
 import { useTasks } from '@/hooks/useTasks';
@@ -11,6 +10,8 @@ import { useTeamMembers } from '@/hooks/useTeamMembers';
 import type { useProjects } from '@/hooks/useProjects';
 import { getPageContext } from '@/utils/ai/getContext';
 import { handleToolCalls } from '@/services/aiToolHandler';
+import { getSystemPrompt } from '@/utils/ai/getSystemPrompt';
+import { searchRag } from '@/services/ragService';
 
 type Project = ReturnType<typeof useProjects>['projects'][0];
 type CreateProject = ReturnType<typeof useProjects>['createProject'];
@@ -61,21 +62,7 @@ export const useProjectAIAgentLogic = ({
       }
 
       // 1. RAG Retrieval
-      let ragContext = "";
-      try {
-        const { data: searchResults, error: searchError } = await supabase.functions.invoke('vector_search', {
-          body: { query: messageText, userId: user.id, limit: 3 }
-        });
-
-        if (searchError) {
-          console.warn("La recherche RAG a échoué:", searchError.message);
-        } else if (searchResults && searchResults.length > 0) {
-          ragContext = "Contexte potentiellement pertinent de votre base de connaissances :\n" +
-            searchResults.map((doc: any) => `- ${doc.content}`).join('\n') + "\n\n";
-        }
-      } catch (e) {
-        console.warn("La recherche RAG a échoué, je continue sans contexte.", e);
-      }
+      const ragContext = await searchRag(messageText, user.id);
 
       // 2. Page-specific context
       const { pageContext, teamMembersContext } = getPageContext({
@@ -85,37 +72,13 @@ export const useProjectAIAgentLogic = ({
         teamMembers,
       });
 
-      const systemPrompt = `
-      You are a project management AI assistant. Your goal is to help the user manage their projects.
-      You are omniscient about the user's projects and what they are currently doing in the app.
-
-      ${pageContext}
-      ${teamMembersContext}
-
-      Here is the current list of all projects:
-      <projects_data>
-      ${JSON.stringify(projects, null, 2)}
-      </projects_data>
-
-      ${ragContext}
-
-      You have access to the following tools. To use a tool, you MUST respond with a JSON object. To use multiple tools in one turn, respond with a JSON array of tool call objects.
-      Format for single call: {"tool_name": "...", "arguments": {...}}
-      Format for multiple calls: [{"tool_name": "...", "arguments": {...}}, {"tool_name": "...", "arguments": {...}}]
-      Do not add any other text outside the JSON.
-      
-      Available tools:
-      - "createProject": { "description": "Creates a new project.", "arguments": { "name": "string", "description": "string" (optional), "priority": "'low'|'medium'|'high'" (optional) } }
-      - "updateProject": { "description": "Updates an existing project.", "arguments": { "id": "string", "updates": { "name": "string" (optional), "description": "string" (optional), "status": "'planning'|'active'|'on-hold'|'completed'" (optional) } } }
-      - "createTask": { "description": "Creates a new task in a specific project. You must provide the project_id from the projects list.", "arguments": { "project_id": "string", "title": "string", "description": "string (optional)", "assignee": "string (the name of a team member, if available in the context)" (optional), "status": "'idea'|'todo'|'in-progress'|'done'" (optional, defaults to 'todo'), "priority": "'low'|'medium'|'high'" (optional, defaults to 'medium'), "due_date": "string (YYYY-MM-DD)" (optional), "tags": "string[]" (optional) } }
-      - "addRagDocument": { "description": "Adds a new piece of information to the long-term knowledge base (RAG). Use this when you learn new, important, and permanent information from the user that should be remembered for future conversations. For example, user preferences, project goals, specific instructions, etc.", "arguments": { "content": "string (the piece of information to remember)", "title": "string (a short, descriptive title for the information)" } }
-      
-      If the user asks a general question, answer it naturally. If they ask to perform an action, use the appropriate tool(s).
-
-      **Crucially, your primary function is to learn and build a knowledge base.** If the user provides any new information that could be useful later (their preferences, goals, facts, specific instructions, etc.), you **MUST** use the 'addRagDocument' tool to store it. This is more important than just answering the immediate question. Always be on the lookout for information to remember, regardless of the current page or context.
-
-      After a tool is successfully used, confirm the action to the user in a natural and friendly way.
-    `;
+      // 3. System Prompt Construction
+      const systemPrompt = getSystemPrompt({
+        pageContext,
+        teamMembersContext,
+        projects,
+        ragContext,
+      });
 
       const conversationHistory: OpenRouterMessage[] = messages.map(m => ({ role: m.role, content: m.content }));
       
