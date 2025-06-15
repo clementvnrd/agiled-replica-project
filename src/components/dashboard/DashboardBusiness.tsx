@@ -1,9 +1,12 @@
+
 import React from 'react';
 import { Users, FolderOpen, Clock, FileText } from 'lucide-react';
 import TasksPerformanceCard from '@/components/TasksPerformanceCard';
 import DashboardChart from '@/components/DashboardChart';
 import StatCardGroup from '@/components/dashboard/StatCardGroup';
 import type { StatItem } from '@/components/dashboard/StatCardGroup';
+import { useProjects } from '@/hooks/useProjects';
+import { useTasks } from '@/hooks/useTasks';
 
 // Example data for charts
 const revenueData = [
@@ -15,21 +18,28 @@ const revenueData = [
 ];
 
 const DashboardBusiness: React.FC = () => {
+  const { projects } = useProjects();
+  const { tasks } = useTasks();
+
+  const totalProjects = projects.length;
+  const pendingTasks = tasks.filter(task => task.status !== 'done').length;
+  const uniqueClients = new Set(projects.map(p => p.client).filter(Boolean));
+
   const businessStats: StatItem[] = [
     {
       title: "Total des clients",
-      value: "0",
+      value: uniqueClients.size,
       icon: <Users size={18} className="text-blue-600" />
     },
     {
       title: "Nombre total de projets",
-      value: "0",
+      value: totalProjects,
       icon: <FolderOpen size={18} className="text-green-600" />,
       iconBg: "bg-green-100"
     },
     {
       title: "Tâches en attente",
-      value: "0",
+      value: pendingTasks,
       icon: <Clock size={18} className="text-green-600" />,
       iconBg: "bg-green-100"
     },
