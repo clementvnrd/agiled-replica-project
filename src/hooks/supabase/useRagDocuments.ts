@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -19,15 +18,21 @@ const fetchDocuments = async (userId: string): Promise<RagDocument[]> => {
   return (data || []).map(doc => ({ ...doc, id: String(doc.id) })) as RagDocument[];
 };
 
-// Helper to add a document
+// Helper to add a document by invoking an edge function
 const addDocumentFn = async ({ userId, content, metadata }: { userId: string, content: string, metadata: Record<string, any> }): Promise<RagDocument> => {
-  const { data, error } = await supabase
-    .from('rag_documents')
-    .insert([{ user_id: userId, content, metadata }])
-    .select()
-    .single();
+  const { data, error } = await supabase.functions.invoke('create-rag-document', {
+    body: { userId, content, metadata },
+  });
 
-  if (error) throw ErrorHandler.handleSupabaseError(error, 'add RAG document');
+  if (error) {
+    console.error("Error invoking create-rag-document function:", error);
+    throw new Error(`Erreur lors de l'ajout du document RAG: ${error.message}`);
+  }
+
+  if (!data) {
+    throw new Error("La fonction pour ajouter un document RAG n'a retourné aucune donnée.");
+  }
+
   return { ...data, id: String(data.id) } as RagDocument;
 };
 

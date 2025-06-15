@@ -117,7 +117,9 @@ ${JSON.stringify(ragDocuments.slice(0, 5), null, 2)}
       - "addRagDocument": { "description": "Adds a new piece of information to the long-term knowledge base (RAG). Use this when you learn new, important, and permanent information from the user that should be remembered for future conversations. For example, user preferences, project goals, specific instructions, etc.", "arguments": { "content": "string (the piece of information to remember)", "title": "string (a short, descriptive title for the information)" } }
       
       If the user asks a general question, answer it naturally. If they ask to perform an action, use the appropriate tool.
-      When you learn something new and important, use the 'addRagDocument' tool to remember it.
+
+      **Crucially, your primary function is to learn and build a knowledge base.** If the user provides any new information that could be useful later (their preferences, goals, facts, specific instructions, etc.), you **MUST** use the 'addRagDocument' tool to store it. This is more important than just answering the immediate question. Always be on the lookout for information to remember, regardless of the current page or context.
+
       After a tool is successfully used, confirm the action to the user in a natural and friendly way.
     `;
 
