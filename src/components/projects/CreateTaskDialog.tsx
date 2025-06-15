@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -57,6 +58,12 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
     }
   });
 
+  useEffect(() => {
+    if (open) {
+      console.log('Dialog opened. Projects data:', projects);
+    }
+  }, [open, projects]);
+
   const handleStatusChange = (value: string) => {
     setStatus(value as 'idea' | 'todo' | 'in-progress' | 'done');
   };
@@ -82,7 +89,7 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
   };
 
   // Filter projects to ensure they have valid IDs
-  const validProjects = projects?.filter(project => project && project.id && project.id.trim() !== '') || [];
+  const validProjects = projects ? projects.filter(p => p && typeof p.id === 'string' && p.id.trim() !== '') : [];
 
   const onSubmit = async (data: TaskFormData) => {
     try {
@@ -194,11 +201,14 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">Aucun projet</SelectItem>
-                  {validProjects.map(project => (
-                    <SelectItem key={project.id} value={project.id}>
-                      {project.name || 'Projet sans nom'}
-                    </SelectItem>
-                  ))}
+                  {validProjects.map(project => {
+                    console.log(`Rendering project: ${project.name}, id: '${project.id}'`);
+                    return (
+                      <SelectItem key={project.id} value={project.id}>
+                        {project.name || 'Projet sans nom'}
+                      </SelectItem>
+                    )
+                  })}
                 </SelectContent>
               </Select>
             </div>
