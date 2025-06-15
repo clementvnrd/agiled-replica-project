@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Bot, X, Loader2, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import ModernChatInterface from '@/components/llm/ModernChatInterface';
 import { openRouterService, Message as OpenRouterMessage } from '@/services/openrouter';
 import { toast } from 'sonner';
@@ -38,7 +37,7 @@ const ProjectAIAgent: React.FC<ProjectAIAgentProps> = ({ projects, createProject
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [model, setModel] = useState('openai/gpt-4o-mini');
+  const [model, setModel] = useState('openai/gpt-4.1');
   const { user } = useSupabaseAuth();
   const { addDocument: addRagDocument, documents: ragDocuments } = useRagDocuments();
   const location = useLocation();
@@ -80,7 +79,6 @@ const ProjectAIAgent: React.FC<ProjectAIAgentProps> = ({ projects, createProject
       // 2. Page-specific context
       let pageContext = "";
       let teamMembersContext = "";
-      const pathname = location.pathname;
 
       if (pathname.startsWith('/projects/')) {
         const projectId = pathname.split('/')[2];
@@ -94,7 +92,7 @@ ${JSON.stringify(currentProject, null, 2)}
             if (teamMembers && teamMembers.length > 0) {
               teamMembersContext = `The following team members are part of this project. You can assign tasks to them by name:
 <team_members_data>
-${JSON.stringify(teamMembers.map(m => ({ name: m.name, role: m.role })), null, 2)}
+${JSON.stringify(teamMembers.map(m => ({ id: m.id, name: m.name, role: m.role })), null, 2)}
 </team_members_data>\n\n`;
             }
           }
@@ -127,7 +125,10 @@ ${JSON.stringify(ragDocuments.slice(0, 5), null, 2)}
 
       ${ragContext}
 
-      You have access to the following tools. To use a tool, you MUST respond with a single JSON object in the format: {"tool_name": "...", "arguments": {...}}. Do not add any other text.
+      You have access to the following tools. To use a tool, you MUST respond with a JSON object. To use multiple tools in one turn, respond with a JSON array of tool call objects.
+      Format for single call: {"tool_name": "...", "arguments": {...}}
+      Format for multiple calls: [{"tool_name": "...", "arguments": {...}}, {"tool_name": "...", "arguments": {...}}]
+      Do not add any other text outside the JSON.
       
       Available tools:
       - "createProject": { "description": "Creates a new project.", "arguments": { "name": "string", "description": "string" (optional), "priority": "'low'|'medium'|'high'" (optional) } }
@@ -135,7 +136,7 @@ ${JSON.stringify(ragDocuments.slice(0, 5), null, 2)}
       - "createTask": { "description": "Creates a new task in a specific project. You must provide the project_id from the projects list.", "arguments": { "project_id": "string", "title": "string", "description": "string (optional)", "assignee": "string (the name of a team member, if available in the context)" (optional), "status": "'idea'|'todo'|'in-progress'|'done'" (optional, defaults to 'todo'), "priority": "'low'|'medium'|'high'" (optional, defaults to 'medium'), "due_date": "string (YYYY-MM-DD)" (optional), "tags": "string[]" (optional) } }
       - "addRagDocument": { "description": "Adds a new piece of information to the long-term knowledge base (RAG). Use this when you learn new, important, and permanent information from the user that should be remembered for future conversations. For example, user preferences, project goals, specific instructions, etc.", "arguments": { "content": "string (the piece of information to remember)", "title": "string (a short, descriptive title for the information)" } }
       
-      If the user asks a general question, answer it naturally. If they ask to perform an action, use the appropriate tool.
+      If the user asks a general question, answer it naturally. If they ask to perform an action, use the appropriate tool(s).
 
       **Crucially, your primary function is to learn and build a knowledge base.** If the user provides any new information that could be useful later (their preferences, goals, facts, specific instructions, etc.), you **MUST** use the 'addRagDocument' tool to store it. This is more important than just answering the immediate question. Always be on the lookout for information to remember, regardless of the current page or context.
 
@@ -155,46 +156,55 @@ ${JSON.stringify(ragDocuments.slice(0, 5), null, 2)}
       let aiResponseContent = response.choices[0].message.content;
       console.log('AI response raw:', aiResponseContent);
 
-      // Check if the AI wants to use a tool
       let isToolCallAttempt = false;
       try {
-        // More robustly find a JSON object in the response
-        const jsonMatch = aiResponseContent.match(/\{[\s\S]*\}/);
+        const jsonMatch = aiResponseContent.match(/(\[[\s\S]*\]|\{[\s\S]*\})/);
         if (jsonMatch) {
-          const toolCall = JSON.parse(jsonMatch[0]);
-          
-          if (toolCall.tool_name) {
-            isToolCallAttempt = true; // We assume it's a tool call and will handle errors
-            if (toolCall.tool_name === 'createProject') {
-              const newProject = await createProject(toolCall.arguments);
-              aiResponseContent = `J'ai créé le projet "${newProject.name}" avec succès !`;
-              refetchProjects();
-            } else if (toolCall.tool_name === 'updateProject') {
-              const { id, updates } = toolCall.arguments;
-              const updatedProject = await updateProject(id, updates);
-              aiResponseContent = `Le projet "${updatedProject.name}" a bien été mis à jour.`;
-              refetchProjects();
-            } else if (toolCall.tool_name === 'createTask') {
-              const newTask = await createTask(toolCall.arguments);
-              aiResponseContent = `J'ai créé la tâche "${newTask.title}" avec succès.`;
-              toast.success("Tâche créée avec succès !");
-              window.dispatchEvent(new Event('tasks-updated'));
-            } else if (toolCall.tool_name === 'addRagDocument') {
-              const { content, title } = toolCall.arguments;
-              if (!content) {
-                  throw new Error("Le contenu est requis pour ajouter un document RAG.");
-              }
-              await addRagDocument({
-                  content,
-                  metadata: { title: title || 'Information apprise', source: 'ProjectAIAgent' }
-              });
-              aiResponseContent = "J'ai bien noté cette information et l'ai ajoutée à ma base de connaissances pour le futur.";
-              toast.success("Nouvelle information ajoutée au RAG.");
-            } else {
-              // Not a recognized tool, so we'll just display the AI's message.
-              isToolCallAttempt = false;
+            const parsedJson = JSON.parse(jsonMatch[0]);
+            const toolCalls = Array.isArray(parsedJson) ? parsedJson : [parsedJson];
+
+            if (toolCalls.length > 0 && toolCalls[0] && toolCalls[0].tool_name) {
+                isToolCallAttempt = true;
+                const confirmationMessages: string[] = [];
+
+                for (const toolCall of toolCalls) {
+                    if (toolCall.tool_name === 'createProject') {
+                        const newProject = await createProject(toolCall.arguments);
+                        confirmationMessages.push(`J'ai créé le projet "${newProject.name}" avec succès !`);
+                    } else if (toolCall.tool_name === 'updateProject') {
+                        const { id, updates } = toolCall.arguments;
+                        const updatedProject = await updateProject(id, updates);
+                        confirmationMessages.push(`Le projet "${updatedProject.name}" a bien été mis à jour.`);
+                    } else if (toolCall.tool_name === 'createTask') {
+                        const newTask = await createTask(toolCall.arguments);
+                        confirmationMessages.push(`J'ai créé la tâche "${newTask.title}".`);
+                    } else if (toolCall.tool_name === 'addRagDocument') {
+                        const { content, title } = toolCall.arguments;
+                        if (!content) {
+                            throw new Error("Le contenu est requis pour ajouter un document RAG.");
+                        }
+                        await addRagDocument({
+                            content,
+                            metadata: { title: title || 'Information apprise', source: 'ProjectAIAgent' }
+                        });
+                        confirmationMessages.push("J'ai bien noté cette information pour le futur.");
+                    }
+                }
+
+                if (confirmationMessages.length > 0) {
+                    aiResponseContent = confirmationMessages.join('\n');
+                    if (toolCalls.some(t => t.tool_name.includes('Project'))) refetchProjects();
+                    if (toolCalls.some(t => t.tool_name === 'createTask')) {
+                        toast.success(`${toolCalls.filter(t => t.tool_name === 'createTask').length} tâche(s) créée(s) !`);
+                        window.dispatchEvent(new Event('tasks-updated'));
+                    }
+                    if (toolCalls.some(t => t.tool_name === 'addRagDocument')) {
+                        toast.success("Nouvelle information ajoutée au RAG.");
+                    }
+                } else {
+                   isToolCallAttempt = false;
+                }
             }
-          }
         }
       } catch (toolError) {
         if (isToolCallAttempt) {
@@ -203,8 +213,6 @@ ${JSON.stringify(ragDocuments.slice(0, 5), null, 2)}
             aiResponseContent = `Désolé, une erreur est survenue lors de l'exécution de l'action demandée.\n\nErreur: ${errorMessage}`;
             toast.error("Erreur de l'agent IA : " + errorMessage);
         }
-        // If it wasn't a tool call attempt, or JSON parsing failed,
-        // we suppress the error and just show the raw response from the AI.
       }
 
       setMessages(prev => [...prev, { role: 'assistant', content: aiResponseContent, timestamp: Date.now() }]);
@@ -223,7 +231,7 @@ ${JSON.stringify(ragDocuments.slice(0, 5), null, 2)}
   if (!isOpen) {
     return (
       <Button
-        className="fixed bottom-6 right-6 h-16 w-16 rounded-full shadow-lg z-50"
+        className="fixed bottom-6 right-6 h-16 w-16 rounded-full shadow-lg z-50 bg-gradient-to-br from-blue-500 to-purple-600 hover:scale-110 transition-transform duration-300"
         onClick={() => setIsOpen(true)}
       >
         <Bot className="h-8 w-8" />
@@ -232,38 +240,43 @@ ${JSON.stringify(ragDocuments.slice(0, 5), null, 2)}
   }
 
   return (
-    <div className="fixed inset-0 bg-black/30 z-40" onClick={() => setIsOpen(false)}>
-        <Card className="fixed bottom-6 right-6 h-[calc(100vh-80px)] w-[440px] z-50 flex flex-col shadow-2xl" onClick={e => e.stopPropagation()}>
-            <CardHeader className="flex flex-row items-center justify-between p-4 border-b">
-                <div className="flex items-center gap-3">
-                    <Bot className="h-6 w-6 text-primary" />
-                    <CardTitle className="text-lg">Agent Projet IA</CardTitle>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Popover>
-                      <PopoverTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                              <Settings className="h-5 w-5" />
-                          </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-[380px] p-2" align="end">
-                          <ModelSelector selectedModel={model} onModelChange={setModel} />
-                      </PopoverContent>
-                  </Popover>
-                  <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)}>
-                      <X className="h-5 w-5" />
-                  </Button>
-                </div>
-            </CardHeader>
-            <CardContent className="flex-1 p-0 min-h-0">
-                <ModernChatInterface
-                    messages={messages}
-                    onSendMessage={handleSendMessage}
-                    loading={isLoading}
-                    model={model}
-                />
-            </CardContent>
-        </Card>
+    <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setIsOpen(false)}>
+      <div 
+        className="fixed bottom-6 right-6 h-[calc(100vh-80px)] w-[440px] z-50 flex flex-col rounded-2xl shadow-2xl bg-gray-800/30 backdrop-blur-2xl border border-white/20 text-white overflow-hidden" 
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between p-4 border-b border-white/20 flex-shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+              <Bot className="h-5 w-5 text-white" />
+            </div>
+            <h2 className="text-lg font-semibold">Agent Projet IA</h2>
+          </div>
+          <div className="flex items-center gap-1">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 hover:text-white">
+                  <Settings className="h-5 w-5" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[380px] p-0 bg-transparent border-none shadow-none" align="end" sideOffset={10}>
+                <ModelSelector selectedModel={model} onModelChange={setModel} />
+              </PopoverContent>
+            </Popover>
+            <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)} className="text-white hover:bg-white/10 hover:text-white">
+              <X className="h-5 w-5" />
+            </Button>
+          </div>
+        </div>
+        <div className="flex-1 p-0 min-h-0">
+          <ModernChatInterface
+            messages={messages}
+            onSendMessage={handleSendMessage}
+            loading={isLoading}
+            model={model}
+          />
+        </div>
+      </div>
     </div>
   );
 };
