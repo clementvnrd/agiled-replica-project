@@ -24,7 +24,7 @@ export const crmNavItems = [
   {
     icon: <LayoutDashboard size={16} />,
     label: "Dashboard",
-    to: "/crm",
+    to: "/crm/dashboard",
     badge: { count: 3, variant: "info" as const },
   },
   {

@@ -1,9 +1,9 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@clerk/clerk-react';
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 
-const fetchAccounts = async (userId: string | null | undefined) => {
+const fetchAccounts = async (userId: string | undefined) => {
   if (!userId) return [];
   const { data, error } = await supabase
     .from('crm_accounts')
@@ -19,11 +19,11 @@ const fetchAccounts = async (userId: string | null | undefined) => {
 };
 
 export const useCrmAccounts = () => {
-  const { userId } = useAuth();
+  const { user } = useSupabaseAuth();
 
   return useQuery({
-    queryKey: ['crm_accounts', userId],
-    queryFn: () => fetchAccounts(userId),
-    enabled: !!userId,
+    queryKey: ['crm_accounts', user?.id],
+    queryFn: () => fetchAccounts(user?.id),
+    enabled: !!user,
   });
 };
