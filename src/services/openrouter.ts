@@ -1,3 +1,4 @@
+
 import { ErrorHandler } from '@/utils/errorHandler';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -35,7 +36,7 @@ export class OpenRouterService {
 
   constructor() {
     // Écouter l'événement de déconnexion pour effacer la clé en cache
-    supabase.auth.onAuthStateChanged((event) => {
+    supabase.auth.onAuthStateChange((event) => {
       if (event === 'SIGNED_OUT') {
         this.apiKey = null;
       }
