@@ -1,4 +1,3 @@
-
 # "To Do" du 15 Juin (Audit Complet)
 
 Liste des améliorations à apporter à l'application, basée sur l'audit complet du 15/06.
@@ -7,7 +6,7 @@ Liste des améliorations à apporter à l'application, basée sur l'audit comple
 
 - [x] **Dashboard Dynamique :** Connecter les `StatCard` du `DashboardBusiness.tsx` aux données réelles des projets et des tâches. **(FAIT)**
 - [x] **Gestion des Projets :** Ajouter la possibilité de voir le nombre de tâches par projet sur la page de liste des projets. **(FAIT)**
-- [ ] **Centre de Notifications :** Mettre en place un système de notifications (tâches assignées, mentions).
+- [x] **Centre de Notifications :** Mettre en place un système de notifications (tâches assignées, mentions). **(FAIT - Tâches assignées)**
 - [x] **Recherche Globale :** Activer la barre de recherche globale pour rechercher dans les projets, tâches, et documents RAG. **(FAIT)**
 - [ ] **Modules Métiers (CRM & Finance) :** Développer les sections CRM et Finance (contacts, factures, devis).
 - [ ] **Profil et Paramètres Utilisateur :** Enrichir la page des paramètres (profil, préférences de notification, connexions externes).
