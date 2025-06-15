@@ -240,9 +240,9 @@ ${JSON.stringify(ragDocuments.slice(0, 5), null, 2)}
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setIsOpen(false)}>
+    <div className="fixed inset-0 pointer-events-none z-40" onClick={() => setIsOpen(false)}>
       <div 
-        className="fixed bottom-6 right-6 h-[calc(100vh-80px)] w-[440px] z-50 flex flex-col rounded-2xl shadow-2xl bg-gray-800/30 backdrop-blur-2xl border border-white/20 text-white overflow-hidden" 
+        className="fixed bottom-6 right-6 h-[calc(100vh-80px)] w-[440px] z-50 flex flex-col rounded-2xl shadow-2xl bg-gray-800/30 backdrop-blur-2xl border border-white/20 text-white overflow-hidden pointer-events-auto" 
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-center justify-between p-4 border-b border-white/20 flex-shrink-0">
