@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import type { useProjects } from '@/hooks/useProjects';
 import { useProjectAIAgentLogic } from '@/hooks/useProjectAIAgentLogic';
 import ProjectAIAgentUI from './ProjectAIAgentUI';
+import { DEFAULT_MODEL_ID } from '@/lib/constants/models';
 
 type Project = ReturnType<typeof useProjects>['projects'][0];
 type CreateProject = ReturnType<typeof useProjects>['createProject'];
@@ -17,7 +18,7 @@ interface ProjectAIAgentProps {
 
 const ProjectAIAgent: React.FC<ProjectAIAgentProps> = ({ projects, createProject, updateProject, refetchProjects }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [model, setModel] = useState('openai/gpt-4.1-mini');
+  const [model, setModel] = useState(DEFAULT_MODEL_ID);
 
   const { messages, isLoading, handleSendMessage } = useProjectAIAgentLogic({
     projects,

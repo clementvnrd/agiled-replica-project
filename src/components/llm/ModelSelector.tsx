@@ -1,45 +1,15 @@
-
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Settings, Zap, Brain, Star } from 'lucide-react';
+import { MODELS_CONFIG } from '@/lib/constants/models';
 
-const MODELS = [
-  { 
-    label: 'GPT-4.1', 
-    value: 'openai/gpt-4.1',
-    tier: 'premium',
-    description: 'Le plus avancé pour les tâches complexes.',
-    icon: <Star className="w-4 h-4" />
-  },
-  { 
-    label: 'Claude 3.7 Sonnet', 
-    value: 'anthropic/claude-3.7-sonnet',
-    tier: 'premium',
-    description: 'Excellent pour l\'analyse et l\'écriture.',
-    icon: <Brain className="w-4 h-4" />
-  },
-  { 
-    label: 'GPT-4o', 
-    value: 'openai/gpt-4o',
-    tier: 'standard',
-    description: 'Polyvalent et efficace.',
-    icon: <Zap className="w-4 h-4" />
-  },
-  {
-    label: 'GPT-4.1 Mini',
-    value: 'openai/gpt-4.1-mini',
-    tier: 'fast',
-    description: 'Rapide et économique pour les tâches quotidiennes.',
-    icon: <Zap className="w-4 h-4" />
-  },
-  { 
-    label: 'O4 Mini', 
-    value: 'openai/o4-mini',
-    tier: 'fast',
-    description: 'Le plus rapide pour les tâches simples.',
-    icon: <Zap className="w-4 h-4" />
-  },
-];
+const MODEL_ICONS: Record<string, React.ReactElement> = {
+  'openai/gpt-4.1': <Star className="w-4 h-4" />,
+  'anthropic/claude-3.7-sonnet': <Brain className="w-4 h-4" />,
+  'openai/gpt-4o': <Zap className="w-4 h-4" />,
+  'openai/gpt-4.1-mini': <Zap className="w-4 h-4" />,
+  'openai/o4-mini': <Zap className="w-4 h-4" />,
+};
 
 interface ModelSelectorProps {
   selectedModel: string;
@@ -66,7 +36,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ selectedModel, onModelCha
       </div>
 
       <div className="space-y-3">
-        {MODELS.map((model) => (
+        {MODELS_CONFIG.map((model) => (
           <div
             key={model.value}
             className={`p-3 rounded-lg border cursor-pointer transition-all hover:shadow-md ${
@@ -79,7 +49,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ selectedModel, onModelCha
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
-                  {model.icon}
+                  {MODEL_ICONS[model.value]}
                   <span className="font-medium text-sm text-gray-100">{model.label}</span>
                   <Badge variant="outline" className={`text-xs ${getTierColor(model.tier)}`}>
                     {model.tier}
@@ -105,4 +75,3 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ selectedModel, onModelCha
 };
 
 export default ModelSelector;
-
