@@ -95,7 +95,7 @@ const TodoBoard: React.FC<TodoBoardProps> = ({
 
   return (
     <div className="space-y-6">
-      <Card>
+      <Card className="glass-card">
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
@@ -115,7 +115,7 @@ const TodoBoard: React.FC<TodoBoardProps> = ({
             const columnTasks = getTasksByStatus(column.id as TodoTask['status']);
             
             return (
-              <Card key={column.id} className="h-fit">
+              <Card key={column.id} className="h-fit glass-card">
                 <CardHeader className="pb-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">

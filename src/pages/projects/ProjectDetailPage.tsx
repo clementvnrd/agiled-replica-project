@@ -182,7 +182,7 @@ const ProjectDetailPage: React.FC = () => {
       </div>
 
       {/* Informations du projet */}
-      <Card>
+      <Card className="glass-card">
         <CardContent className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div>
@@ -264,7 +264,7 @@ const ProjectDetailPage: React.FC = () => {
 
         <TabsContent value="overview">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
+            <Card className="glass-card">
               <CardHeader>
                 <CardTitle>Informations générales</CardTitle>
               </CardHeader>
@@ -284,7 +284,7 @@ const ProjectDetailPage: React.FC = () => {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="glass-card">
               <CardHeader>
                 <CardTitle>Équipe ({teamMembers.length})</CardTitle>
               </CardHeader>
@@ -348,7 +348,7 @@ const ProjectDetailPage: React.FC = () => {
         </TabsContent>
 
         <TabsContent value="team">
-          <Card>
+          <Card className="glass-card">
             <CardHeader>
               <CardTitle>Gestion de l'équipe</CardTitle>
             </CardHeader>
@@ -362,7 +362,7 @@ const ProjectDetailPage: React.FC = () => {
         </TabsContent>
 
         <TabsContent value="calendar">
-          <Card>
+          <Card className="glass-card">
             <CardHeader>
               <CardTitle>Calendrier du projet</CardTitle>
             </CardHeader>
