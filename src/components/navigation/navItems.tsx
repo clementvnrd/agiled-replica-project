@@ -1,5 +1,4 @@
-
-import { Home, Book, Calendar, Settings, Users, FileText, Database, Bot, Plug, Sparkles, DollarSign, Building, LayoutDashboard, Ticket } from 'lucide-react';
+import { Home, Book, Calendar, Settings, Users, FileText, Database, Bot, Plug, Sparkles, DollarSign, Building, LayoutDashboard, Ticket, CheckSquare } from 'lucide-react';
 
 export const navItems = [
   {
@@ -46,6 +45,11 @@ export const crmNavItems = [
     icon: <Ticket size={16} />,
     label: "Tickets",
     to: "/crm/tickets",
+  },
+  {
+    icon: <CheckSquare size={16} />,
+    label: "Activités",
+    to: "/crm/activities",
   },
 ];
 

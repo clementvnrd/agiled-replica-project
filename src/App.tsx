@@ -22,6 +22,7 @@ import CrmAccountsPage from '@/pages/business/crm/CrmAccountsPage';
 import CrmContactsPage from '@/pages/business/crm/CrmContactsPage';
 import CrmDealsPage from '@/pages/business/crm/CrmDealsPage';
 import CrmTicketsPage from '@/pages/business/crm/CrmTicketsPage';
+import CrmActivitiesPage from '@/pages/business/crm/CrmActivitiesPage';
 
 function App() {
   return (
@@ -50,6 +51,7 @@ function App() {
             <Route path="/crm/contacts" element={<CrmContactsPage />} />
             <Route path="/crm/deals" element={<CrmDealsPage />} />
             <Route path="/crm/tickets" element={<CrmTicketsPage />} />
+            <Route path="/crm/activities" element={<CrmActivitiesPage />} />
 
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/llm" element={<LLMPage />} />
