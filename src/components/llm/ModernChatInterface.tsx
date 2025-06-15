@@ -1,10 +1,8 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card } from '@/components/ui/card';
-import { Loader2, Send, Bot, User, Copy, ThumbsUp, ThumbsDown, MoreVertical, Share, Download, RefreshCcw } from 'lucide-react';
-import { useOpenRouter } from '@/services/openrouter';
+import { Textarea } from '@/components/ui/textarea';
+import { Loader2, Send, Bot, User, Copy, ThumbsUp, ThumbsDown, MoreVertical } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
@@ -30,18 +28,37 @@ const ModernChatInterface: React.FC<ModernChatInterfaceProps> = ({
 }) => {
   const [input, setInput] = useState('');
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, loading]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = (e?: React.FormEvent) => {
+    e?.preventDefault();
     if (input.trim() && !loading) {
       onSendMessage(input);
       setInput('');
+      if (textareaRef.current) {
+        textareaRef.current.style.height = 'auto'; // Reset height
+      }
     }
   };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit();
+    }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInput(e.target.value);
+    const textarea = e.target;
+    textarea.style.height = 'auto'; // Reset to shrink if text deleted
+    textarea.style.height = `${textarea.scrollHeight}px`; // Set to expand
+  };
+
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -141,18 +158,21 @@ const ModernChatInterface: React.FC<ModernChatInterfaceProps> = ({
       {/* Input Area */}
       <div className="p-4 bg-white border-t border-gray-200">
         <form onSubmit={handleSubmit} className="max-w-4xl mx-auto">
-          <div className="relative flex items-center bg-gray-50 rounded-2xl border border-gray-200 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20 transition-all">
-            <Input
+          <div className="relative flex items-end bg-gray-50 rounded-2xl border border-gray-200 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20 transition-all">
+            <Textarea
+              ref={textareaRef}
               placeholder="Écrivez votre message..."
               value={input}
-              onChange={(e) => setInput(e.target.value)}
+              onChange={handleInputChange}
+              onKeyDown={handleKeyDown}
               disabled={loading}
-              className="flex-1 border-0 bg-transparent px-4 py-3 focus-visible:ring-0 focus-visible:ring-offset-0"
+              className="flex-1 border-0 bg-transparent px-4 py-2.5 focus-visible:ring-0 focus-visible:ring-offset-0 resize-none min-h-0 max-h-36 overflow-y-auto"
+              rows={1}
             />
             <Button 
               type="submit" 
               disabled={loading || !input.trim()}
-              className="mr-2 rounded-xl"
+              className="mr-2 mb-1.5 rounded-xl"
               size="sm"
             >
               <Send className="w-4 h-4" />
@@ -160,7 +180,7 @@ const ModernChatInterface: React.FC<ModernChatInterfaceProps> = ({
           </div>
           <div className="flex items-center justify-between mt-2 text-xs text-gray-500">
             <span>Modèle: {model}</span>
-            <span>Appuyez sur Entrée pour envoyer</span>
+            <span>Maj+Entrée pour une nouvelle ligne</span>
           </div>
         </form>
       </div>
