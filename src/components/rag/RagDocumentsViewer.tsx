@@ -1,30 +1,29 @@
 
-// Migration : utilisation du client Supabase global (plus de logique multi-instance)
 import { supabase } from '@/integrations/supabase/client';
 import React, { useState, useEffect } from 'react';
-import { useUser } from '@clerk/clerk-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Loader2, Search, FileText, AlertCircle } from 'lucide-react';
+import { Loader2, Search, ServerCrash } from 'lucide-react';
 import { toast } from "sonner";
 import { RagDocument } from '@/types';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
 
 const RagDocumentsViewer: React.FC = () => {
-  const { user } = useUser();
+  const { user } = useSupabaseAuth();
   const [documents, setDocuments] = useState<RagDocument[]>([]);
   const [filteredDocuments, setFilteredDocuments] = useState<RagDocument[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  // On utilise le client global, donc pas de loading/error spécifique
-  const supabaseLoading = false;
-  const supabaseError = null;
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (user && !supabaseLoading && !supabaseError) {
+    if (user) {
       fetchDocuments();
     }
-  }, [user, supabase, supabaseLoading, supabaseError]);
+  }, [user]);
 
   useEffect(() => {
     if (!searchQuery.trim()) {
@@ -44,16 +43,16 @@ const RagDocumentsViewer: React.FC = () => {
     if (!user) return;
     
     setIsLoading(true);
+    setError(null);
     try {
-      const { data, error } = await supabase
+      const { data, error: fetchError } = await supabase
         .from('rag_documents')
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
         
-      if (error) throw error;
+      if (fetchError) throw fetchError;
       
-      // Ensure each document has an ID
       const processedData = (data || []).map((doc: any) => ({
         ...doc,
         id: doc.id || `doc-${crypto.randomUUID()}`
@@ -62,15 +61,35 @@ const RagDocumentsViewer: React.FC = () => {
       setDocuments(processedData);
       setFilteredDocuments(processedData);
     } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Erreur inconnue";
       console.error('Erreur lors de la récupération des documents:', err);
+      setError(errorMessage);
       toast.error("Erreur lors de la récupération des documents");
     } finally {
       setIsLoading(false);
     }
   };
 
-  if (supabaseLoading) return <div>Chargement Supabase...</div>;
-  if (supabaseError) return <div>Erreur Supabase : {supabaseError}</div>;
+  const getVectorStatus = (doc: RagDocument) => {
+    if (doc.embedding) {
+      if (Array.isArray(doc.embedding)) {
+        return `Présent (${doc.embedding.length} dims)`;
+      }
+      return 'Présent';
+    }
+    return 'Absent';
+  };
+
+  if (error) {
+    return (
+      <div className="text-center py-12 bg-red-50 text-red-700 rounded-md flex flex-col items-center justify-center">
+        <ServerCrash className="h-12 w-12 mx-auto mb-2" />
+        <h3 className="font-medium">Erreur lors du chargement</h3>
+        <p className="text-sm mb-4">{error}</p>
+        <Button onClick={fetchDocuments}>Réessayer</Button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -94,49 +113,56 @@ const RagDocumentsViewer: React.FC = () => {
         </Button>
       </div>
       
-      {isLoading ? (
-        <div className="flex justify-center py-12">
-          <Loader2 className="h-12 w-12 animate-spin text-gray-400" />
-        </div>
-      ) : filteredDocuments.length === 0 ? (
-        <div className="text-center py-12 bg-gray-50 rounded-md">
-          {searchQuery ? (
-            <>
-              <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-2" />
-              <h3 className="font-medium text-gray-600">Aucun résultat trouvé</h3>
-              <p className="text-sm text-gray-500">
-                Essayez d'autres termes de recherche
-              </p>
-            </>
-          ) : (
-            <>
-              <FileText className="h-12 w-12 text-gray-400 mx-auto mb-2" />
-              <h3 className="font-medium text-gray-600">Aucun document</h3>
-              <p className="text-sm text-gray-500">
-                Votre base de connaissances est vide
-              </p>
-            </>
-          )}
-        </div>
-      ) : (
-        <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-          {filteredDocuments.map(doc => (
-            <Card key={doc.id} className="overflow-hidden">
-              <CardHeader className="bg-gray-50 pb-2">
-                <CardTitle className="text-base truncate">
-                  {doc.metadata?.title || 'Sans titre'}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-4">
-                <div className="text-xs text-gray-500 mb-2">
-                  {doc.created_at ? new Date(doc.created_at).toLocaleString() : ''}
-                </div>
-                <p className="text-sm line-clamp-4">{doc.content}</p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
+      <Card>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[20%]">Titre</TableHead>
+                  <TableHead className="w-[45%]">Contenu</TableHead>
+                  <TableHead className="w-[20%]">Date</TableHead>
+                  <TableHead className="w-[15%]">Vecteur</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={4} className="h-24 text-center">
+                      <Loader2 className="h-8 w-8 animate-spin text-gray-400 mx-auto" />
+                    </TableCell>
+                  </TableRow>
+                ) : filteredDocuments.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={4} className="h-24 text-center">
+                      {searchQuery ? 'Aucun résultat pour votre recherche.' : 'Aucun document dans votre base de connaissances.'}
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredDocuments.map(doc => (
+                    <TableRow key={doc.id}>
+                      <TableCell className="font-medium align-top">
+                        {doc.metadata?.title || 'Sans titre'}
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground align-top">
+                        <p className="line-clamp-4">{doc.content}</p>
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground align-top">
+                        {doc.created_at ? new Date(doc.created_at).toLocaleString() : ''}
+                      </TableCell>
+                      <TableCell className="align-top">
+                        <Badge variant={doc.embedding ? "secondary" : "outline"}>
+                          {getVectorStatus(doc)}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
