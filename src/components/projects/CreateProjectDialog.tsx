@@ -46,6 +46,14 @@ const CreateProjectDialog: React.FC<CreateProjectDialogProps> = ({ trigger }) =>
     }
   });
 
+  const handleStatusChange = (value: string) => {
+    setStatus(value as 'planning' | 'active' | 'on-hold' | 'completed');
+  };
+
+  const handlePriorityChange = (value: string) => {
+    setPriority(value as 'low' | 'medium' | 'high');
+  };
+
   const onSubmit = async (data: ProjectFormData) => {
     try {
       await createProject({
@@ -132,7 +140,7 @@ const CreateProjectDialog: React.FC<CreateProjectDialogProps> = ({ trigger }) =>
           <div className="grid grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label>Statut</Label>
-              <Select value={status} onValueChange={setStatus}>
+              <Select value={status} onValueChange={handleStatusChange}>
                 <SelectTrigger>
                   <SelectValue placeholder="Statut" />
                 </SelectTrigger>
@@ -147,7 +155,7 @@ const CreateProjectDialog: React.FC<CreateProjectDialogProps> = ({ trigger }) =>
 
             <div className="space-y-2">
               <Label>Priorité</Label>
-              <Select value={priority} onValueChange={setPriority}>
+              <Select value={priority} onValueChange={handlePriorityChange}>
                 <SelectTrigger>
                   <SelectValue placeholder="Priorité" />
                 </SelectTrigger>

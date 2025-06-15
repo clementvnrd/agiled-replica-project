@@ -58,6 +58,14 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
     }
   });
 
+  const handleStatusChange = (value: string) => {
+    setStatus(value as 'idea' | 'todo' | 'in-progress' | 'done');
+  };
+
+  const handlePriorityChange = (value: string) => {
+    setPriority(value as 'low' | 'medium' | 'high');
+  };
+
   const addTag = () => {
     if (tagInput.trim() && !tags.includes(tagInput.trim())) {
       const newTags = [...tags, tagInput.trim()];
@@ -142,7 +150,7 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Statut</Label>
-              <Select value={status} onValueChange={setStatus}>
+              <Select value={status} onValueChange={handleStatusChange}>
                 <SelectTrigger>
                   <SelectValue placeholder="Statut" />
                 </SelectTrigger>
@@ -157,7 +165,7 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
 
             <div className="space-y-2">
               <Label>Priorité</Label>
-              <Select value={priority} onValueChange={setPriority}>
+              <Select value={priority} onValueChange={handlePriorityChange}>
                 <SelectTrigger>
                   <SelectValue placeholder="Priorité" />
                 </SelectTrigger>
