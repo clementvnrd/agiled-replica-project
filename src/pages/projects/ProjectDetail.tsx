@@ -33,7 +33,7 @@ import ProjectCalendar from '@/components/projects/ProjectCalendar';
 import CreateTaskDialog from '@/components/projects/CreateTaskDialog';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
-import { useUser } from '@clerk/clerk-react';
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 
 type DbProject = Database['public']['Tables']['projects']['Row'];
 type DbTask = Database['public']['Tables']['tasks']['Row'];
@@ -75,7 +75,7 @@ interface TodoTask {
 const ProjectDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user } = useUser();
+  const { user } = useSupabaseAuth();
 
   const [project, setProject] = useState<DbProject | null>(null);
   const [tasks, setTasks] = useState<DbTask[]>([]);
