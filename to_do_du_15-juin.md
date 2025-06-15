@@ -19,7 +19,7 @@ Liste des améliorations à apporter à l'application, basée sur l'audit comple
 - [x] **Refactor "Tool Calls" IA :** Isoler la logique de traitement des `tool_calls` de `useProjectAIAgentLogic.ts` dans un service dédié (`src/services/aiToolHandler.ts`). **(FAIT)**
 - [x] **Simplifier `useProjectAIAgentLogic.ts` :** S'assurer que le hook est plus court après les refactorisations. **(FAIT)**
 - [ ] **Gestion d'État Centralisée :** Envisager Zustand ou un React Context pour les données globales (utilisateur, paramètres).
-- [ ] **Gestion des Erreurs :** Utiliser systématiquement l'ErrorHandler pour une gestion uniforme.
+- [x] **Gestion des Erreurs :** Utiliser systématiquement l'ErrorHandler pour une gestion uniforme. **(FAIT)**
 
 ## 3. Optimisation (Performance et Réactivité)
 

@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 import type { User } from '@supabase/supabase-js';
+import { handleError } from '@/utils/errorHandler';
 
 type Project = Database['public']['Tables']['projects']['Row'];
 type ProjectInsert = Database['public']['Tables']['projects']['Insert'];
@@ -48,6 +49,7 @@ export const useProjects = () => {
       if (error) throw error;
       setProjects(data || []);
     } catch (err) {
+      handleError(err, 'Erreur lors de la récupération des projets.');
       setError(err instanceof Error ? err.message : 'Une erreur est survenue');
     } finally {
       setLoading(false);
@@ -55,7 +57,11 @@ export const useProjects = () => {
   }, [user]);
 
   const createProject = async (projectData: Omit<ProjectInsert, 'user_id'>) => {
-    if (!user) throw new Error('Utilisateur non connecté');
+    if (!user) {
+      const error = new Error('Utilisateur non connecté pour créer un projet.');
+      handleError(error);
+      throw error;
+    }
 
     try {
       const { data, error } = await supabase
@@ -64,20 +70,22 @@ export const useProjects = () => {
         .select()
         .single();
 
-      if (error) {
-        console.error("Supabase error creating project:", error);
-        throw error;
-      }
+      if (error) throw error;
+
       setProjects(prev => [data, ...prev]);
       return data;
     } catch (err) {
-      console.error("Error creating project:", err);
-      throw err instanceof Error ? err : new Error('Erreur lors de la création du projet');
+      handleError(err, 'Erreur lors de la création du projet.');
+      throw err;
     }
   };
 
   const updateProject = async (id: string, updates: ProjectUpdate) => {
-    if (!user) throw new Error('Utilisateur non connecté');
+    if (!user) {
+      const error = new Error('Utilisateur non connecté pour mettre à jour un projet.');
+      handleError(error);
+      throw error;
+    }
     try {
       const { data, error } = await supabase
         .from('projects')
@@ -90,12 +98,17 @@ export const useProjects = () => {
       setProjects(prev => prev.map(p => p.id === id ? data : p));
       return data;
     } catch (err) {
-      throw err instanceof Error ? err : new Error('Erreur lors de la mise à jour du projet');
+      handleError(err, 'Erreur lors de la mise à jour du projet.');
+      throw err;
     }
   };
 
   const deleteProject = async (id: string) => {
-    if (!user) throw new Error('Utilisateur non connecté');
+    if (!user) {
+      const error = new Error('Utilisateur non connecté pour supprimer un projet.');
+      handleError(error);
+      throw error;
+    }
     try {
       const { error } = await supabase
         .from('projects')
@@ -105,7 +118,8 @@ export const useProjects = () => {
       if (error) throw error;
       setProjects(prev => prev.filter(p => p.id !== id));
     } catch (err) {
-      throw err instanceof Error ? err : new Error('Erreur lors de la suppression du projet');
+      handleError(err, 'Erreur lors de la suppression du projet.');
+      throw err;
     }
   };
 

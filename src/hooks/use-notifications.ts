@@ -1,10 +1,10 @@
-
 import * as React from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { type User } from "@supabase/supabase-js";
 import { type Notification as UINotification } from "@/components/ui/notifications-center";
 import type { Database } from "@/integrations/supabase/types";
 import { toast } from "sonner";
+import { handleError } from "@/utils/errorHandler";
 
 type DbNotification = Database['public']['Tables']['notifications']['Row'];
 
@@ -76,8 +76,7 @@ export function useNotifications() {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error("Error fetching notifications:", error);
-        toast.error("Erreur lors de la récupération des notifications.");
+        handleError(error, "Erreur lors de la récupération des notifications.");
         return;
       }
       
@@ -145,8 +144,7 @@ export function useNotifications() {
       .eq('id', id);
 
     if (error) {
-        console.error("Error marking notification as read:", error);
-        toast.error("Impossible de marquer la notification comme lue.");
+        handleError(error, "Impossible de marquer la notification comme lue.");
         setNotifications(originalNotifications);
     }
   }, [notifications]);
@@ -165,8 +163,7 @@ export function useNotifications() {
       .eq('read', false);
 
     if (error) {
-        console.error("Error marking all notifications as read:", error);
-        toast.error("Impossible de marquer toutes les notifications comme lues.");
+        handleError(error, "Impossible de marquer toutes les notifications comme lues.");
         setNotifications(originalNotifications);
     }
   }, [user, notifications]);
@@ -181,8 +178,7 @@ export function useNotifications() {
         .eq('id', id);
     
     if (error) {
-        console.error("Error dismissing notification:", error);
-        toast.error("Impossible de supprimer la notification.");
+        handleError(error, "Impossible de supprimer la notification.");
         setNotifications(originalNotifications);
     }
   }, [notifications]);
@@ -198,8 +194,7 @@ export function useNotifications() {
         .eq('user_id', user.id);
 
     if (error) {
-        console.error("Error clearing all notifications:", error);
-        toast.error("Impossible de supprimer toutes les notifications.");
+        handleError(error, "Impossible de supprimer toutes les notifications.");
         setNotifications(originalNotifications);
     }
   }, [user, notifications]);
