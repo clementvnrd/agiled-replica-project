@@ -32,6 +32,7 @@ interface TodoBoardProps {
   onCreateTask: (taskData: Omit<TodoTask, 'id' | 'createdAt'>) => Promise<void>;
   onUpdateTask: (taskId: string, updates: Partial<TodoTask>) => Promise<void>;
   onDeleteTask: (taskId: string) => Promise<void>;
+  projectId?: string;
 }
 
 const TodoBoard: React.FC<TodoBoardProps> = ({ 
@@ -39,7 +40,8 @@ const TodoBoard: React.FC<TodoBoardProps> = ({
   teamMembers,
   onCreateTask,
   onUpdateTask,
-  onDeleteTask 
+  onDeleteTask,
+  projectId
 }) => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [createInColumn, setCreateInColumn] = useState<TodoTask['status']>('idea');
@@ -204,6 +206,7 @@ const TodoBoard: React.FC<TodoBoardProps> = ({
         onCreateTask={handleCreateTask}
         initialStatus={createInColumn}
         teamMembers={teamMembers}
+        projectId={projectId}
       />
     </div>
   );

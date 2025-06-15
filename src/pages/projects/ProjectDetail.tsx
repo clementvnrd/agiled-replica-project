@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -136,7 +135,7 @@ const ProjectDetail: React.FC = () => {
         status: taskData.status,
         priority: taskData.priority,
         assignee: taskData.assignee,
-        due_date: taskData.dueDate ? taskData.dueDate.toISOString() : null,
+        dueDate: taskData.dueDate ? taskData.dueDate.toISOString() : null,
         tags: taskData.tags,
         project_id: project.id,
         user_id: user.id,
@@ -460,6 +459,7 @@ const ProjectDetail: React.FC = () => {
             onCreateTask={handleCreateTask}
             onUpdateTask={handleUpdateTask}
             onDeleteTask={handleDeleteTask}
+            projectId={project.id}
           />
         </TabsContent>
 
