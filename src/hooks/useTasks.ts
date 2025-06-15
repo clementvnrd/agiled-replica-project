@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 import type { User } from '@supabase/supabase-js';
-import { handleError } from '@/utils/errorHandler';
+import { ErrorHandler } from '@/utils/errorHandler';
 
 type Task = Database['public']['Tables']['tasks']['Row'];
 type TaskInsert = Database['public']['Tables']['tasks']['Insert'];
@@ -49,7 +49,7 @@ export const useTasks = (projectId?: string) => {
       if (error) throw error;
       setTasks(data || []);
     } catch (err) {
-      handleError(err, 'Une erreur est survenue lors de la récupération des tâches.');
+      ErrorHandler.handleError(err, 'Une erreur est survenue lors de la récupération des tâches.');
       setError(err instanceof Error ? err.message : 'Une erreur est survenue');
     } finally {
       setLoading(false);
@@ -59,7 +59,7 @@ export const useTasks = (projectId?: string) => {
   const createTask = async (taskData: Omit<TaskInsert, 'user_id'>) => {
     if (!user) {
         const error = new Error('Vous devez être connecté pour créer une tâche.');
-        handleError(error);
+        ErrorHandler.handleError(error);
         throw error;
     }
 
@@ -94,7 +94,7 @@ export const useTasks = (projectId?: string) => {
       setTasks(prev => prev.map(t => (t.id === tempId ? data : t)));
       return data;
     } catch (err) {
-      handleError(err, 'Erreur lors de la création de la tâche.');
+      ErrorHandler.handleError(err, 'Erreur lors de la création de la tâche.');
       setTasks(prev => prev.filter(t => t.id !== tempId));
       throw err;
     }
@@ -122,7 +122,7 @@ export const useTasks = (projectId?: string) => {
       setTasks(prev => prev.map(t => (t.id === id ? data : t)));
       return data;
     } catch (err) {
-      handleError(err, 'Erreur lors de la mise à jour de la tâche.');
+      ErrorHandler.handleError(err, 'Erreur lors de la mise à jour de la tâche.');
       setTasks(originalTasks);
       throw err;
     }
@@ -141,7 +141,7 @@ export const useTasks = (projectId?: string) => {
       if (error) throw error;
       // L'état est déjà à jour, pas besoin de le modifier en cas de succès
     } catch (err) {
-      handleError(err, 'Erreur lors de la suppression de la tâche.');
+      ErrorHandler.handleError(err, 'Erreur lors de la suppression de la tâche.');
       setTasks(originalTasks);
       throw err;
     }
