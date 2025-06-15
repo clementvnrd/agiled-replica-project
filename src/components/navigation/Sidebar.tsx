@@ -4,7 +4,7 @@ import {
   SheetContent,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { Menu, DollarSign, Building, LayoutDashboard } from "lucide-react";
+import { Menu, DollarSign, Building, LayoutDashboard, Ticket } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Link, useLocation } from 'react-router-dom';
 import { Home, Book, Calendar, Settings, Users, FileText, Database, Bot, Plug, Sparkles } from 'lucide-react';
@@ -54,6 +54,11 @@ const crmNavItems = [
     icon: <DollarSign size={16} />,
     label: "Deals",
     to: "/crm/deals",
+  },
+  {
+    icon: <Ticket size={16} />,
+    label: "Tickets",
+    to: "/crm/tickets",
   },
 ];
 
