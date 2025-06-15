@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -26,13 +27,16 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import TodoBoard from '@/components/projects/TodoBoard';
-import NotesEditor from '@/components/projects/NotesEditor';
-import ProjectCalendar from '@/components/projects/ProjectCalendar';
 import CreateTaskDialog from '@/components/projects/CreateTaskDialog';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
+
+// Lazy loaded components
+const TodoBoard = lazy(() => import('@/components/projects/TodoBoard'));
+const NotesEditor = lazy(() => import('@/components/projects/NotesEditor'));
+const ProjectCalendar = lazy(() => import('@/components/projects/ProjectCalendar'));
+
 
 type DbProject = Database['public']['Tables']['projects']['Row'];
 type DbTask = Database['public']['Tables']['tasks']['Row'];
@@ -70,6 +74,14 @@ interface TodoTask {
   tags: string[];
   createdAt: Date;
 }
+
+const TabContentLoader = () => (
+  <Card>
+    <CardContent className="flex items-center justify-center p-12">
+      <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+    </CardContent>
+  </Card>
+);
 
 const ProjectDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -432,20 +444,26 @@ const ProjectDetail: React.FC = () => {
         </TabsList>
 
         <TabsContent value="tasks">
-          <TodoBoard 
-            tasks={todoTasksForBoard} 
-            teamMembers={teamForBoard}
-            onUpdateTask={handleUpdateTask}
-            onDeleteTask={handleDeleteTask}
-          />
+          <Suspense fallback={<TabContentLoader />}>
+            <TodoBoard 
+              tasks={todoTasksForBoard} 
+              teamMembers={teamForBoard}
+              onUpdateTask={handleUpdateTask}
+              onDeleteTask={handleDeleteTask}
+            />
+          </Suspense>
         </TabsContent>
 
         <TabsContent value="notes">
-          <NotesEditor projectId={project.id} />
+          <Suspense fallback={<TabContentLoader />}>
+            <NotesEditor projectId={project.id} />
+          </Suspense>
         </TabsContent>
 
         <TabsContent value="calendar">
-          <ProjectCalendar projectId={project.id} />
+          <Suspense fallback={<TabContentLoader />}>
+            <ProjectCalendar projectId={project.id} />
+          </Suspense>
         </TabsContent>
 
         <TabsContent value="analytics">

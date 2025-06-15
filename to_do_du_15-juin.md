@@ -23,7 +23,7 @@ Liste des améliorations à apporter à l'application, basée sur l'audit comple
 
 ## 3. Optimisation (Performance et Réactivité)
 
-- [ ] **Chargement Paresseux (Lazy Loading) :** Utiliser `React.lazy` et `Suspense` pour le chargement des pages.
+- [x] **Chargement Paresseux (Lazy Loading) :** Utiliser `React.lazy` et `Suspense` pour le chargement des pages. **(FAIT - Onglets ProjectDetail)**
 - [x] **Mises à Jour Optimistes :** Implémenter des mises à jour optimistes pour les actions fréquentes (création de tâches). **(FAIT)**
 - [x] **Memoization :** Utiliser `React.memo` et `useCallback` pour optimiser les rendus inutiles. **(FAIT - ProjectCalendarView, TodoBoard/TodoCard)**
 
