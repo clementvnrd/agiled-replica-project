@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -81,6 +80,9 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
   const removeTag = (tagToRemove: string) => {
     setTags(tags.filter(tag => tag !== tagToRemove));
   };
+
+  // Filter projects to ensure they have valid IDs
+  const validProjects = projects?.filter(project => project && project.id && project.id.trim() !== '') || [];
 
   const onSubmit = async (data: TaskFormData) => {
     try {
@@ -192,9 +194,9 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">Aucun projet</SelectItem>
-                  {projects && projects.length > 0 && projects.map(project => (
+                  {validProjects.map(project => (
                     <SelectItem key={project.id} value={project.id}>
-                      {project.name}
+                      {project.name || 'Projet sans nom'}
                     </SelectItem>
                   ))}
                 </SelectContent>
