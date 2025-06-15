@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -5,32 +6,49 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ErrorHandler } from '@/utils/errorHandler';
-
-// Types pour le stockage des API keys
-type StoredApiKeys = {
-  openRouterApiKey?: string;
-};
+import { supabase } from '@/integrations/supabase/client';
 
 const OpenRouterSettings: React.FC = () => {
   const [apiKey, setApiKey] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [isValidating, setIsValidating] = useState(false);
   const [isConfigured, setIsConfigured] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
 
   // Récupérer la clé API stockée au chargement du composant
   useEffect(() => {
-    const storedKeys = localStorage.getItem('api_keys');
-    if (storedKeys) {
+    const fetchUserData = async () => {
+      setIsLoading(true);
       try {
-        const parsed: StoredApiKeys = JSON.parse(storedKeys);
-        if (parsed.openRouterApiKey) {
-          setApiKey(parsed.openRouterApiKey);
-          setIsConfigured(true);
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          setUserId(user.id);
+          const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('openrouter_api_key')
+            .eq('id', user.id)
+            .single();
+
+          if (error && error.code !== 'PGRST116') { // Ignorer l'erreur si le profil n'est pas trouvé
+            throw error;
+          }
+
+          if (profile?.openrouter_api_key) {
+            setApiKey(profile.openrouter_api_key);
+            setIsConfigured(true);
+          }
+        } else {
+          toast.error("Veuillez vous connecter pour configurer OpenRouter.");
         }
       } catch (e) {
-        ErrorHandler.handleError(e, 'Erreur lors de la récupération des clés API');
+        ErrorHandler.handleError(e, 'Erreur lors de la récupération des informations utilisateur');
+        toast.error('Erreur de chargement de la configuration.');
+      } finally {
+        setIsLoading(false);
       }
-    }
+    };
+
+    fetchUserData();
   }, []);
 
   // Fonction pour valider la clé API OpenRouter
@@ -38,7 +56,6 @@ const OpenRouterSettings: React.FC = () => {
     setIsValidating(true);
     
     try {
-      // Tentative d'appel simple à OpenRouter pour valider la clé
       const response = await fetch('https://openrouter.ai/api/v1/models', {
         method: 'GET',
         headers: {
@@ -69,19 +86,23 @@ const OpenRouterSettings: React.FC = () => {
       return;
     }
     
+    if (!userId) {
+      toast.error("Utilisateur non authentifié. Veuillez vous reconnecter.");
+      return;
+    }
+
     setIsLoading(true);
     
-    // Valider la clé API
     const isValid = await validateApiKey(apiKey);
     
     if (isValid) {
-      // Sauvegarder la clé dans le localStorage
       try {
-        const storedKeys = localStorage.getItem('api_keys');
-        const keys: StoredApiKeys = storedKeys ? JSON.parse(storedKeys) : {};
-        
-        keys.openRouterApiKey = apiKey;
-        localStorage.setItem('api_keys', JSON.stringify(keys));
+        const { error } = await supabase
+          .from('profiles')
+          .update({ openrouter_api_key: apiKey })
+          .eq('id', userId);
+
+        if (error) throw error;
         
         setIsConfigured(true);
         toast.success('Clé API OpenRouter sauvegardée avec succès');
@@ -94,15 +115,19 @@ const OpenRouterSettings: React.FC = () => {
     setIsLoading(false);
   };
 
-  const handleRemove = () => {
-    // Supprimer la clé du localStorage
+  const handleRemove = async () => {
+    if (!userId) {
+      toast.error('Utilisateur non authentifié.');
+      return;
+    }
+    
     try {
-      const storedKeys = localStorage.getItem('api_keys');
-      if (storedKeys) {
-        const keys: StoredApiKeys = JSON.parse(storedKeys);
-        delete keys.openRouterApiKey;
-        localStorage.setItem('api_keys', JSON.stringify(keys));
-      }
+      const { error } = await supabase
+        .from('profiles')
+        .update({ openrouter_api_key: null })
+        .eq('id', userId);
+      
+      if (error) throw error;
       
       setApiKey('');
       setIsConfigured(false);
@@ -122,40 +147,47 @@ const OpenRouterSettings: React.FC = () => {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">Clé API OpenRouter</label>
-            <Input
-              type="password"
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-              placeholder="sk-or-v1-..."
-              className="w-full"
-            />
-            {isConfigured && (
-              <p className="text-sm text-green-600 mt-1">
-                ✓ Configuration OpenRouter active
-              </p>
-            )}
+        {isLoading ? (
+          <div className="flex justify-center items-center h-24">
+            <Loader2 className="h-8 w-8 animate-spin" />
           </div>
-          <div className="text-sm text-gray-500">
-            <p>Pour obtenir votre clé API:</p>
-            <ol className="list-decimal pl-5 mt-1 space-y-1">
-              <li>Créez un compte sur <a href="https://openrouter.ai" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">OpenRouter.ai</a></li>
-              <li>Accédez à votre tableau de bord</li>
-              <li>Créez une nouvelle clé API</li>
-            </ol>
+        ) : (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Clé API OpenRouter</label>
+              <Input
+                type="password"
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                placeholder="sk-or-v1-..."
+                className="w-full"
+                disabled={!userId}
+              />
+              {isConfigured && (
+                <p className="text-sm text-green-600 mt-1">
+                  ✓ Configuration OpenRouter active
+                </p>
+              )}
+            </div>
+            <div className="text-sm text-gray-500">
+              <p>Pour obtenir votre clé API:</p>
+              <ol className="list-decimal pl-5 mt-1 space-y-1">
+                <li>Créez un compte sur <a href="https://openrouter.ai" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">OpenRouter.ai</a></li>
+                <li>Accédez à votre tableau de bord</li>
+                <li>Créez une nouvelle clé API</li>
+              </ol>
+            </div>
           </div>
-        </div>
+        )}
       </CardContent>
       <CardFooter className="flex justify-between">
         {isConfigured ? (
           <>
-            <Button onClick={handleRemove} variant="destructive">
+            <Button onClick={handleRemove} variant="destructive" disabled={isLoading || isValidating || !userId}>
               Supprimer la clé
             </Button>
-            <Button onClick={handleSave} disabled={isLoading || isValidating || !apiKey.trim()}>
-              {(isLoading || isValidating) ? (
+            <Button onClick={handleSave} disabled={isLoading || isValidating || !apiKey.trim() || !userId}>
+              {(isValidating) ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Vérification...
@@ -166,8 +198,8 @@ const OpenRouterSettings: React.FC = () => {
             </Button>
           </>
         ) : (
-          <Button onClick={handleSave} className="w-full" disabled={isLoading || isValidating || !apiKey.trim()}>
-            {(isLoading || isValidating) ? (
+          <Button onClick={handleSave} className="w-full" disabled={isLoading || isValidating || !apiKey.trim() || !userId}>
+            {(isValidating) ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Vérification...

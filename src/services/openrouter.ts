@@ -1,4 +1,5 @@
 import { ErrorHandler } from '@/utils/errorHandler';
+import { supabase } from '@/integrations/supabase/client';
 
 // Service pour interagir avec l'API OpenRouter
 export interface Message {
@@ -30,34 +31,58 @@ export interface OpenRouterOptions {
 // Classe pour interagir avec OpenRouter
 export class OpenRouterService {
   private apiKey: string | null = null;
+  private lastApiKeyFetch: number = 0;
 
   constructor() {
-    this.loadApiKey();
+    // Écouter l'événement de déconnexion pour effacer la clé en cache
+    supabase.auth.onAuthStateChanged((event) => {
+      if (event === 'SIGNED_OUT') {
+        this.apiKey = null;
+      }
+    });
   }
 
-  // Charger la clé API depuis le localStorage
-  private loadApiKey(): void {
+  // Charger la clé API depuis le profil Supabase de l'utilisateur
+  private async loadApiKey(): Promise<void> {
+    // Un cache simple pour éviter de multiples appels rapides
+    if (this.apiKey && Date.now() - this.lastApiKeyFetch < 5000) {
+      return;
+    }
+
     try {
-      const storedKeys = localStorage.getItem('api_keys');
-      if (storedKeys) {
-        const parsed = JSON.parse(storedKeys);
-        this.apiKey = parsed.openRouterApiKey || null;
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('openrouter_api_key')
+          .eq('id', user.id)
+          .single();
+
+        if (error && error.code !== 'PGRST116') { // Ignorer 'resource not found'
+          throw error;
+        }
+        this.apiKey = data?.openrouter_api_key || null;
+        this.lastApiKeyFetch = Date.now();
+      } else {
+        this.apiKey = null;
       }
     } catch (e) {
-      ErrorHandler.handleError(e, 'Erreur lors du chargement de la clé API');
+      ErrorHandler.handleError(e, 'Erreur lors du chargement de la clé API OpenRouter');
       this.apiKey = null;
     }
   }
 
-  // Vérifier si le service est configuré
-  public isConfigured(): boolean {
+  // Vérifier si le service est configuré (devient asynchrone)
+  public async isConfigured(): Promise<boolean> {
+    await this.loadApiKey();
     return !!this.apiKey;
   }
 
   // Récupérer la liste des modèles disponibles
   public async getModels(): Promise<any> {
+    await this.loadApiKey();
     if (!this.apiKey) {
-      throw new Error('API key not configured');
+      throw new Error("La clé API OpenRouter n'est pas configurée.");
     }
 
     try {
@@ -85,8 +110,9 @@ export class OpenRouterService {
     messages: Message[],
     options: OpenRouterOptions = {}
   ): Promise<any> {
+    await this.loadApiKey();
     if (!this.apiKey) {
-      throw new Error('API key not configured');
+      throw new Error("La clé API OpenRouter n'est pas configurée.");
     }
 
     try {
@@ -110,6 +136,8 @@ export class OpenRouterService {
       });
 
       if (!response.ok) {
+        const errorBody = await response.text();
+        console.error("OpenRouter Error Body:", errorBody);
         throw new Error(`Error generating completion: ${response.statusText}`);
       }
 
@@ -125,8 +153,9 @@ export class OpenRouterService {
     messages: Message[],
     options: OpenRouterOptions = {}
   ): AsyncGenerator<OpenRouterStreamingResponse, void, unknown> {
+    await this.loadApiKey();
     if (!this.apiKey) {
-      throw new Error('API key not configured');
+      throw new Error("La clé API OpenRouter n'est pas configurée.");
     }
 
     try {
