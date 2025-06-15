@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -65,6 +66,10 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
     setPriority(value as 'low' | 'medium' | 'high');
   };
 
+  const handleProjectChange = (value: string) => {
+    setSelectedProjectId(value);
+  };
+
   const addTag = () => {
     if (tagInput.trim() && !tags.includes(tagInput.trim())) {
       const newTags = [...tags, tagInput.trim()];
@@ -102,6 +107,7 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
       setSelectedProjectId(projectId || 'none');
       setOpen(false);
     } catch (error) {
+      console.error("Erreur lors de la création de la tâche:", error);
       toast({
         title: "Erreur",
         description: "Impossible de créer la tâche.",
@@ -180,13 +186,13 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
           {!projectId && (
             <div className="space-y-2">
               <Label>Projet</Label>
-              <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
+              <Select value={selectedProjectId} onValueChange={handleProjectChange}>
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner un projet (optionnel)" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">Aucun projet</SelectItem>
-                  {projects.map(project => (
+                  {projects && projects.length > 0 && projects.map(project => (
                     <SelectItem key={project.id} value={project.id}>
                       {project.name}
                     </SelectItem>
