@@ -1,0 +1,96 @@
+
+import React from 'react';
+import { useTasks } from '@/hooks/useTasks';
+import { useTeamMembers } from '@/hooks/useTeamMembers';
+import TodoBoard from './TodoBoard';
+import { useToast } from '@/hooks/use-toast';
+import type { Database } from '@/integrations/supabase/types';
+
+// This interface is compatible with the one in TodoBoard.tsx
+interface TodoTask {
+  id: string;
+  title: string;
+  description: string;
+  status: 'idea' | 'todo' | 'in-progress' | 'done';
+  priority: 'low' | 'medium' | 'high';
+  assignee?: string;
+  dueDate?: Date;
+  tags: string[];
+  createdAt: Date;
+}
+
+type TaskUpdate = Database['public']['Tables']['tasks']['Update'];
+
+const ProjectTasksBoard: React.FC = () => {
+  const { tasks, loading: tasksLoading, error: tasksError, updateTask, deleteTask } = useTasks();
+  const { teamMembers, loading: membersLoading, error: membersError } = useTeamMembers();
+  const { toast } = useToast();
+
+  const handleUpdateTask = async (taskId: string, updates: Partial<TodoTask>) => {
+    try {
+      const dbUpdates: TaskUpdate = { ...updates };
+
+      if (updates.dueDate) {
+        dbUpdates.due_date = updates.dueDate.toISOString().split('T')[0];
+        delete (dbUpdates as Partial<TodoTask>).dueDate;
+      }
+      
+      await updateTask(taskId, dbUpdates);
+
+      toast({ title: 'Tâche mise à jour', description: 'Le statut de la tâche a été mis à jour.' });
+    } catch (error) {
+      console.error("Error updating task:", error);
+      toast({ title: 'Erreur', description: 'Impossible de mettre à jour la tâche.', variant: 'destructive' });
+    }
+  };
+
+  const handleDeleteTask = async (taskId: string) => {
+    try {
+      await deleteTask(taskId);
+      toast({ title: 'Tâche supprimée', description: 'La tâche a été supprimée avec succès.' });
+    } catch (error) {
+      console.error("Error deleting task:", error);
+      toast({ title: 'Erreur', description: 'Impossible de supprimer la tâche.', variant: 'destructive' });
+    }
+  };
+
+  if (tasksLoading || membersLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <p>Chargement des tâches et des membres...</p>
+      </div>
+    );
+  }
+
+  if (tasksError || membersError) {
+    return (
+      <div className="text-center py-12 text-red-500">
+        <p>Erreur: {tasksError || membersError}</p>
+      </div>
+    );
+  }
+
+  const formattedTasks: TodoTask[] = tasks.map(task => ({
+    ...task,
+    id: task.id,
+    title: task.title,
+    description: task.description || '',
+    status: task.status as 'idea' | 'todo' | 'in-progress' | 'done',
+    priority: task.priority as 'low' | 'medium' | 'high',
+    assignee: task.assignee || undefined,
+    dueDate: task.due_date ? new Date(task.due_date) : undefined,
+    createdAt: new Date(task.created_at!),
+    tags: task.tags || [],
+  }));
+
+  return (
+    <TodoBoard
+      tasks={formattedTasks}
+      teamMembers={teamMembers}
+      onUpdateTask={handleUpdateTask}
+      onDeleteTask={handleDeleteTask}
+    />
+  );
+};
+
+export default ProjectTasksBoard;

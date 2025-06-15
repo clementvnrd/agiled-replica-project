@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Lightbulb, CheckSquare, Clock, CheckCircle } from 'lucide-react';
 import TodoCard from './TodoCard';
+import CreateTaskDialog from './CreateTaskDialog';
 
 interface TodoTask {
   id: string;
@@ -131,15 +132,15 @@ const TodoBoard: React.FC<TodoBoardProps> = ({
                       {columnTasks.length}
                     </Badge>
                   </div>
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                    className="w-full"
-                    disabled
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Ajouter une tâche
-                  </Button>
+                  <CreateTaskDialog
+                    trigger={
+                      <Button size="sm" variant="outline" className="w-full">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Ajouter une tâche
+                      </Button>
+                    }
+                    initialStatus={column.id as 'idea' | 'todo' | 'in-progress' | 'done'}
+                  />
                 </CardHeader>
 
                 <CardContent>

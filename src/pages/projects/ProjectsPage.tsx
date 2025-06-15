@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,7 +16,8 @@ import {
   MoreHorizontal,
   FolderOpen,
   BarChart3,
-  Bell
+  Bell,
+  ListTodo
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -28,6 +28,7 @@ import ProjectDashboard from '@/components/projects/ProjectDashboard';
 import ProjectCalendarView from '@/components/projects/ProjectCalendarView';
 import NotificationCenter from '@/components/notifications/NotificationCenter';
 import ProjectAIAgent from '@/components/projects/ProjectAIAgent'; // Importer le nouvel agent
+import ProjectTasksBoard from '@/components/projects/ProjectTasksBoard';
 
 const ProjectsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -105,7 +106,7 @@ const ProjectsPage: React.FC = () => {
 
       {/* Onglets principaux */}
       <Tabs defaultValue="projects" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="projects" className="flex items-center gap-2">
             <FolderOpen className="h-4 w-4" />
             Projets
@@ -113,6 +114,10 @@ const ProjectsPage: React.FC = () => {
           <TabsTrigger value="dashboard" className="flex items-center gap-2">
             <BarChart3 className="h-4 w-4" />
             Tableau de bord
+          </TabsTrigger>
+          <TabsTrigger value="tasks" className="flex items-center gap-2">
+            <ListTodo className="h-4 w-4" />
+            Tâches
           </TabsTrigger>
           <TabsTrigger value="calendar" className="flex items-center gap-2">
             <Calendar className="h-4 w-4" />
@@ -288,6 +293,10 @@ const ProjectsPage: React.FC = () => {
 
         <TabsContent value="dashboard">
           <ProjectDashboard />
+        </TabsContent>
+
+        <TabsContent value="tasks">
+          <ProjectTasksBoard />
         </TabsContent>
 
         <TabsContent value="calendar">
