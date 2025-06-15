@@ -254,9 +254,17 @@ const ProjectCalendarView: React.FC = () => {
 
             if (upcomingEvents.length === 0) {
               return (
-                <p className="text-muted-foreground text-center py-4">
-                  Aucun événement dans les 7 prochains jours
-                </p>
+                <div className="text-center p-8 flex flex-col items-center">
+                  <CalendarIcon className="h-12 w-12 text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-medium text-foreground mb-2">Aucun événement à venir</h3>
+                  <p className="text-muted-foreground mb-4 max-w-md mx-auto">
+                    Les échéances de vos projets et de vos tâches pour les 7 prochains jours s'afficheront ici.
+                  </p>
+                  <Button size="sm" onClick={() => setIsTaskDialogOpen(true)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Créer une tâche
+                  </Button>
+                </div>
               );
             }
 
