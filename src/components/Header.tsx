@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { 
   Search, 
@@ -15,14 +16,14 @@ import {
   DropdownMenuItem
 } from '@/components/ui/dropdown-menu';
 import { useNavigate } from 'react-router-dom';
-import { useUser, SignOutButton } from '@clerk/clerk-react';
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { GlobalSearch, SearchResult } from '@/components/ui/search';
 import { NotificationsCenter } from '@/components/ui/notifications-center';
 import { useNotifications } from '@/hooks/use-notifications';
 
 const Header: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useUser();
+  const { user, signOut } = useSupabaseAuth();
   const { notifications, markAsRead, markAllAsRead, dismiss } = useNotifications();
 
   const handleSearch = async (query: string): Promise<SearchResult[]> => {
@@ -56,6 +57,34 @@ const Header: React.FC = () => {
 
   const handleSearchSelect = (result: SearchResult) => {
     navigate(result.url);
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      navigate('/login');
+    } catch (error) {
+      console.error('Erreur lors de la déconnexion:', error);
+    }
+  };
+
+  // Récupérer les initiales de l'utilisateur pour l'avatar
+  const getUserInitials = () => {
+    if (user?.user_metadata?.full_name) {
+      return user.user_metadata.full_name.charAt(0).toUpperCase();
+    }
+    if (user?.email) {
+      return user.email.charAt(0).toUpperCase();
+    }
+    return 'U';
+  };
+
+  // Récupérer le nom d'affichage de l'utilisateur
+  const getDisplayName = () => {
+    if (user?.user_metadata?.full_name) {
+      return user.user_metadata.full_name;
+    }
+    return user?.email || 'Utilisateur';
   };
 
   return (
@@ -98,14 +127,14 @@ const Header: React.FC = () => {
           <DropdownMenuTrigger asChild>
             <div className="flex items-center gap-3 pl-3 border-l border-agiled-lightBorder cursor-pointer">
               <div className="w-8 h-8 rounded-full bg-agiled-primary text-white flex items-center justify-center overflow-hidden">
-                {user?.imageUrl ? (
-                  <img src={user.imageUrl} alt="Avatar" className="w-full h-full object-cover rounded-full" />
+                {user?.user_metadata?.avatar_url ? (
+                  <img src={user.user_metadata.avatar_url} alt="Avatar" className="w-full h-full object-cover rounded-full" />
                 ) : (
-                  user?.fullName?.charAt(0)?.toUpperCase() || user?.emailAddresses?.[0]?.emailAddress?.charAt(0)?.toUpperCase()
+                  getUserInitials()
                 )}
               </div>
               <div className="text-sm">
-                <p className="font-medium">{user?.fullName || user?.emailAddresses?.[0]?.emailAddress}</p>
+                <p className="font-medium">{getDisplayName()}</p>
               </div>
             </div>
           </DropdownMenuTrigger>
@@ -113,11 +142,9 @@ const Header: React.FC = () => {
             <DropdownMenuItem onSelect={() => navigate('/profil')}>
               Profil
             </DropdownMenuItem>
-            <SignOutButton>
-              <DropdownMenuItem asChild>
-                <span>Log out</span>
-              </DropdownMenuItem>
-            </SignOutButton>
+            <DropdownMenuItem onSelect={handleSignOut}>
+              Se déconnecter
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
