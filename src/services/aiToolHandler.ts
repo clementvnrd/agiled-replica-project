@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 type CreateProjectFunc = (args: any) => Promise<{ name: string }>;
 type UpdateProjectFunc = (id: string, updates: any) => Promise<{ name: string }>;
 type CreateTaskFunc = (args: any) => Promise<{ title: string }>;
-type AddRagDocumentFunc = (args: { content: string; metadata: any }) => Promise<void>;
+type AddRagDocumentFunc = (args: { content: string; metadata: any }) => Promise<any>;
 type RefetchProjectsFunc = () => void;
 
 interface ToolHandlerDependencies {
