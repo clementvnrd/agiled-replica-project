@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Search, Loader2 } from 'lucide-react';
-import { useUser } from '@clerk/clerk-react';
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 
 interface RagDocument {
   id: string;
@@ -18,7 +18,7 @@ interface RagDocument {
 }
 
 const VectorSearch: React.FC = () => {
-  const { user } = useUser();
+  const { user } = useSupabaseAuth();
   const dynamicSupabase = supabase;
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<RagDocument[]>([]);
@@ -122,3 +122,4 @@ const VectorSearch: React.FC = () => {
 };
 
 export default VectorSearch;
+
