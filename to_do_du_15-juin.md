@@ -30,7 +30,7 @@ Liste des améliorations à apporter à l'application, basée sur l'audit comple
 ## 4. Visuel (Design et Cohérence de l'UI)
 
 - [ ] **Animer l'Agent IA :** Ajouter des transitions fluides (`framer-motion`) pour l'ouverture/fermeture du chat IA.
-- [ ] **Skeletons de Chargement :** Remplacer les indicateurs de chargement par des squelettes UI.
+- [x] **Skeletons de Chargement :** Remplacer les indicateurs de chargement par des squelettes UI. **(FAIT)**
 - [ ] **États Vides (Empty States) :** Améliorer les écrans sans contenu avec des illustrations et des appels à l'action.
 - [ ] **Thème Sombre/Clair :** Assurer la cohérence des deux thèmes.
 

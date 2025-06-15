@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Users, FolderOpen, Clock, FileText } from 'lucide-react';
 import TasksPerformanceCard from '@/components/TasksPerformanceCard';
@@ -7,6 +6,7 @@ import StatCardGroup from '@/components/dashboard/StatCardGroup';
 import type { StatItem } from '@/components/dashboard/StatCardGroup';
 import { useProjects } from '@/hooks/useProjects';
 import { useTasks } from '@/hooks/useTasks';
+import { Skeleton } from '@/components/ui/skeleton';
 
 // Example data for charts
 const revenueData = [
@@ -18,8 +18,26 @@ const revenueData = [
 ];
 
 const DashboardBusiness: React.FC = () => {
-  const { projects } = useProjects();
-  const { tasks } = useTasks();
+  const { projects, isLoading: isLoadingProjects } = useProjects();
+  const { tasks, isLoading: isLoadingTasks } = useTasks();
+
+  const isLoading = isLoadingProjects || isLoadingTasks;
+
+  if (isLoading) {
+    return (
+      <>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+          {[...Array(4)].map((_, i) => (
+            <Skeleton key={i} className="h-[110px] rounded-lg" />
+          ))}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <Skeleton className="h-[350px] rounded-lg" />
+          <Skeleton className="h-[350px] rounded-lg" />
+        </div>
+      </>
+    );
+  }
 
   const totalProjects = projects.length;
   const pendingTasks = tasks.filter(task => task.status !== 'done').length;
