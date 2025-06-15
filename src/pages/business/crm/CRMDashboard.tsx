@@ -10,6 +10,7 @@ import { useCrmTodos } from '@/hooks/crm/useCrmTodos';
 import { Building, Users, DollarSign, Ticket, Calendar, CheckSquare } from 'lucide-react';
 import ProactiveAIAgent from '@/components/crm/ProactiveAIAgent';
 import CrmTodoList from '@/components/crm/CrmTodoList';
+import AISuggestionCards from '@/components/crm/AISuggestionCards';
 
 const CRMDashboard: React.FC = () => {
   const { data: accounts } = useCrmAccounts();
@@ -86,13 +87,29 @@ const CRMDashboard: React.FC = () => {
         ))}
       </div>
 
-      {/* Grille principale */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Agent IA Proactif */}
-        <ProactiveAIAgent />
+      {/* Grille principale avec suggestions IA */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Suggestions IA - Prend toute la largeur sur mobile, 2 colonnes sur desktop */}
+        <div className="lg:col-span-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Assistant IA - Suggestions Intelligentes</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <AISuggestionCards />
+            </CardContent>
+          </Card>
+        </div>
         
-        {/* To Do Liste */}
-        <CrmTodoList />
+        {/* To Do Liste - 1 colonne */}
+        <div className="lg:col-span-1">
+          <CrmTodoList />
+        </div>
+      </div>
+
+      {/* Agent IA Proactif - En bas, largeur complète */}
+      <div className="mt-6">
+        <ProactiveAIAgent />
       </div>
     </div>
   );
