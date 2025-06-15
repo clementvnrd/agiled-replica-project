@@ -1,11 +1,10 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Lightbulb, CheckSquare, Clock, CheckCircle } from 'lucide-react';
 import TodoCard from './TodoCard';
-import CreateTodoDialog from './CreateTodoDialog';
 
 interface TodoTask {
   id: string;
@@ -29,7 +28,6 @@ interface TeamMember {
 interface TodoBoardProps {
   tasks: TodoTask[];
   teamMembers: TeamMember[];
-  onCreateTask: (taskData: Omit<TodoTask, 'id' | 'createdAt'>) => Promise<void>;
   onUpdateTask: (taskId: string, updates: Partial<TodoTask>) => Promise<void>;
   onDeleteTask: (taskId: string) => Promise<void>;
 }
@@ -37,13 +35,9 @@ interface TodoBoardProps {
 const TodoBoard: React.FC<TodoBoardProps> = ({ 
   tasks, 
   teamMembers,
-  onCreateTask,
   onUpdateTask,
   onDeleteTask
 }) => {
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [createInColumn, setCreateInColumn] = useState<TodoTask['status']>('idea');
-
   const columns = [
     {
       id: 'idea',
@@ -91,21 +85,12 @@ const TodoBoard: React.FC<TodoBoardProps> = ({
     onUpdateTask(draggableId, { status: destination.droppableId as TodoTask['status'] });
   };
 
-  const handleCreateTask = async (newTask: Omit<TodoTask, 'id' | 'createdAt'>) => {
-    await onCreateTask(newTask);
-  };
-
   const handleUpdateTask = async (taskId: string, updates: Partial<TodoTask>) => {
     await onUpdateTask(taskId, updates);
   };
 
   const handleDeleteTask = async (taskId: string) => {
     await onDeleteTask(taskId);
-  };
-
-  const openCreateDialog = (status: TodoTask['status']) => {
-    setCreateInColumn(status);
-    setIsCreateDialogOpen(true);
   };
 
   return (
@@ -150,7 +135,7 @@ const TodoBoard: React.FC<TodoBoardProps> = ({
                     size="sm" 
                     variant="outline" 
                     className="w-full"
-                    onClick={() => openCreateDialog(column.id as TodoTask['status'])}
+                    disabled
                   >
                     <Plus className="h-4 w-4 mr-2" />
                     Ajouter une tâche
@@ -197,14 +182,6 @@ const TodoBoard: React.FC<TodoBoardProps> = ({
           })}
         </div>
       </DragDropContext>
-
-      <CreateTodoDialog
-        isOpen={isCreateDialogOpen}
-        onClose={() => setIsCreateDialogOpen(false)}
-        onCreateTask={handleCreateTask}
-        initialStatus={createInColumn}
-        teamMembers={teamMembers}
-      />
     </div>
   );
 };

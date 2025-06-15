@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -51,7 +50,6 @@ const ProjectDetailPage: React.FC = () => {
     tasks: dbTasks, 
     loading: tasksLoading, 
     error: tasksError, 
-    createTask, 
     updateTask, 
     deleteTask 
   } = useTasks(projectId);
@@ -128,25 +126,6 @@ const ProjectDetailPage: React.FC = () => {
       role: member.role
   }));
 
-  const handleCreateTask = async (taskData: Omit<TodoTask, 'id' | 'createdAt'>) => {
-    if (!projectId) return;
-    try {
-      await createTask({
-        project_id: projectId,
-        title: taskData.title,
-        description: taskData.description,
-        status: taskData.status,
-        priority: taskData.priority,
-        assignee: taskData.assignee,
-        due_date: taskData.dueDate ? taskData.dueDate.toISOString().split('T')[0] : null,
-        tags: taskData.tags,
-      });
-    } catch (error) {
-      console.error("Failed to create task:", error);
-      // TODO: Add user-facing error notification
-    }
-  };
-  
   const handleUpdateTask = async (taskId: string, updates: Partial<TodoTask>) => {
     try {
       const dbUpdates: Partial<Database['public']['Tables']['tasks']['Update']> = {};
@@ -358,7 +337,6 @@ const ProjectDetailPage: React.FC = () => {
             <TodoBoard
               tasks={convertedTasks}
               teamMembers={convertedTeamMembers}
-              onCreateTask={handleCreateTask}
               onUpdateTask={handleUpdateTask}
               onDeleteTask={handleDeleteTask}
             />

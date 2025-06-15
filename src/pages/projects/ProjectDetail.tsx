@@ -126,30 +126,6 @@ const ProjectDetail: React.FC = () => {
     fetchProjectDetails();
   }, [id, user]);
 
-  const handleCreateTask = async (taskData: Omit<TodoTask, 'id' | 'createdAt'>) => {
-    if (!user || !project) return;
-    
-    const taskToInsert = {
-        title: taskData.title,
-        description: taskData.description,
-        status: taskData.status,
-        priority: taskData.priority,
-        assignee: taskData.assignee,
-        dueDate: taskData.dueDate ? taskData.dueDate.toISOString() : null,
-        tags: taskData.tags,
-        project_id: project.id,
-        user_id: user.id,
-    };
-
-    const { data: newTask, error } = await supabase.from('tasks').insert([taskToInsert]).select().single();
-
-    if (error) {
-      console.error("Erreur lors de la création de la tâche:", error);
-    } else if (newTask) {
-      setTasks(prev => [...prev, newTask]);
-    }
-  };
-  
   const handleUpdateTask = async (taskId: string, updates: Partial<TodoTask>) => {
     const dbUpdates: Partial<DbTask> = {};
     if (updates.title) dbUpdates.title = updates.title;
@@ -339,7 +315,7 @@ const ProjectDetail: React.FC = () => {
               <CreateTaskDialog 
                 projectId={project.id}
                 trigger={
-                  <Button variant="outline" size="sm">
+                  <Button variant="outline" size="sm" disabled>
                     <Plus className="h-4 w-4 mr-2" />
                     Nouvelle tâche
                   </Button>
@@ -456,7 +432,6 @@ const ProjectDetail: React.FC = () => {
           <TodoBoard 
             tasks={todoTasksForBoard} 
             teamMembers={teamForBoard}
-            onCreateTask={handleCreateTask}
             onUpdateTask={handleUpdateTask}
             onDeleteTask={handleDeleteTask}
           />
