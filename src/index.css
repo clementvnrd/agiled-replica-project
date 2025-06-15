@@ -74,10 +74,19 @@
 
   body {
     @apply bg-background text-foreground;
+    /* Ajout d'un fond subtil pour l'effet de glassmorphisme */
+    background-image: linear-gradient(to top right, hsl(var(--background)), hsl(var(--muted)));
+    background-attachment: fixed;
   }
 }
 
 @layer components {
+  .glass-card {
+    /* Effet glassmorphisme: fond semi-transparent, flou en arrière-plan et bordure subtile */
+    /* !important est utilisé pour surcharger la couleur de fond par défaut de la Card shadcn */
+    background-color: hsl(var(--card) / 0.6) !important;
+    @apply backdrop-blur-xl border-border/20 shadow-lg rounded-xl;
+  }
   .agiled-card {
     @apply bg-white rounded-lg border border-agiled-lightBorder shadow-sm p-4;
   }

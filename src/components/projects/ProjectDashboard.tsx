@@ -67,7 +67,7 @@ const ProjectDashboard: React.FC = () => {
     <div className="space-y-6">
       {/* Statistiques globales */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
+        <Card className="glass-card">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -79,7 +79,7 @@ const ProjectDashboard: React.FC = () => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="glass-card">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -91,7 +91,7 @@ const ProjectDashboard: React.FC = () => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="glass-card">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -103,7 +103,7 @@ const ProjectDashboard: React.FC = () => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="glass-card">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -121,7 +121,7 @@ const ProjectDashboard: React.FC = () => {
       {/* Graphiques et détails */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Répartition des projets */}
-        <Card>
+        <Card className="glass-card">
           <CardHeader>
             <CardTitle>Répartition des projets</CardTitle>
           </CardHeader>
@@ -166,7 +166,7 @@ const ProjectDashboard: React.FC = () => {
         </Card>
 
         {/* Répartition des tâches */}
-        <Card>
+        <Card className="glass-card">
           <CardHeader>
             <CardTitle>Répartition des tâches</CardTitle>
           </CardHeader>
@@ -214,7 +214,7 @@ const ProjectDashboard: React.FC = () => {
       {/* Alertes et tâches prioritaires */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Tâches en retard */}
-        <Card>
+        <Card className="glass-card">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Clock className="h-5 w-5 text-red-500" />
@@ -245,7 +245,7 @@ const ProjectDashboard: React.FC = () => {
         </Card>
 
         {/* Tâches prioritaires */}
-        <Card>
+        <Card className="glass-card">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Target className="h-5 w-5 text-orange-500" />
@@ -277,7 +277,7 @@ const ProjectDashboard: React.FC = () => {
       </div>
 
       {/* Projets récents */}
-      <Card>
+      <Card className="glass-card">
         <CardHeader>
           <CardTitle>Projets récents</CardTitle>
         </CardHeader>
