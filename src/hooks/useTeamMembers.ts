@@ -7,7 +7,7 @@ import type { User } from '@supabase/supabase-js';
 type TeamMember = Database['public']['Tables']['team_members']['Row'];
 type TeamMemberInsert = Database['public']['Tables']['team_members']['Insert'];
 
-export const useTeamMembers = (projectId: string) => {
+export const useTeamMembers = (projectId?: string) => {
   const [user, setUser] = useState<User | null>(null);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [loading, setLoading] = useState(true);
@@ -29,16 +29,20 @@ export const useTeamMembers = (projectId: string) => {
   }, []);
 
   const fetchTeamMembers = async () => {
-    if (!user || !projectId) return;
+    if (!user) return;
 
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      let query = supabase
         .from('team_members')
         .select('*')
-        .eq('project_id', projectId)
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+        .eq('user_id', user.id);
+
+      if (projectId) {
+        query = query.eq('project_id', projectId);
+      }
+
+      const { data, error } = await query.order('created_at', { ascending: false });
 
       if (error) throw error;
       setTeamMembers(data || []);
@@ -51,6 +55,7 @@ export const useTeamMembers = (projectId: string) => {
 
   const addTeamMember = async (memberData: Omit<TeamMemberInsert, 'user_id' | 'project_id'>) => {
     if (!user) throw new Error('Utilisateur non connecté');
+    if (!projectId) throw new Error("L'ID du projet est requis pour ajouter un membre à l'équipe.");
 
     try {
       const { data, error } = await supabase
@@ -86,7 +91,7 @@ export const useTeamMembers = (projectId: string) => {
   };
 
   useEffect(() => {
-    if (user && projectId) {
+    if (user) {
       fetchTeamMembers();
     }
   }, [user, projectId]);
