@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -10,6 +9,7 @@ import { useRagDocuments } from '@/hooks/supabase/useRagDocuments';
 import { useTasks } from '@/hooks/useTasks';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
 import type { useProjects } from '@/hooks/useProjects';
+import { getPageContext } from '@/utils/ai/getContext';
 
 type Project = ReturnType<typeof useProjects>['projects'][0];
 type CreateProject = ReturnType<typeof useProjects>['createProject'];
@@ -77,39 +77,12 @@ export const useProjectAIAgentLogic = ({
       }
 
       // 2. Page-specific context
-      let pageContext = "";
-      let teamMembersContext = "";
-
-      if (pathname.startsWith('/projects/')) {
-        const projectId = pathname.split('/')[2];
-        if (projectId) {
-          const currentProject = projects.find(p => p.id === projectId);
-          if (currentProject) {
-            pageContext = `The user is currently viewing the details of the project "${currentProject.name}". Here is the full data for this project:
-<current_project_data>
-${JSON.stringify(currentProject, null, 2)}
-</current_project_data>\n\n`;
-            if (teamMembers && teamMembers.length > 0) {
-              teamMembersContext = `The following team members are part of this project. You can assign tasks to them by name:
-<team_members_data>
-${JSON.stringify(teamMembers.map(m => ({ id: m.id, name: m.name, role: m.role })), null, 2)}
-</team_members_data>\n\n`;
-            }
-          }
-        }
-      } else if (pathname.startsWith('/projects')) {
-        pageContext = "The user is currently viewing the list of all their projects.\n\n";
-      } else if (pathname.startsWith('/rag')) {
-        pageContext = `The user is currently on the RAG document management page. They can see a list of their documents. Here are the first 5 documents in their knowledge base:
-<rag_documents_sample>
-${JSON.stringify(ragDocuments.slice(0, 5), null, 2)}
-</rag_documents_sample>\n\n`;
-      } else if (pathname.startsWith('/dashboard')) {
-        pageContext = "The user is currently on the main dashboard page.\n\n";
-      } else if (pathname.startsWith('/calendar')) {
-        pageContext = "The user is currently viewing their calendar.\n\n";
-      }
-
+      const { pageContext, teamMembersContext } = getPageContext({
+        pathname,
+        projects,
+        ragDocuments,
+        teamMembers,
+      });
 
       const systemPrompt = `
       You are a project management AI assistant. Your goal is to help the user manage their projects.
