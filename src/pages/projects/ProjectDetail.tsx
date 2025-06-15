@@ -459,7 +459,6 @@ const ProjectDetail: React.FC = () => {
             onCreateTask={handleCreateTask}
             onUpdateTask={handleUpdateTask}
             onDeleteTask={handleDeleteTask}
-            projectId={project.id}
           />
         </TabsContent>
 
