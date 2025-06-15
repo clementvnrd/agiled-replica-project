@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -45,7 +44,7 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
   const [tagInput, setTagInput] = useState('');
   const [status, setStatus] = useState<'idea' | 'todo' | 'in-progress' | 'done'>(initialStatus);
   const [priority, setPriority] = useState<'low' | 'medium' | 'high'>('medium');
-  const [selectedProjectId, setSelectedProjectId] = useState<string>(projectId || '');
+  const [selectedProjectId, setSelectedProjectId] = useState<string>(projectId || 'none');
   const { createTask } = useTasks();
   const { projects } = useProjects();
   const { toast } = useToast();
@@ -84,7 +83,7 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
         ...data,
         status,
         priority,
-        project_id: selectedProjectId || null,
+        project_id: selectedProjectId === 'none' ? null : selectedProjectId,
         due_date: dueDate?.toISOString().split('T')[0] || null,
         tags
       });
@@ -100,7 +99,7 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
       setTagInput('');
       setStatus(initialStatus);
       setPriority('medium');
-      setSelectedProjectId(projectId || '');
+      setSelectedProjectId(projectId || 'none');
       setOpen(false);
     } catch (error) {
       toast({
@@ -186,7 +185,7 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
                   <SelectValue placeholder="Sélectionner un projet (optionnel)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Aucun projet</SelectItem>
+                  <SelectItem value="none">Aucun projet</SelectItem>
                   {projects.map(project => (
                     <SelectItem key={project.id} value={project.id}>
                       {project.name}
