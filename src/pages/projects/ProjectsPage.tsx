@@ -27,10 +27,11 @@ import CreateTaskDialog from '@/components/projects/CreateTaskDialog';
 import ProjectDashboard from '@/components/projects/ProjectDashboard';
 import ProjectCalendarView from '@/components/projects/ProjectCalendarView';
 import NotificationCenter from '@/components/notifications/NotificationCenter';
+import ProjectAIAgent from '@/components/projects/ProjectAIAgent'; // Importer le nouvel agent
 
 const ProjectsPage: React.FC = () => {
   const navigate = useNavigate();
-  const { projects, loading } = useProjects();
+  const { projects, loading, createProject, updateProject, refetch } = useProjects();
   const [searchTerm, setSearchTerm] = useState('');
 
   const getStatusColor = (status: string) => {
@@ -297,6 +298,14 @@ const ProjectsPage: React.FC = () => {
           <NotificationCenter />
         </TabsContent>
       </Tabs>
+
+      {/* Agent IA Flottant */}
+      <ProjectAIAgent
+        projects={projects}
+        createProject={createProject}
+        updateProject={updateProject}
+        refetchProjects={refetch}
+      />
     </div>
   );
 };
