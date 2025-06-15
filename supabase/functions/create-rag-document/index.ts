@@ -1,24 +1,38 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.47.0";
-import { Configuration, OpenAIApi } from "https://esm.sh/openai@3.3.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-async function createEmbedding(openai: OpenAIApi, content: string): Promise<number[]> {
-  const embeddingResponse = await openai.createEmbedding({
-    model: "text-embedding-ada-002",
-    input: content.trim(),
+async function createEmbedding(apiKey: string, content: string): Promise<number[]> {
+  const response = await fetch('https://api.openai.com/v1/embeddings', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: "text-embedding-ada-002",
+      input: content.trim(),
+    }),
   });
 
-  if (embeddingResponse.data.data.length === 0) {
-    throw new Error("Failed to generate embedding.");
+  if (!response.ok) {
+    const errorBody = await response.json();
+    console.error('OpenAI API error:', errorBody);
+    throw new Error(`Failed to generate embedding: ${errorBody.error.message}`);
   }
 
-  return embeddingResponse.data.data[0].embedding;
+  const embeddingResponse = await response.json();
+
+  if (embeddingResponse.data.length === 0) {
+    throw new Error("Failed to generate embedding, no data returned.");
+  }
+
+  return embeddingResponse.data[0].embedding;
 }
 
 async function insertDocument(supabase: SupabaseClient, doc: object) {
@@ -91,13 +105,9 @@ serve(async (req) => {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
     }
-
-    // Initialize OpenAI client
-    const configuration = new Configuration({ apiKey: openaiKey });
-    const openai = new OpenAIApi(configuration);
     
     // Create embedding
-    const embedding = await createEmbedding(openai, content);
+    const embedding = await createEmbedding(openaiKey, content);
 
     // Insert document into database
     const newDocument = { 
