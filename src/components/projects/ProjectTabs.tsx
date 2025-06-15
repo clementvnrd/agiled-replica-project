@@ -1,4 +1,3 @@
-
 import React, { lazy, Suspense } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -11,30 +10,11 @@ import {
 } from 'lucide-react';
 import type { Database } from '@/integrations/supabase/types';
 
-const TodoBoard = lazy(() => import('@/components/projects/TodoBoard'));
+const ProjectTasksBoard = lazy(() => import('@/components/projects/ProjectTasksBoard'));
 const NotesEditor = lazy(() => import('@/components/projects/NotesEditor'));
 const ProjectCalendar = lazy(() => import('@/components/projects/ProjectCalendar'));
 
 type DbProject = Database['public']['Tables']['projects']['Row'];
-
-interface TodoTask {
-  id: string;
-  title: string;
-  description: string;
-  status: 'idea' | 'todo' | 'in-progress' | 'done';
-  priority: 'low' | 'medium' | 'high';
-  assignee?: string;
-  dueDate?: Date;
-  tags: string[];
-  createdAt: Date;
-}
-
-interface TeamMember {
-  id: string;
-  name: string;
-  avatar?: string;
-  role: string;
-}
 
 const TabContentLoader = () => (
   <Card>
@@ -46,13 +26,9 @@ const TabContentLoader = () => (
 
 interface ProjectTabsProps {
   project: DbProject;
-  tasks: TodoTask[];
-  teamMembers: TeamMember[];
-  onUpdateTask: (taskId: string, updates: Partial<TodoTask>) => Promise<void>;
-  onDeleteTask: (taskId: string) => Promise<void>;
 }
 
-const ProjectTabs: React.FC<ProjectTabsProps> = ({ project, tasks, teamMembers, onUpdateTask, onDeleteTask }) => {
+const ProjectTabs: React.FC<ProjectTabsProps> = ({ project }) => {
   return (
     <Tabs defaultValue="tasks" className="space-y-6">
       <TabsList className="grid w-full grid-cols-4">
@@ -76,12 +52,7 @@ const ProjectTabs: React.FC<ProjectTabsProps> = ({ project, tasks, teamMembers, 
 
       <TabsContent value="tasks">
         <Suspense fallback={<TabContentLoader />}>
-          <TodoBoard 
-            tasks={tasks} 
-            teamMembers={teamMembers}
-            onUpdateTask={onUpdateTask}
-            onDeleteTask={onDeleteTask}
-          />
+          <ProjectTasksBoard projectId={project.id} />
         </Suspense>
       </TabsContent>
 
