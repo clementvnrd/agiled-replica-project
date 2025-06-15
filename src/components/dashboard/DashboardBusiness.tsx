@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Users, FolderOpen, Clock, FileText } from 'lucide-react';
 import TasksPerformanceCard from '@/components/TasksPerformanceCard';
@@ -18,8 +19,8 @@ const revenueData = [
 ];
 
 const DashboardBusiness: React.FC = () => {
-  const { projects, isLoading: isLoadingProjects } = useProjects();
-  const { tasks, isLoading: isLoadingTasks } = useTasks();
+  const { projects, loading: isLoadingProjects } = useProjects();
+  const { tasks, loading: isLoadingTasks } = useTasks();
 
   const isLoading = isLoadingProjects || isLoadingTasks;
 
