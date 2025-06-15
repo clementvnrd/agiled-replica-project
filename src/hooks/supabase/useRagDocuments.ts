@@ -1,106 +1,85 @@
 
-import { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { RagDocument } from '@/types';
+import { ErrorHandler } from '@/utils/errorHandler';
 
-/**
- * Hook to manage RAG documents for the current user.
- */
+const RAG_DOCUMENTS_QUERY_KEY = 'ragDocuments';
+
+// Helper to fetch documents
+const fetchDocuments = async (userId: string): Promise<RagDocument[]> => {
+  const { data, error } = await supabase
+    .from('rag_documents')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
+
+  if (error) throw ErrorHandler.handleSupabaseError(error, 'fetch RAG documents');
+  return (data || []).map(doc => ({ ...doc, id: String(doc.id) })) as RagDocument[];
+};
+
+// Helper to add a document
+const addDocumentFn = async ({ userId, content, metadata }: { userId: string, content: string, metadata: Record<string, any> }): Promise<RagDocument> => {
+  const { data, error } = await supabase
+    .from('rag_documents')
+    .insert([{ user_id: userId, content, metadata }])
+    .select()
+    .single();
+
+  if (error) throw ErrorHandler.handleSupabaseError(error, 'add RAG document');
+  return { ...data, id: String(data.id) } as RagDocument;
+};
+
+// Helper to delete a document
+const deleteDocumentFn = async (id: string): Promise<string> => {
+  const { error } = await supabase
+    .from('rag_documents')
+    .delete()
+    .match({ id });
+
+  if (error) throw ErrorHandler.handleSupabaseError(error, 'delete RAG document');
+  return id;
+};
+
 export function useRagDocuments() {
   const { user } = useSupabaseAuth();
-  const [documents, setDocuments] = useState<RagDocument[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<Error | null>(null);
+  const queryClient = useQueryClient();
 
-  // Utilitaire pour convertir un objet brut en RagDocument typé
-  function toRagDocument(doc: Record<string, any>, fallbackUserId: string): RagDocument {
-    return {
-      id: String(doc.id ?? `doc-${crypto.randomUUID()}`),
-      user_id: doc.user_id || fallbackUserId,
-      content: doc.content || null,
-      metadata: doc.metadata || {},
-      embedding: doc.embedding || null,
-      created_at: doc.created_at || null,
-    };
-  }
+  const queryKey = [RAG_DOCUMENTS_QUERY_KEY, user?.id];
 
-  useEffect(() => {
-    if (!user) {
-      setDocuments([]);
-      setIsLoading(false);
-      return;
-    }
+  const { data: documents = [], isLoading, error, refetch } = useQuery<RagDocument[], Error>({
+    queryKey,
+    queryFn: () => {
+      if (!user?.id) throw new Error("User not authenticated for RAG documents");
+      return fetchDocuments(user.id);
+    },
+    enabled: !!user,
+  });
 
-    const fetchDocuments = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        const { data, error } = await supabase
-          .from('rag_documents')
-          .select('*')
-          .eq('user_id', user.id);
-        if (error) throw error;
-        
-        const processedData: RagDocument[] = (data || []).map((doc) => toRagDocument(doc, user.id));
-        
-        setDocuments(processedData);
-      } catch (err) {
-        setError(err instanceof Error ? err : new Error('Unknown error occurred'));
-        console.error('Error fetching RAG documents:', err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchDocuments();
-  }, [user]);
+  const addDocumentMutation = useMutation({
+    mutationFn: (newDoc: { content: string, metadata?: Record<string, any> }) => {
+      if (!user) throw new Error("User not authenticated");
+      return addDocumentFn({ userId: user.id, content: newDoc.content, metadata: newDoc.metadata || {} });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey });
+    },
+  });
 
-  const addDocument = async (content: string, metadata: Record<string, any> = {}) => {
-    if (!user) return null;
-
-    try {
-      const newDocument = {
-        user_id: user.id,
-        content,
-        metadata
-      };
-      const { data, error } = await supabase
-        .from('rag_documents')
-        .insert([newDocument])
-        .select()
-        .single();
-      if (error) throw error;
-      
-      const processedDoc: RagDocument = toRagDocument(data, user.id);
-      
-      setDocuments(prev => [...prev, processedDoc]);
-      return processedDoc;
-    } catch (err) {
-      console.error('Error adding RAG document:', err);
-      return null;
-    }
-  };
-
-  const deleteDocument = async (id: string) => {
-    try {
-      const { error } = await supabase
-        .from('rag_documents')
-        .delete()
-        .match({ id });
-      if (error) throw error;
-      setDocuments(prev => prev.filter(doc => doc.id !== id));
-      return true;
-    } catch (err) {
-      console.error('Error deleting RAG document:', err);
-      return false;
-    }
-  };
+  const deleteDocumentMutation = useMutation({
+    mutationFn: deleteDocumentFn,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey });
+    },
+  });
 
   return {
     documents,
     isLoading,
     error,
-    addDocument,
-    deleteDocument
+    addDocument: addDocumentMutation.mutateAsync,
+    deleteDocument: deleteDocumentMutation.mutateAsync,
+    refetch,
   };
 }

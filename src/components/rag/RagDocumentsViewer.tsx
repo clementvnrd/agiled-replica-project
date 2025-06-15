@@ -1,29 +1,18 @@
 
-import { supabase } from '@/integrations/supabase/client';
 import React, { useState, useEffect } from 'react';
-import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Loader2, Search, ServerCrash } from 'lucide-react';
-import { toast } from "sonner";
 import { RagDocument } from '@/types';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { useRagDocuments } from '@/hooks/supabase/useRagDocuments';
 
 const RagDocumentsViewer: React.FC = () => {
-  const { user } = useSupabaseAuth();
-  const [documents, setDocuments] = useState<RagDocument[]>([]);
+  const { documents, isLoading, error, refetch } = useRagDocuments();
   const [filteredDocuments, setFilteredDocuments] = useState<RagDocument[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (user) {
-      fetchDocuments();
-    }
-  }, [user]);
 
   useEffect(() => {
     if (!searchQuery.trim()) {
@@ -38,37 +27,6 @@ const RagDocumentsViewer: React.FC = () => {
       );
     }
   }, [searchQuery, documents]);
-
-  const fetchDocuments = async () => {
-    if (!user) return;
-    
-    setIsLoading(true);
-    setError(null);
-    try {
-      const { data, error: fetchError } = await supabase
-        .from('rag_documents')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-        
-      if (fetchError) throw fetchError;
-      
-      const processedData = (data || []).map((doc: any) => ({
-        ...doc,
-        id: doc.id || `doc-${crypto.randomUUID()}`
-      })) as RagDocument[];
-      
-      setDocuments(processedData);
-      setFilteredDocuments(processedData);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Erreur inconnue";
-      console.error('Erreur lors de la récupération des documents:', err);
-      setError(errorMessage);
-      toast.error("Erreur lors de la récupération des documents");
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const getVectorStatus = (doc: RagDocument) => {
     if (doc.embedding) {
@@ -85,8 +43,8 @@ const RagDocumentsViewer: React.FC = () => {
       <div className="text-center py-12 bg-red-50 text-red-700 rounded-md flex flex-col items-center justify-center">
         <ServerCrash className="h-12 w-12 mx-auto mb-2" />
         <h3 className="font-medium">Erreur lors du chargement</h3>
-        <p className="text-sm mb-4">{error}</p>
-        <Button onClick={fetchDocuments}>Réessayer</Button>
+        <p className="text-sm mb-4">{error.message}</p>
+        <Button onClick={() => refetch()}>Réessayer</Button>
       </div>
     );
   }
@@ -106,7 +64,7 @@ const RagDocumentsViewer: React.FC = () => {
         <Button 
           variant="outline" 
           size="sm" 
-          onClick={fetchDocuments}
+          onClick={() => refetch()}
           disabled={isLoading}
         >
           {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Rafraîchir"}

@@ -10,6 +10,7 @@ import ModelSelector from '@/components/llm/ModelSelector';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { useRagDocuments } from '@/hooks/supabase/useRagDocuments';
 
 // Utiliser les types de useProjects
 type Project = ReturnType<typeof useProjects>['projects'][0];
@@ -35,6 +36,7 @@ const ProjectAIAgent: React.FC<ProjectAIAgentProps> = ({ projects, createProject
   const [isLoading, setIsLoading] = useState(false);
   const [model, setModel] = useState('openai/gpt-4o-mini');
   const { user } = useSupabaseAuth();
+  const { addDocument: addRagDocument } = useRagDocuments();
 
   const handleSendMessage = async (messageText: string) => {
     setIsLoading(true);
@@ -114,12 +116,10 @@ const ProjectAIAgent: React.FC<ProjectAIAgentProps> = ({ projects, createProject
             if (!content) {
                 throw new Error("Le contenu est requis pour ajouter un document RAG.");
             }
-            const { error: insertError } = await supabase.from('rag_documents').insert({
-                user_id: user.id,
+            await addRagDocument({
                 content,
                 metadata: { title: title || 'Information apprise', source: 'ProjectAIAgent' }
             });
-            if (insertError) throw insertError;
             aiResponseContent = "J'ai bien noté cette information et l'ai ajoutée à ma base de connaissances pour le futur.";
             toast.success("Nouvelle information ajoutée au RAG.");
           }
