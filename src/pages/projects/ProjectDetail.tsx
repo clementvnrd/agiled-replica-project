@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -28,9 +27,11 @@ import {
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import CreateTaskDialog from '@/components/projects/CreateTaskDialog';
-import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
-import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
+import { useProjects } from '@/hooks/useProjects';
+import { useTasks } from '@/hooks/useTasks';
+import { useTeamMembers } from '@/hooks/useTeamMembers';
+import { useToast } from "@/hooks/use-toast";
 
 // Lazy loaded components
 const TodoBoard = lazy(() => import('@/components/projects/TodoBoard'));
@@ -40,7 +41,6 @@ const ProjectCalendar = lazy(() => import('@/components/projects/ProjectCalendar
 
 type DbProject = Database['public']['Tables']['projects']['Row'];
 type DbTask = Database['public']['Tables']['tasks']['Row'];
-type DbTeamMember = Database['public']['Tables']['team_members']['Row'];
 
 // Ces interfaces sont conservées pour la compatibilité avec les composants enfants non modifiables.
 interface Project {
@@ -86,58 +86,30 @@ const TabContentLoader = () => (
 const ProjectDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user } = useSupabaseAuth();
+  const { toast } = useToast();
+  
+  const { projects, updateProject, loading: projectsLoading, error: projectsError } = useProjects();
+  const project = projects.find(p => p.id === id);
 
-  const [project, setProject] = useState<DbProject | null>(null);
-  const [tasks, setTasks] = useState<DbTask[]>([]);
-  const [team, setTeam] = useState<DbTeamMember[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { tasks, updateTask, deleteTask, refetch: refetchTasks, loading: tasksLoading, error: tasksError } = useTasks(id);
+  const { teamMembers: team, loading: teamLoading, error: teamError } = useTeamMembers(id);
+  
+  const loading = projectsLoading || tasksLoading || teamLoading;
+  const error = projectsError || tasksError || teamError;
   
   const [editingField, setEditingField] = useState<string | null>(null);
   const [tempValue, setTempValue] = useState('');
   const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
 
   useEffect(() => {
-    const fetchProjectDetails = async () => {
-      if (!id || !user) return;
-      
-      setLoading(true);
-      setError(null);
-      
-      try {
-        const projectPromise = supabase.from('projects').select('*').eq('id', id).single();
-        const tasksPromise = supabase.from('tasks').select('*').eq('project_id', id).order('created_at');
-        const teamPromise = supabase.from('team_members').select('*').eq('project_id', id);
-
-        const [
-          { data: projectData, error: projectError }, 
-          { data: tasksData, error: tasksError }, 
-          { data: teamData, error: teamError }
-        ] = await Promise.all([projectPromise, tasksPromise, teamPromise]);
-
-        if (projectError) throw new Error(`Projet: ${projectError.message}`);
-        if (tasksError) throw new Error(`Tâches: ${tasksError.message}`);
-        if (teamError) throw new Error(`Équipe: ${teamError.message}`);
-
-        if (!projectData) {
-          throw new Error("Projet non trouvé.");
-        }
-
-        setProject(projectData);
-        setTasks(tasksData || []);
-        setTeam(teamData || []);
-
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Une erreur est survenue.');
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
+    const handleTasksUpdate = () => {
+      refetchTasks();
     };
-    
-    fetchProjectDetails();
-  }, [id, user]);
+    window.addEventListener('tasks-updated', handleTasksUpdate);
+    return () => {
+      window.removeEventListener('tasks-updated', handleTasksUpdate);
+    };
+  }, [refetchTasks]);
 
   const handleUpdateTask = async (taskId: string, updates: Partial<TodoTask>) => {
     const dbUpdates: Partial<DbTask> = {};
@@ -149,21 +121,20 @@ const ProjectDetail: React.FC = () => {
     if (updates.dueDate) dbUpdates.due_date = updates.dueDate.toISOString();
     if (updates.tags) dbUpdates.tags = updates.tags;
 
-    const { data: updatedTask, error } = await supabase.from('tasks').update(dbUpdates).eq('id', taskId).select().single();
-    
-    if (error) {
-      console.error("Erreur lors de la mise à jour de la tâche:", error);
-    } else if (updatedTask) {
-      setTasks(prev => prev.map(t => t.id === taskId ? updatedTask : t));
+    try {
+      await updateTask(taskId, dbUpdates);
+      toast({ title: "Tâche mise à jour", description: "La tâche a été mise à jour avec succès." });
+    } catch (err) {
+      toast({ title: "Erreur", description: "La mise à jour de la tâche a échoué.", variant: "destructive" });
     }
   };
   
   const handleDeleteTask = async (taskId: string) => {
-    const { error } = await supabase.from('tasks').delete().eq('id', taskId);
-    if (error) {
-      console.error("Erreur lors de la suppression de la tâche:", error);
-    } else {
-      setTasks(prev => prev.filter(task => task.id !== taskId));
+    try {
+      await deleteTask(taskId);
+      toast({ title: "Tâche supprimée", description: "La tâche a été supprimée avec succès." });
+    } catch (err) {
+      toast({ title: "Erreur", description: "La suppression de la tâche a échoué.", variant: "destructive" });
     }
   };
 
@@ -173,7 +144,7 @@ const ProjectDetail: React.FC = () => {
   };
 
   const handleSaveField = async (field: string) => {
-    if (!project) return;
+    if (!project || !id) return;
     
     let updates: Partial<DbProject> = {};
     if (field === 'name') {
@@ -183,9 +154,13 @@ const ProjectDetail: React.FC = () => {
     }
     
     setEditingField(null);
-    const { data, error } = await supabase.from('projects').update(updates).eq('id', project.id).select().single();
-    if (data) setProject(data);
-    if (error) console.error("Erreur de mise à jour:", error);
+    try {
+      await updateProject(id, updates);
+      toast({ title: "Projet mis à jour", description: "Les informations du projet ont été sauvegardées." });
+    } catch (err) {
+      toast({ title: "Erreur", description: "La mise à jour du projet a échoué.", variant: "destructive" });
+      console.error("Erreur de mise à jour:", err);
+    }
   };
 
   const handleCancelEdit = () => {
@@ -221,12 +196,22 @@ const ProjectDetail: React.FC = () => {
     );
   }
 
-  if (error || !project) {
+  if (!loading && (error || !project)) {
     return (
       <div className="p-6 space-y-6 max-w-7xl mx-auto text-center">
         <h2 className="text-2xl font-bold text-red-600">Erreur</h2>
-        <p>{error || 'Le projet n\'a pas pu être chargé.'}</p>
+        <p>{error || 'Le projet n\'a pas pu être trouvé ou chargé.'}</p>
         <Button onClick={() => navigate('/projects')}>Retour aux projets</Button>
+      </div>
+    );
+  }
+
+  // Fallback for when projects have loaded but the specific project isn't found
+  if (!project) {
+    return (
+      <div className="p-6 space-y-6 max-w-7xl mx-auto flex justify-center items-center h-screen">
+        <Loader2 className="h-8 w-8 animate-spin" />
+        <p className="ml-4">Recherche du projet...</p>
       </div>
     );
   }
