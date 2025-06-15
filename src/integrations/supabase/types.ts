@@ -370,6 +370,21 @@ export type Database = {
         Args: { "": string } | { "": unknown } | { "": unknown }
         Returns: unknown
       }
+      match_documents: {
+        Args: {
+          query_embedding: string
+          similarity_threshold: number
+          match_count: number
+          p_user_id: string
+        }
+        Returns: {
+          id: string
+          content: string
+          metadata: Json
+          created_at: string
+          similarity: number
+        }[]
+      }
       sparsevec_out: {
         Args: { "": unknown }
         Returns: unknown
