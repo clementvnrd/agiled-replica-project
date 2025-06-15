@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React from 'react';
 import { Users, Clock, Plug, Database } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EnhancedCard } from '@/components/ui/enhanced-card';
@@ -23,6 +22,7 @@ const DashboardOverview: React.FC = () => {
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-6">
         <EnhancedCard
+          className="glass-card"
           title="Tâches en attente"
           subtitle="Business et personnel"
           icon={<Clock className="h-5 w-5" />}
@@ -40,6 +40,7 @@ const DashboardOverview: React.FC = () => {
         </EnhancedCard>
         
         <EnhancedCard
+          className="glass-card"
           title="MCPs connectés"
           subtitle="Connectez vos outils préférés"
           icon={<Plug className="h-5 w-5" />}
@@ -54,6 +55,7 @@ const DashboardOverview: React.FC = () => {
         </EnhancedCard>
         
         <EnhancedCard
+          className="glass-card"
           title="Évènements aujourd'hui"
           subtitle="Réunions et rendez-vous"
           icon={<Users className="h-5 w-5" />}
@@ -67,6 +69,7 @@ const DashboardOverview: React.FC = () => {
         </EnhancedCard>
         
         <EnhancedCard
+          className="glass-card"
           title="Documents RAG"
           subtitle="Base de connaissances"
           icon={<Database className="h-5 w-5" />}
@@ -86,13 +89,14 @@ const DashboardOverview: React.FC = () => {
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <InteractiveChart
+          className="glass-card"
           title="Activité des tâches"
           data={taskData}
           dataKey="value"
           color="#3b82f6"
           category="Productivité"
         />
-        <EnhancedActivityFeed />
+        <EnhancedActivityFeed className="glass-card" />
       </div>
     </>
   );
