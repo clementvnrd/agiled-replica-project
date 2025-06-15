@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
@@ -61,19 +62,20 @@ export const useTasks = (projectId?: string) => {
     }
 
     const tempId = `temp-${Date.now()}`;
+    // Correction de l'objet newTask pour correspondre au type Task
     const newTask: Task = {
       id: tempId,
       user_id: user.id,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
-      title: taskData.title ?? '',
+      title: taskData.title,
       description: taskData.description ?? null,
       status: taskData.status ?? 'todo',
       project_id: taskData.project_id ?? null,
       due_date: taskData.due_date ?? null,
-      assignee_id: taskData.assignee_id ?? null,
-      priority: taskData.priority ?? null,
-      order: taskData.order ?? null,
+      assignee: taskData.assignee ?? null,
+      priority: taskData.priority ?? 'medium',
+      tags: taskData.tags ?? null,
     };
 
     setTasks(prev => [newTask, ...prev]);
