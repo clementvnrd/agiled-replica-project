@@ -6,7 +6,6 @@ import DashboardBusiness from '@/components/dashboard/DashboardBusiness';
 import DashboardPersonal from '@/components/dashboard/DashboardPersonal';
 import DashboardSystemCards from '@/components/dashboard/DashboardSystemCards';
 import DashboardFooter from '@/components/dashboard/DashboardFooter';
-import QuickActionsFab from '@/components/enhanced-dashboard/QuickActionsFab';
 
 const DashboardPage: React.FC = () => {
   return (
@@ -38,7 +37,6 @@ const DashboardPage: React.FC = () => {
       
       <DashboardSystemCards />
       <DashboardFooter />
-      <QuickActionsFab />
     </div>
   );
 };
