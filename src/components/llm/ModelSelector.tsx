@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Settings, Zap, Brain, Star } from 'lucide-react';
 
@@ -10,28 +9,35 @@ const MODELS = [
     label: 'GPT-4.1', 
     value: 'openai/gpt-4.1',
     tier: 'premium',
-    description: 'Le plus avancé pour les tâches complexes',
+    description: 'Le plus avancé pour les tâches complexes.',
     icon: <Star className="w-4 h-4" />
   },
   { 
     label: 'Claude 3.7 Sonnet', 
     value: 'anthropic/claude-3.7-sonnet',
     tier: 'premium',
-    description: 'Excellent pour l\'analyse et l\'écriture',
+    description: 'Excellent pour l\'analyse et l\'écriture.',
     icon: <Brain className="w-4 h-4" />
   },
   { 
-    label: 'GPT-4o (2024-11-20)', 
-    value: 'openai/gpt-4o-2024-11-20',
+    label: 'GPT-4o', 
+    value: 'openai/gpt-4o',
     tier: 'standard',
-    description: 'Polyvalent et efficace',
+    description: 'Polyvalent et efficace.',
+    icon: <Zap className="w-4 h-4" />
+  },
+  {
+    label: 'GPT-4.1 Mini',
+    value: 'openai/gpt-4.1-mini',
+    tier: 'fast',
+    description: 'Rapide et économique pour les tâches quotidiennes.',
     icon: <Zap className="w-4 h-4" />
   },
   { 
-    label: 'O3 Mini', 
-    value: 'openai/o3-mini',
+    label: 'O4 Mini', 
+    value: 'openai/o4-mini',
     tier: 'fast',
-    description: 'Rapide pour les tâches simples',
+    description: 'Le plus rapide pour les tâches simples.',
     icon: <Zap className="w-4 h-4" />
   },
 ];

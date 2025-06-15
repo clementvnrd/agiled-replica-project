@@ -1,12 +1,14 @@
 
-import React, { useState, useCallback } from 'react';
-import { Bot, X, Loader2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { Bot, X, Loader2, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import ModernChatInterface from '@/components/llm/ModernChatInterface';
 import { openRouterService, Message as OpenRouterMessage } from '@/services/openrouter';
 import { toast } from 'sonner';
-import { useProjects } from '@/hooks/useProjects'; // Importer pour les types
+import { useProjects } from '@/hooks/useProjects';
+import ModelSelector from '@/components/llm/ModelSelector';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 // Utiliser les types de useProjects
 type Project = ReturnType<typeof useProjects>['projects'][0];
@@ -30,7 +32,7 @@ const ProjectAIAgent: React.FC<ProjectAIAgentProps> = ({ projects, createProject
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const model = 'anthropic/claude-3-opus:beta';
+  const [model, setModel] = useState('openai/gpt-4.1-mini');
 
   const handleSendMessage = async (messageText: string) => {
     setIsLoading(true);
@@ -120,9 +122,21 @@ const ProjectAIAgent: React.FC<ProjectAIAgentProps> = ({ projects, createProject
                     <Bot className="h-6 w-6 text-primary" />
                     <CardTitle className="text-lg">Agent Projet IA</CardTitle>
                 </div>
-                <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)}>
-                    <X className="h-5 w-5" />
-                </Button>
+                <div className="flex items-center gap-1">
+                  <Popover>
+                      <PopoverTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                              <Settings className="h-5 w-5" />
+                          </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[380px] p-2" align="end">
+                          <ModelSelector selectedModel={model} onModelChange={setModel} />
+                      </PopoverContent>
+                  </Popover>
+                  <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)}>
+                      <X className="h-5 w-5" />
+                  </Button>
+                </div>
             </CardHeader>
             <CardContent className="flex-1 p-0">
                 <ModernChatInterface
