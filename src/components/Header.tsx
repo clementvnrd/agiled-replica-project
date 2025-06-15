@@ -1,12 +1,14 @@
+
 import React from 'react';
-import { Search, Bell, Moon, ChevronDown, Plus, Briefcase } from 'lucide-react';
+import { Moon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { useNavigate } from 'react-router-dom';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
-import { GlobalSearch, SearchResult } from '@/components/ui/search';
+import { GlobalSearch } from '@/components/ui/search';
 import { NotificationsCenter } from '@/components/ui/notifications-center';
 import { useNotifications } from '@/hooks/use-notifications';
+
 const Header: React.FC = () => {
   const navigate = useNavigate();
   const {
@@ -19,29 +21,7 @@ const Header: React.FC = () => {
     markAllAsRead,
     dismiss
   } = useNotifications();
-  const handleSearch = async (query: string): Promise<SearchResult[]> => {
-    // Mock search - replace with actual search implementation
-    const mockResults: SearchResult[] = [{
-      id: '1',
-      title: 'Dashboard',
-      type: 'Navigation',
-      url: '/dashboard'
-    }, {
-      id: '2',
-      title: 'Agent Manager',
-      type: 'IA',
-      url: '/agent'
-    }, {
-      id: '3',
-      title: 'CRM',
-      type: 'Business',
-      url: '/crm'
-    }].filter(result => result.title.toLowerCase().includes(query.toLowerCase()) || result.type && result.type.toLowerCase().includes(query.toLowerCase()));
-    return mockResults;
-  };
-  const handleSearchSelect = (result: SearchResult) => {
-    navigate(result.url);
-  };
+
   const handleSignOut = async () => {
     try {
       await signOut();
@@ -71,7 +51,7 @@ const Header: React.FC = () => {
   };
   return <header className="h-16 bg-white border-b border-agiled-lightBorder flex items-center px-4">
       <div className="flex-1 flex items-center">
-        <GlobalSearch placeholder="Chercher dans l'application..." onSearch={handleSearch} onSelect={handleSearchSelect} className="w-64" />
+        <GlobalSearch placeholder="Chercher dans l'application..." className="w-64" />
       </div>
       
       <div className="flex items-center space-x-4">
