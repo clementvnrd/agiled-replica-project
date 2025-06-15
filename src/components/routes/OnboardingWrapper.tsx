@@ -1,14 +1,14 @@
 
 import React from 'react';
-import { useUser } from '@clerk/clerk-react';
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 
-// Wrapper simplifié qui ne fait plus d'onboarding Supabase
-// Les utilisateurs connectés via Clerk arrivent directement sur le dashboard
+// Wrapper simplifié qui ne fait plus d'onboarding complexe
+// Les utilisateurs connectés via Supabase arrivent directement sur le dashboard
 export default function OnboardingWrapper({ children }: { children: React.ReactNode }) {
-  const { user, isLoaded } = useUser();
+  const { user, loading } = useSupabaseAuth();
 
-  // Si Clerk n'a pas encore chargé, on affiche un loading
-  if (!isLoaded) {
+  // Si Supabase n'a pas encore chargé, on affiche un loading
+  if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-gray-50">
         <div className="text-center">
@@ -19,7 +19,7 @@ export default function OnboardingWrapper({ children }: { children: React.ReactN
     );
   }
 
-  // Si pas d'utilisateur Clerk, ne rien afficher (sera géré par ProtectedRoute)
+  // Si pas d'utilisateur Supabase, ne rien afficher (sera géré par ProtectedRoute)
   if (!user) {
     return null;
   }

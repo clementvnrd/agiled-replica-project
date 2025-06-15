@@ -1,18 +1,33 @@
 
 import { useState, useEffect } from 'react';
-import { useUser } from '@clerk/clerk-react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
+import type { User } from '@supabase/supabase-js';
 
 type ProjectNote = Database['public']['Tables']['project_notes']['Row'];
 type ProjectNoteInsert = Database['public']['Tables']['project_notes']['Insert'];
 type ProjectNoteUpdate = Database['public']['Tables']['project_notes']['Update'];
 
 export const useProjectNotes = (projectId: string) => {
-  const { user } = useUser();
+  const [user, setUser] = useState<User | null>(null);
   const [notes, setNotes] = useState<ProjectNote[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Écouter les changements d'authentification
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setUser(session?.user ?? null);
+      }
+    );
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const fetchNotes = async () => {
     if (!user || !projectId) return;
@@ -89,7 +104,9 @@ export const useProjectNotes = (projectId: string) => {
   };
 
   useEffect(() => {
-    fetchNotes();
+    if (user && projectId) {
+      fetchNotes();
+    }
   }, [user, projectId]);
 
   return {

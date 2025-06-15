@@ -1,17 +1,32 @@
 
 import { useState, useEffect } from 'react';
-import { useUser } from '@clerk/clerk-react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
+import type { User } from '@supabase/supabase-js';
 
 type TeamMember = Database['public']['Tables']['team_members']['Row'];
 type TeamMemberInsert = Database['public']['Tables']['team_members']['Insert'];
 
 export const useTeamMembers = (projectId: string) => {
-  const { user } = useUser();
+  const [user, setUser] = useState<User | null>(null);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Écouter les changements d'authentification
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setUser(session?.user ?? null);
+      }
+    );
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const fetchTeamMembers = async () => {
     if (!user || !projectId) return;
@@ -71,7 +86,9 @@ export const useTeamMembers = (projectId: string) => {
   };
 
   useEffect(() => {
-    fetchTeamMembers();
+    if (user && projectId) {
+      fetchTeamMembers();
+    }
   }, [user, projectId]);
 
   return {

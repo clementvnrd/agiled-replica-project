@@ -1,41 +1,45 @@
+
 import { useState, useEffect, useCallback } from 'react';
-import { useUser, useAuth } from '@clerk/clerk-react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
+import type { User } from '@supabase/supabase-js';
 
 type Project = Database['public']['Tables']['projects']['Row'];
 type ProjectInsert = Database['public']['Tables']['projects']['Insert'];
 type ProjectUpdate = Database['public']['Tables']['projects']['Update'];
 
 export const useProjects = () => {
-  const { user } = useUser();
-  const { getToken } = useAuth();
+  const [user, setUser] = useState<User | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const getSupabaseWithAuth = useCallback(async () => {
-    const token = await getToken({ template: 'supabase' });
-    if (token) {
-      const { error } = await supabase.auth.setSession({
-        access_token: token,
-        refresh_token: token, // Pas utilisé par Supabase dans ce flux, mais requis par la méthode
-      });
-      if (error) {
-        console.error('Error setting Supabase session:', error);
-        throw new Error('Impossible de configurer la session Supabase.');
+  // Écouter les changements d'authentification
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setUser(session?.user ?? null);
       }
-    }
-    return supabase;
-  }, [getToken]);
+    );
+
+    // Récupérer la session actuelle
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const fetchProjects = useCallback(async () => {
-    if (!user) return;
+    if (!user) {
+      setProjects([]);
+      setLoading(false);
+      return;
+    }
 
     try {
       setLoading(true);
-      const authedSupabase = await getSupabaseWithAuth();
-      const { data, error } = await authedSupabase
+      const { data, error } = await supabase
         .from('projects')
         .select('*')
         .eq('user_id', user.id)
@@ -48,14 +52,13 @@ export const useProjects = () => {
     } finally {
       setLoading(false);
     }
-  }, [user, getSupabaseWithAuth]);
+  }, [user]);
 
   const createProject = async (projectData: Omit<ProjectInsert, 'user_id'>) => {
     if (!user) throw new Error('Utilisateur non connecté');
 
     try {
-      const authedSupabase = await getSupabaseWithAuth();
-      const { data, error } = await authedSupabase
+      const { data, error } = await supabase
         .from('projects')
         .insert([{ ...projectData, user_id: user.id }])
         .select()
@@ -76,8 +79,7 @@ export const useProjects = () => {
   const updateProject = async (id: string, updates: ProjectUpdate) => {
     if (!user) throw new Error('Utilisateur non connecté');
     try {
-      const authedSupabase = await getSupabaseWithAuth();
-      const { data, error } = await authedSupabase
+      const { data, error } = await supabase
         .from('projects')
         .update(updates)
         .eq('id', id)
@@ -95,8 +97,7 @@ export const useProjects = () => {
   const deleteProject = async (id: string) => {
     if (!user) throw new Error('Utilisateur non connecté');
     try {
-      const authedSupabase = await getSupabaseWithAuth();
-      const { error } = await authedSupabase
+      const { error } = await supabase
         .from('projects')
         .delete()
         .eq('id', id);

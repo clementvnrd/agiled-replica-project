@@ -1,18 +1,33 @@
 
 import { useState, useEffect } from 'react';
-import { useUser } from '@clerk/clerk-react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
+import type { User } from '@supabase/supabase-js';
 
 type Task = Database['public']['Tables']['tasks']['Row'];
 type TaskInsert = Database['public']['Tables']['tasks']['Insert'];
 type TaskUpdate = Database['public']['Tables']['tasks']['Update'];
 
 export const useTasks = (projectId?: string) => {
-  const { user } = useUser();
+  const [user, setUser] = useState<User | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Écouter les changements d'authentification
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setUser(session?.user ?? null);
+      }
+    );
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const fetchTasks = async () => {
     if (!user) return;
@@ -89,7 +104,9 @@ export const useTasks = (projectId?: string) => {
   };
 
   useEffect(() => {
-    fetchTasks();
+    if (user) {
+      fetchTasks();
+    }
   }, [user, projectId]);
 
   return {

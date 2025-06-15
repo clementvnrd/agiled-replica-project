@@ -1,8 +1,9 @@
 
 import React, { useState } from 'react';
-import { SignedIn, SignedOut, SignIn, useUser } from '@clerk/clerk-react';
 import { Navigate, useLocation, Link } from 'react-router-dom';
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import AuthLayout from '../auth/AuthLayout';
+import SupabaseAuth from '../auth/SupabaseAuth';
 import PasswordRecovery from '../auth/PasswordRecovery';
 import { Card } from '@/components/ui/card';
 import AuthConfirmation from '../auth/AuthConfirmation';
@@ -10,7 +11,13 @@ import AuthConfirmation from '../auth/AuthConfirmation';
 export function LoginPage() {
   const [mode, setMode] = useState<'signin' | 'recovery'>('signin');
   const location = useLocation();
+  const { isAuthenticated } = useSupabaseAuth();
   const from = (location.state as any)?.from?.pathname || '/dashboard';
+  
+  // Rediriger si déjà connecté
+  if (isAuthenticated) {
+    return <Navigate to={from} replace />;
+  }
   
   if (mode === 'recovery') {
     return (
@@ -22,53 +29,31 @@ export function LoginPage() {
   
   return (
     <AuthLayout>
-      <div className="bg-white p-6 rounded-lg shadow-md">
-        <h1 className="text-2xl font-bold mb-4 text-center">Connectez-vous</h1>
-        <SignIn redirectUrl={from} />
-        <div className="mt-6 text-center space-y-2">
-          <button 
-            onClick={() => setMode('recovery')}
-            className="text-sm text-blue-600 hover:underline block w-full"
-          >
-            Mot de passe oublié ?
-          </button>
-          <div className="text-sm text-gray-600">
-            Pas encore de compte ?{' '}
-            <Link to="/signup" className="text-blue-600 hover:underline font-medium">
-              Créer un compte
-            </Link>
-          </div>
-        </div>
-      </div>
+      <SupabaseAuth onAuthSuccess={() => window.location.href = from} />
     </AuthLayout>
   );
 }
 
 export function SignupPage() {
   const location = useLocation();
+  const { isAuthenticated } = useSupabaseAuth();
   const from = (location.state as any)?.from?.pathname || '/dashboard';
+  
+  // Rediriger si déjà connecté
+  if (isAuthenticated) {
+    return <Navigate to={from} replace />;
+  }
   
   return (
     <AuthLayout>
-      <div className="bg-white p-6 rounded-lg shadow-md">
-        <h1 className="text-2xl font-bold mb-4 text-center">Créez votre compte</h1>
-        <SignIn redirectUrl={from} />
-        <div className="mt-6 text-center">
-          <div className="text-sm text-gray-600">
-            Déjà inscrit ?{' '}
-            <Link to="/login" className="text-blue-600 hover:underline font-medium">
-              Se connecter
-            </Link>
-          </div>
-        </div>
-      </div>
+      <SupabaseAuth onAuthSuccess={() => window.location.href = from} />
     </AuthLayout>
   );
 }
 
 export function VerifyEmail() {
-  const { user } = useUser();
-  const email = user?.primaryEmailAddress?.emailAddress || 'votre adresse email';
+  const { user } = useSupabaseAuth();
+  const email = user?.email || 'votre adresse email';
   
   return (
     <AuthLayout>
@@ -98,14 +83,11 @@ export function ResetPassword() {
 
 // Composant qui redirige les utilisateurs déjà authentifiés
 export function RedirectIfAuthenticated({ children }: { children: React.ReactNode }) {
-  return (
-    <>
-      <SignedIn>
-        <Navigate to="/dashboard" replace />
-      </SignedIn>
-      <SignedOut>
-        {children}
-      </SignedOut>
-    </>
-  );
+  const { isAuthenticated } = useSupabaseAuth();
+  
+  if (isAuthenticated) {
+    return <Navigate to="/dashboard" replace />;
+  }
+  
+  return <>{children}</>;
 }
