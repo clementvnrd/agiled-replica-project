@@ -1,17 +1,14 @@
-
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Home, ChevronRight, Database, FileText } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
-
 interface SidebarNavItemProps {
   icon: React.ReactNode;
   label: string;
   to: string;
   isActive?: boolean;
 }
-
 interface SidebarNavGroupProps {
   title: string;
   icon?: React.ReactNode;
@@ -21,75 +18,45 @@ interface SidebarNavGroupProps {
     to: string;
   }>;
 }
-
-export const SidebarNavItem: React.FC<SidebarNavItemProps> = ({ icon, label, to, isActive }) => {
-  return (
-    <Link
-      to={to}
-      className={cn(
-        "flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-all",
-        isActive 
-          ? "bg-agiled-primary/10 font-medium text-agiled-primary" 
-          : "hover:bg-gray-100 text-agiled-text"
-      )}
-    >
-      <span className="w-5 h-5 flex items-center justify-center">
-        {icon}
-      </span>
-      <span>{label}</span>
-    </Link>
-  );
+export const SidebarNavItem: React.FC<SidebarNavItemProps> = ({
+  icon,
+  label,
+  to,
+  isActive
+}) => {
+  return;
 };
-
-export const SidebarNavGroup: React.FC<SidebarNavGroupProps> = ({ title, icon, items }) => {
+export const SidebarNavGroup: React.FC<SidebarNavGroupProps> = ({
+  title,
+  icon,
+  items
+}) => {
   const location = useLocation();
-  const [isOpen, setIsOpen] = React.useState(
-    items.some(item => location.pathname.startsWith(item.to))
-  );
-
-  return (
-    <Collapsible open={isOpen} onOpenChange={setIsOpen} className="w-full">
+  const [isOpen, setIsOpen] = React.useState(items.some(item => location.pathname.startsWith(item.to)));
+  return <Collapsible open={isOpen} onOpenChange={setIsOpen} className="w-full">
       <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-2 rounded-md text-sm font-medium text-agiled-text hover:bg-gray-100 transition-all">
         <span className="flex items-center gap-2">
           {icon || <Home size={16} />}
           {title}
         </span>
-        <ChevronRight 
-          size={16} 
-          className={cn(
-            "text-gray-400 transition-transform duration-200",
-            isOpen && "transform rotate-90"
-          )} 
-        />
+        <ChevronRight size={16} className={cn("text-gray-400 transition-transform duration-200", isOpen && "transform rotate-90")} />
       </CollapsibleTrigger>
       <CollapsibleContent>
         <div className="pt-1 pl-2">
-          {items.map((item, index) => (
-            <SidebarNavItem
-              key={index}
-              icon={item.icon}
-              label={item.label}
-              to={item.to}
-              isActive={location.pathname === item.to}
-            />
-          ))}
+          {items.map((item, index) => <SidebarNavItem key={index} icon={item.icon} label={item.label} to={item.to} isActive={location.pathname === item.to} />)}
         </div>
       </CollapsibleContent>
-    </Collapsible>
-  );
+    </Collapsible>;
 };
 
 // Ajouter un groupe RAG pour la navigation
 export const ragNavGroup = {
   title: "Système RAG",
   icon: <Database size={16} />,
-  items: [
-    {
-      icon: <FileText size={16} />,
-      label: "Documents RAG",
-      to: "/rag",
-    },
-  ],
+  items: [{
+    icon: <FileText size={16} />,
+    label: "Documents RAG",
+    to: "/rag"
+  }]
 };
-
 export default SidebarNavGroup;
