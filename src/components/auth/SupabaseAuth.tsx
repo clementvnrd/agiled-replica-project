@@ -79,13 +79,10 @@ const SupabaseAuth: React.FC<SupabaseAuthProps> = ({ onAuthSuccess }) => {
       const { error } = await supabase.auth.signUp({
         email,
         password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/`
-        }
       });
 
       if (error) throw error;
-      setMessage('Inscription réussie ! Vérifiez votre email pour confirmer votre compte.');
+      setMessage('Compte créé avec succès ! Vous pouvez maintenant vous connecter.');
     } catch (err: any) {
       setError(err.message || 'Erreur lors de l\'inscription');
     } finally {
