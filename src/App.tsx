@@ -13,8 +13,6 @@ import RagManagementPage from './pages/rag/RagManagementPage';
 import VectorSearch from './components/rag/VectorSearch';
 import SettingsPage from './pages/settings/SettingsPage';
 import OnboardingWrapper from './components/routes/OnboardingWrapper';
-import Sidebar from './components/Sidebar';
-import SidebarNavGroup from './components/navigation/SidebarNavGroup';
 import CalendarPage from './pages/calendar/CalendarPage';
 import ProjectsPage from '@/pages/projects/ProjectsPage';
 import ProjectDetail from '@/pages/projects/ProjectDetail';
