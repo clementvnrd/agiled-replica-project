@@ -1,7 +1,7 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, X } from 'lucide-react';
+import { Search, X, Frown } from 'lucide-react';
 import { Input } from './input';
 import { Button } from './button';
 import { cn } from '@/lib/utils';
@@ -23,13 +23,14 @@ interface SearchProps {
 }
 
 export const GlobalSearch: React.FC<SearchProps> = ({
-  placeholder = "Rechercher...",
+  placeholder,
   className,
 }) => {
   const [query, setQuery] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const debouncedQuery = useDebounce(query, 300);
   const navigate = useNavigate();
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const { projects } = useProjects();
   const { tasks } = useTasks();
@@ -82,6 +83,20 @@ export const GlobalSearch: React.FC<SearchProps> = ({
     setIsOpen(debouncedQuery.length > 0);
   }, [debouncedQuery]);
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'k' && (event.metaKey || event.ctrlKey)) {
+        event.preventDefault();
+        inputRef.current?.focus();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
   const handleSelect = (result: SearchResult) => {
     navigate(result.url);
     setQuery('');
@@ -93,13 +108,16 @@ export const GlobalSearch: React.FC<SearchProps> = ({
     setIsOpen(false);
   };
 
+  const defaultPlaceholder = "Rechercher... (⌘K)";
+
   return (
     <div className={cn("relative w-full max-w-md", className)}>
       <div className="relative">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
+          ref={inputRef}
           type="text"
-          placeholder={placeholder}
+          placeholder={placeholder || defaultPlaceholder}
           value={query}
           onChange={handleInputChange}
           className="pl-10 pr-10"
@@ -132,8 +150,10 @@ export const GlobalSearch: React.FC<SearchProps> = ({
               </div>
             ))
           ) : (
-            <div className="px-3 py-2 text-sm text-muted-foreground">
-              Aucun résultat pour "{debouncedQuery}"
+            <div className="px-4 py-6 text-center text-sm text-muted-foreground">
+              <Frown className="mx-auto h-8 w-8 mb-2 opacity-50" />
+              <p className="font-semibold">Aucun résultat trouvé</p>
+              <p>Essayez avec d'autres mots-clés.</p>
             </div>
           )}
         </div>
