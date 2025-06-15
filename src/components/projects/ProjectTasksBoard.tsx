@@ -21,9 +21,13 @@ interface TodoTask {
 
 type TaskUpdate = Database['public']['Tables']['tasks']['Update'];
 
-const ProjectTasksBoard: React.FC = () => {
-  const { tasks, loading: tasksLoading, error: tasksError, updateTask, deleteTask } = useTasks();
-  const { teamMembers, loading: membersLoading, error: membersError } = useTeamMembers();
+interface ProjectTasksBoardProps {
+  projectId?: string;
+}
+
+const ProjectTasksBoard: React.FC<ProjectTasksBoardProps> = ({ projectId }) => {
+  const { tasks, loading: tasksLoading, error: tasksError, updateTask, deleteTask } = useTasks(projectId);
+  const { teamMembers, loading: membersLoading, error: membersError } = useTeamMembers(projectId);
   const { toast } = useToast();
 
   const handleUpdateTask = async (taskId: string, updates: Partial<TodoTask>) => {
@@ -89,6 +93,7 @@ const ProjectTasksBoard: React.FC = () => {
       teamMembers={teamMembers}
       onUpdateTask={handleUpdateTask}
       onDeleteTask={handleDeleteTask}
+      projectId={projectId}
     />
   );
 };

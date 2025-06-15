@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -31,13 +32,15 @@ interface TodoBoardProps {
   teamMembers: TeamMember[];
   onUpdateTask: (taskId: string, updates: Partial<TodoTask>) => Promise<void>;
   onDeleteTask: (taskId: string) => Promise<void>;
+  projectId?: string;
 }
 
 const TodoBoard: React.FC<TodoBoardProps> = ({ 
   tasks, 
   teamMembers,
   onUpdateTask,
-  onDeleteTask
+  onDeleteTask,
+  projectId
 }) => {
   const columns = [
     {
@@ -140,6 +143,7 @@ const TodoBoard: React.FC<TodoBoardProps> = ({
                       </Button>
                     }
                     initialStatus={column.id as 'idea' | 'todo' | 'in-progress' | 'done'}
+                    projectId={projectId}
                   />
                 </CardHeader>
 
