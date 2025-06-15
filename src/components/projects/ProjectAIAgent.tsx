@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Bot, X, Loader2, Settings } from 'lucide-react';
@@ -152,6 +153,7 @@ ${JSON.stringify(ragDocuments.slice(0, 5), null, 2)}
       );
 
       let aiResponseContent = response.choices[0].message.content;
+      console.log('AI response raw:', aiResponseContent);
 
       // Check if the AI wants to use a tool
       let isToolCallAttempt = false;
@@ -197,8 +199,9 @@ ${JSON.stringify(ragDocuments.slice(0, 5), null, 2)}
       } catch (toolError) {
         if (isToolCallAttempt) {
             console.error("Error executing tool:", toolError);
-            aiResponseContent = "Désolé, une erreur est survenue lors de l'exécution de l'action demandée.";
-            toast.error("Erreur de l'agent IA : " + (toolError instanceof Error ? toolError.message : String(toolError)));
+            const errorMessage = toolError instanceof Error ? toolError.message : String(toolError);
+            aiResponseContent = `Désolé, une erreur est survenue lors de l'exécution de l'action demandée.\n\nErreur: ${errorMessage}`;
+            toast.error("Erreur de l'agent IA : " + errorMessage);
         }
         // If it wasn't a tool call attempt, or JSON parsing failed,
         // we suppress the error and just show the raw response from the AI.
