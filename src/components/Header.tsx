@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Moon, Sun } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -7,7 +8,7 @@ import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { GlobalSearch } from '@/components/ui/search';
 import { NotificationsCenter } from '@/components/ui/notifications-center';
 import { useNotifications } from '@/hooks/use-notifications';
-import { useTheme } from 'next-themes';
+import { useTheme } from '@/providers/ThemeProvider';
 
 const Header: React.FC = () => {
   const navigate = useNavigate();
