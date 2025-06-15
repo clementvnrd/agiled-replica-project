@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { ThemeProvider } from "@/providers/ThemeProvider"
@@ -10,7 +9,7 @@ import NotFound from './pages/NotFound';
 import { LoginPage, SignupPage, VerifyEmail, ResetPassword, RedirectIfAuthenticated } from './components/routes/AuthRoutes';
 import { ProtectedRoute } from './components/routes/ProtectedRoute';
 import MainLayout from './layouts/MainLayout';
-import RagDocumentEditor from './components/rag/RagDocumentEditor';
+import RagManagementPage from './pages/rag/RagManagementPage';
 import VectorSearch from './components/rag/VectorSearch';
 import SettingsPage from './pages/settings/SettingsPage';
 import OnboardingWrapper from './components/routes/OnboardingWrapper';
@@ -72,7 +71,7 @@ function App() {
                 <Route path="/projects/:id" element={<ProjectDetail />} />
                 <Route path="/settings" element={<SettingsPage />} />
                 <Route path="/llm" element={<LLMPage />} />
-                <Route path="/rag" element={<RagDocumentEditor />} />
+                <Route path="/rag" element={<RagManagementPage />} />
                 <Route path="/search" element={<VectorSearch />} />
               </Route>
               
