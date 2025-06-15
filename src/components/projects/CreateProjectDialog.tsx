@@ -33,6 +33,8 @@ const CreateProjectDialog: React.FC<CreateProjectDialogProps> = ({ trigger }) =>
   const [open, setOpen] = useState(false);
   const [startDate, setStartDate] = useState<Date | undefined>();
   const [endDate, setEndDate] = useState<Date | undefined>();
+  const [status, setStatus] = useState<'planning' | 'active' | 'on-hold' | 'completed'>('planning');
+  const [priority, setPriority] = useState<'low' | 'medium' | 'high'>('medium');
   const { createProject } = useProjects();
   const { toast } = useToast();
 
@@ -48,6 +50,8 @@ const CreateProjectDialog: React.FC<CreateProjectDialogProps> = ({ trigger }) =>
     try {
       await createProject({
         ...data,
+        status,
+        priority,
         budget: isNaN(data.budget) ? null : data.budget,
         start_date: startDate?.toISOString().split('T')[0] || null,
         end_date: endDate?.toISOString().split('T')[0] || null,
@@ -62,6 +66,8 @@ const CreateProjectDialog: React.FC<CreateProjectDialogProps> = ({ trigger }) =>
       reset();
       setStartDate(undefined);
       setEndDate(undefined);
+      setStatus('planning');
+      setPriority('medium');
       setOpen(false);
     } catch (error) {
       console.error("Failed to create project:", error);
@@ -126,7 +132,7 @@ const CreateProjectDialog: React.FC<CreateProjectDialogProps> = ({ trigger }) =>
           <div className="grid grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label>Statut</Label>
-              <Select onValueChange={(value) => setValue('status', value as any)} defaultValue="planning">
+              <Select value={status} onValueChange={setStatus}>
                 <SelectTrigger>
                   <SelectValue placeholder="Statut" />
                 </SelectTrigger>
@@ -141,7 +147,7 @@ const CreateProjectDialog: React.FC<CreateProjectDialogProps> = ({ trigger }) =>
 
             <div className="space-y-2">
               <Label>Priorité</Label>
-              <Select onValueChange={(value) => setValue('priority', value as any)} defaultValue="medium">
+              <Select value={priority} onValueChange={setPriority}>
                 <SelectTrigger>
                   <SelectValue placeholder="Priorité" />
                 </SelectTrigger>

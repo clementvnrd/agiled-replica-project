@@ -43,6 +43,9 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
   const [dueDate, setDueDate] = useState<Date | undefined>();
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState('');
+  const [status, setStatus] = useState<'idea' | 'todo' | 'in-progress' | 'done'>(initialStatus);
+  const [priority, setPriority] = useState<'low' | 'medium' | 'high'>('medium');
+  const [selectedProjectId, setSelectedProjectId] = useState<string>(projectId || '');
   const { createTask } = useTasks();
   const { projects } = useProjects();
   const { toast } = useToast();
@@ -71,6 +74,9 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
     try {
       await createTask({
         ...data,
+        status,
+        priority,
+        project_id: selectedProjectId || null,
         due_date: dueDate?.toISOString().split('T')[0] || null,
         tags
       });
@@ -84,6 +90,9 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
       setDueDate(undefined);
       setTags([]);
       setTagInput('');
+      setStatus(initialStatus);
+      setPriority('medium');
+      setSelectedProjectId(projectId || '');
       setOpen(false);
     } catch (error) {
       toast({
@@ -133,7 +142,7 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Statut</Label>
-              <Select onValueChange={(value) => setValue('status', value as any)} defaultValue={initialStatus}>
+              <Select value={status} onValueChange={setStatus}>
                 <SelectTrigger>
                   <SelectValue placeholder="Statut" />
                 </SelectTrigger>
@@ -148,7 +157,7 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
 
             <div className="space-y-2">
               <Label>Priorité</Label>
-              <Select onValueChange={(value) => setValue('priority', value as any)} defaultValue="medium">
+              <Select value={priority} onValueChange={setPriority}>
                 <SelectTrigger>
                   <SelectValue placeholder="Priorité" />
                 </SelectTrigger>
@@ -164,11 +173,12 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
           {!projectId && (
             <div className="space-y-2">
               <Label>Projet</Label>
-              <Select onValueChange={(value) => setValue('project_id', value)}>
+              <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner un projet (optionnel)" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="">Aucun projet</SelectItem>
                   {projects.map(project => (
                     <SelectItem key={project.id} value={project.id}>
                       {project.name}
