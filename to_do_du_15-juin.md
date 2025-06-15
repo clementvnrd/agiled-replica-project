@@ -1,14 +1,40 @@
 
-# "To Do" du 15 Juin
+# "To Do" du 15 Juin (Audit Complet)
 
-Liste des améliorations à apporter à l'application, basée sur l'audit du 15/06.
+Liste des améliorations à apporter à l'application, basée sur l'audit complet du 15/06.
 
-## Tâches
+## 1. Fonctionnalités (Améliorations et Nouveautés)
 
-- [x] **1. Centraliser les constantes des modèles LLM :** Extraire la liste des modèles LLM de `ModelSelector.tsx` dans un fichier de constantes dédié (`src/lib/constants/models.ts`) pour faciliter la maintenance et la réutilisation. Mettre à jour les composants qui utilisent ces valeurs. **(FAIT)**
-- [x] **2. Refactoriser la logique de contexte de l'agent IA :** Extraire la logique de génération du `pageContext` depuis `useProjectAIAgentLogic.ts` vers une fonction utilitaire dédiée (`src/utils/ai/getContext.ts`) pour alléger le hook. **(FAIT)**
-- [ ] **3. Refactoriser la gestion des appels d'outils :** Isoler la logique complexe de traitement des `tool_calls` de `useProjectAIAgentLogic.ts` dans un service ou une fonction dédiée (`src/services/aiToolHandler.ts`) pour améliorer la lisibilité et la testabilité.
-- [ ] **4. Animer l'apparition de l'agent IA :** Ajouter des transitions fluides (par exemple avec `framer-motion`) pour l'ouverture et la fermeture de la fenêtre de chat de l'agent IA dans `ProjectAIAgentUI.tsx`.
-- [ ] **5. Simplifier `useProjectAIAgentLogic.ts` :** Après les refactorisations précédentes, s'assurer que le hook est significativement plus court et plus facile à comprendre. Proposer de le scinder davantage si nécessaire.
-- [ ] **6. Améliorer la gestion des projets :** Ajouter la possibilité de voir le nombre de tâches par projet sur la page de liste des projets.
-- [ ] **7. Mettre à jour les statistiques du tableau de bord :** Connecter les `StatCard` du `DashboardBusiness.tsx` aux données réelles des projets et des tâches.
+- [ ] **Dashboard Dynamique :** Connecter les `StatCard` du `DashboardBusiness.tsx` aux données réelles des projets et des tâches.
+- [ ] **Gestion des Projets :** Ajouter la possibilité de voir le nombre de tâches par projet sur la page de liste des projets.
+- [ ] **Centre de Notifications :** Mettre en place un système de notifications (tâches assignées, mentions).
+- [ ] **Recherche Globale :** Activer la barre de recherche globale pour rechercher dans les projets, tâches, et documents RAG.
+- [ ] **Modules Métiers (CRM & Finance) :** Développer les sections CRM et Finance (contacts, factures, devis).
+- [ ] **Profil et Paramètres Utilisateur :** Enrichir la page des paramètres (profil, préférences de notification, connexions externes).
+
+## 2. Technique (Qualité et Maintenabilité du Code)
+
+- [x] **Centraliser les Constantes :** Extraire la liste des modèles LLM de `ModelSelector.tsx` dans `src/lib/constants/models.ts`. **(FAIT)**
+- [x] **Refactor Contexte IA :** Extraire la logique du `pageContext` de `useProjectAIAgentLogic.ts` vers `src/utils/ai/getContext.ts`. **(FAIT)**
+- [ ] **Refactor "Tool Calls" IA :** Isoler la logique de traitement des `tool_calls` de `useProjectAIAgentLogic.ts` dans un service dédié (`src/services/aiToolHandler.ts`).
+- [ ] **Simplifier `useProjectAIAgentLogic.ts` :** S'assurer que le hook est plus court après les refactorisations.
+- [ ] **Gestion d'État Centralisée :** Envisager Zustand ou un React Context pour les données globales (utilisateur, paramètres).
+- [ ] **Gestion des Erreurs :** Utiliser systématiquement l'ErrorHandler pour une gestion uniforme.
+
+## 3. Optimisation (Performance et Réactivité)
+
+- [ ] **Chargement Paresseux (Lazy Loading) :** Utiliser `React.lazy` et `Suspense` pour le chargement des pages.
+- [ ] **Mises à Jour Optimistes :** Implémenter des mises à jour optimistes pour les actions fréquentes (création de tâches).
+- [ ] **Memoization :** Utiliser `React.memo` et `useCallback` pour optimiser les rendus inutiles.
+
+## 4. Visuel (Design et Cohérence de l'UI)
+
+- [ ] **Animer l'Agent IA :** Ajouter des transitions fluides (`framer-motion`) pour l'ouverture/fermeture du chat IA.
+- [ ] **Skeletons de Chargement :** Remplacer les indicateurs de chargement par des squelettes UI.
+- [ ] **États Vides (Empty States) :** Améliorer les écrans sans contenu avec des illustrations et des appels à l'action.
+- [ ] **Thème Sombre/Clair :** Assurer la cohérence des deux thèmes.
+
+## 5. Ergonomie (Expérience Utilisateur - UX)
+
+- [ ] **Agent IA Proactif :** Rendre l'agent plus proactif avec des messages d'accueil contextuels.
+- [ ] **Raccourcis Clavier :** Intégrer des raccourcis (`Cmd+K` pour la recherche, `N` pour créer).
