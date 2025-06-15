@@ -4,7 +4,11 @@ import { ActivityFeed, ActivityItem } from '@/components/ui/activity-feed';
 import { EnhancedCard } from '@/components/ui/enhanced-card';
 import { Clock, CheckCircle, AlertCircle, Info } from 'lucide-react';
 
-const EnhancedActivityFeed: React.FC = () => {
+interface EnhancedActivityFeedProps {
+  className?: string;
+}
+
+const EnhancedActivityFeed: React.FC<EnhancedActivityFeedProps> = ({ className }) => {
   // Mock data - replace with real data
   const activities: ActivityItem[] = [
     {
@@ -48,6 +52,7 @@ const EnhancedActivityFeed: React.FC = () => {
 
   return (
     <EnhancedCard
+      className={className}
       title="Activité récente"
       subtitle="Dernières actions et événements"
       icon={<Clock className="h-5 w-5" />}

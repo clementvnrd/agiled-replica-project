@@ -11,6 +11,7 @@ interface InteractiveChartProps {
   dataKey: string;
   color?: string;
   category?: string;
+  className?: string;
 }
 
 const InteractiveChart: React.FC<InteractiveChartProps> = ({ 
@@ -18,7 +19,8 @@ const InteractiveChart: React.FC<InteractiveChartProps> = ({
   data, 
   dataKey,
   color = "#2563eb",
-  category
+  category,
+  className
 }) => {
   const [period, setPeriod] = useState<PeriodType>("30d");
   const [chartType, setChartType] = useState<"area" | "bar" | "line">("area");
@@ -83,6 +85,7 @@ const InteractiveChart: React.FC<InteractiveChartProps> = ({
 
   return (
     <EnhancedCard
+      className={className}
       title={title}
       subtitle={category}
       hover
