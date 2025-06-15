@@ -1,8 +1,8 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 import type { User } from '@supabase/supabase-js';
+import { toast } from 'sonner';
 
 type Task = Database['public']['Tables']['tasks']['Row'];
 type TaskInsert = Database['public']['Tables']['tasks']['Insert'];
@@ -55,7 +55,28 @@ export const useTasks = (projectId?: string) => {
   };
 
   const createTask = async (taskData: Omit<TaskInsert, 'user_id'>) => {
-    if (!user) throw new Error('Utilisateur non connecté');
+    if (!user) {
+        toast.error('Vous devez être connecté pour créer une tâche.');
+        throw new Error('Utilisateur non connecté');
+    }
+
+    const tempId = `temp-${Date.now()}`;
+    const newTask: Task = {
+      id: tempId,
+      user_id: user.id,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      title: taskData.title ?? '',
+      description: taskData.description ?? null,
+      status: taskData.status ?? 'todo',
+      project_id: taskData.project_id ?? null,
+      due_date: taskData.due_date ?? null,
+      assignee_id: taskData.assignee_id ?? null,
+      priority: taskData.priority ?? null,
+      order: taskData.order ?? null,
+    };
+
+    setTasks(prev => [newTask, ...prev]);
 
     try {
       const { data, error } = await supabase
@@ -65,14 +86,25 @@ export const useTasks = (projectId?: string) => {
         .single();
 
       if (error) throw error;
-      setTasks(prev => [data, ...prev]);
+      
+      setTasks(prev => prev.map(t => (t.id === tempId ? data : t)));
       return data;
     } catch (err) {
+      toast.error('Erreur lors de la création de la tâche.');
+      setTasks(prev => prev.filter(t => t.id !== tempId));
       throw err instanceof Error ? err : new Error('Erreur lors de la création de la tâche');
     }
   };
 
   const updateTask = async (id: string, updates: TaskUpdate) => {
+    const originalTasks = [...tasks];
+    const taskToUpdate = tasks.find(t => t.id === id);
+    if (!taskToUpdate) return;
+    
+    const updatedTask = { ...taskToUpdate, ...updates };
+    
+    setTasks(prev => prev.map(t => (t.id === id ? updatedTask as Task : t)));
+
     try {
       const { data, error } = await supabase
         .from('tasks')
@@ -82,14 +114,20 @@ export const useTasks = (projectId?: string) => {
         .single();
 
       if (error) throw error;
-      setTasks(prev => prev.map(t => t.id === id ? data : t));
+      // L'état est déjà à jour, on met à jour la tâche avec les données finales du serveur
+      setTasks(prev => prev.map(t => (t.id === id ? data : t)));
       return data;
     } catch (err) {
+      toast.error('Erreur lors de la mise à jour de la tâche.');
+      setTasks(originalTasks);
       throw err instanceof Error ? err : new Error('Erreur lors de la mise à jour de la tâche');
     }
   };
 
   const deleteTask = async (id: string) => {
+    const originalTasks = [...tasks];
+    setTasks(prev => prev.filter(t => t.id !== id));
+
     try {
       const { error } = await supabase
         .from('tasks')
@@ -97,8 +135,10 @@ export const useTasks = (projectId?: string) => {
         .eq('id', id);
 
       if (error) throw error;
-      setTasks(prev => prev.filter(t => t.id !== id));
+      // L'état est déjà à jour, pas besoin de le modifier en cas de succès
     } catch (err) {
+      toast.error('Erreur lors de la suppression de la tâche.');
+      setTasks(originalTasks);
       throw err instanceof Error ? err : new Error('Erreur lors de la suppression de la tâche');
     }
   };

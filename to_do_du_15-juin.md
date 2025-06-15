@@ -24,7 +24,7 @@ Liste des améliorations à apporter à l'application, basée sur l'audit comple
 ## 3. Optimisation (Performance et Réactivité)
 
 - [ ] **Chargement Paresseux (Lazy Loading) :** Utiliser `React.lazy` et `Suspense` pour le chargement des pages.
-- [ ] **Mises à Jour Optimistes :** Implémenter des mises à jour optimistes pour les actions fréquentes (création de tâches).
+- [x] **Mises à Jour Optimistes :** Implémenter des mises à jour optimistes pour les actions fréquentes (création de tâches). **(FAIT)**
 - [ ] **Memoization :** Utiliser `React.memo` et `useCallback` pour optimiser les rendus inutiles.
 
 ## 4. Visuel (Design et Cohérence de l'UI)
