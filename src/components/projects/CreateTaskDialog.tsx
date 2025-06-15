@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, Plus, Tag } from 'lucide-react';
+import { CalendarIcon, Tag } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useForm } from 'react-hook-form';
@@ -18,6 +18,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 
 interface CreateTaskDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   trigger?: React.ReactNode;
   projectId?: string;
   initialStatus?: 'idea' | 'todo' | 'in-progress' | 'done';
@@ -35,11 +37,12 @@ interface TaskFormData {
 }
 
 const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({ 
+  open,
+  onOpenChange,
   trigger, 
   projectId, 
   initialStatus = 'todo' 
 }) => {
-  const [open, setOpen] = useState(false);
   const [dueDate, setDueDate] = useState<Date | undefined>();
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState('');
@@ -50,7 +53,7 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
   const { projects } = useProjects();
   const { toast } = useToast();
 
-  const { register, handleSubmit, reset, setValue, watch, formState: { errors, isSubmitting } } = useForm<TaskFormData>({
+  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<TaskFormData>({
     defaultValues: {
       status: initialStatus,
       priority: 'medium',
@@ -88,7 +91,6 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
     setTags(tags.filter(tag => tag !== tagToRemove));
   };
 
-  // Filter projects to ensure they have valid IDs
   const validProjects = projects ? projects.filter(p => p && typeof p.id === 'string' && p.id.trim() !== '') : [];
 
   const onSubmit = async (data: TaskFormData) => {
@@ -114,7 +116,7 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
       setStatus(initialStatus);
       setPriority('medium');
       setSelectedProjectId(projectId || 'none');
-      setOpen(false);
+      onOpenChange(false);
     } catch (error) {
       console.error("Erreur lors de la création de la tâche:", error);
       toast({
@@ -126,15 +128,12 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {trigger || (
-          <Button>
-            <Plus className="h-4 w-4 mr-2" />
-            Nouvelle tâche
-          </Button>
-        )}
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      {trigger && (
+        <DialogTrigger asChild>
+          {trigger}
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Créer une nouvelle tâche</DialogTitle>
@@ -273,7 +272,7 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
           </div>
 
           <div className="flex justify-end space-x-2">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Annuler
             </Button>
             <Button type="submit" disabled={isSubmitting}>

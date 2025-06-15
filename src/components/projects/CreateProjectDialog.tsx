@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, Plus } from 'lucide-react';
+import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useForm } from 'react-hook-form';
@@ -16,6 +16,8 @@ import { useProjects } from '@/hooks/useProjects';
 import { useToast } from '@/hooks/use-toast';
 
 interface CreateProjectDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   trigger?: React.ReactNode;
 }
 
@@ -29,8 +31,7 @@ interface ProjectFormData {
   budget: number;
 }
 
-const CreateProjectDialog: React.FC<CreateProjectDialogProps> = ({ trigger }) => {
-  const [open, setOpen] = useState(false);
+const CreateProjectDialog: React.FC<CreateProjectDialogProps> = ({ trigger, open, onOpenChange }) => {
   const [startDate, setStartDate] = useState<Date | undefined>();
   const [endDate, setEndDate] = useState<Date | undefined>();
   const [status, setStatus] = useState<'planning' | 'active' | 'on-hold' | 'completed'>('planning');
@@ -38,7 +39,7 @@ const CreateProjectDialog: React.FC<CreateProjectDialogProps> = ({ trigger }) =>
   const { createProject } = useProjects();
   const { toast } = useToast();
 
-  const { register, handleSubmit, reset, setValue, watch, formState: { errors, isSubmitting } } = useForm<ProjectFormData>({
+  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<ProjectFormData>({
     defaultValues: {
       status: 'planning',
       priority: 'medium',
@@ -76,7 +77,7 @@ const CreateProjectDialog: React.FC<CreateProjectDialogProps> = ({ trigger }) =>
       setEndDate(undefined);
       setStatus('planning');
       setPriority('medium');
-      setOpen(false);
+      onOpenChange(false);
     } catch (error) {
       console.error("Failed to create project:", error);
       toast({
@@ -88,15 +89,12 @@ const CreateProjectDialog: React.FC<CreateProjectDialogProps> = ({ trigger }) =>
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {trigger || (
-          <Button>
-            <Plus className="h-4 w-4 mr-2" />
-            Nouveau projet
-          </Button>
-        )}
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      {trigger && (
+        <DialogTrigger asChild>
+          {trigger}
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>Créer un nouveau projet</DialogTitle>
@@ -231,7 +229,7 @@ const CreateProjectDialog: React.FC<CreateProjectDialogProps> = ({ trigger }) =>
           </div>
 
           <div className="flex justify-end space-x-2">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Annuler
             </Button>
             <Button type="submit" disabled={isSubmitting}>
