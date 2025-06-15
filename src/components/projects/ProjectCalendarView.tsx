@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -76,16 +76,16 @@ const ProjectCalendarView: React.FC = () => {
   const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
 
   // Navigation
-  const goToPreviousMonth = () => setCurrentDate(subMonths(currentDate, 1));
-  const goToNextMonth = () => setCurrentDate(addMonths(currentDate, 1));
-  const goToToday = () => setCurrentDate(new Date());
+  const goToPreviousMonth = useCallback(() => setCurrentDate(current => subMonths(current, 1)), []);
+  const goToNextMonth = useCallback(() => setCurrentDate(current => addMonths(current, 1)), []);
+  const goToToday = useCallback(() => setCurrentDate(new Date()), []);
 
   // Obtenir les événements pour une date donnée
-  const getEventsForDate = (date: Date) => {
+  const getEventsForDate = useCallback((date: Date) => {
     return events.filter(event => isSameDay(event.date, date));
-  };
+  }, [events]);
 
-  const getEventColor = (event: CalendarEvent) => {
+  const getEventColor = useCallback((event: CalendarEvent) => {
     if (event.type === 'project-start') return 'bg-green-100 text-green-800 border-green-200';
     if (event.type === 'project-end') return 'bg-blue-100 text-blue-800 border-blue-200';
     if (event.type === 'task-due') {
@@ -94,12 +94,12 @@ const ProjectCalendarView: React.FC = () => {
       return 'bg-gray-100 text-gray-800 border-gray-200';
     }
     return 'bg-gray-100 text-gray-800 border-gray-200';
-  };
+  }, []);
 
-  const isToday = (date: Date) => isSameDay(date, new Date());
-  const isPastDue = (event: CalendarEvent) => {
+  const isToday = useCallback((date: Date) => isSameDay(date, new Date()), []);
+  const isPastDue = useCallback((event: CalendarEvent) => {
     return event.type === 'task-due' && event.status !== 'done' && event.date < new Date();
-  };
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -205,11 +205,11 @@ const ProjectCalendarView: React.FC = () => {
                 <div
                   key={date.toString()}
                   className={`min-h-[120px] p-2 border rounded-lg ${
-                    isCurrentMonth ? 'bg-white' : 'bg-gray-50'
-                  } ${isTodayDate ? 'ring-2 ring-blue-500' : ''}`}
+                    isCurrentMonth ? 'bg-background' : 'bg-muted/20'
+                  } ${isTodayDate ? 'ring-2 ring-primary' : ''}`}
                 >
                   <div className={`text-sm font-medium mb-1 ${
-                    isTodayDate ? 'text-blue-600' : isCurrentMonth ? 'text-gray-900' : 'text-gray-400'
+                    isTodayDate ? 'text-primary' : isCurrentMonth ? 'text-foreground' : 'text-muted-foreground'
                   }`}>
                     {format(date, 'd')}
                   </div>
@@ -301,4 +301,4 @@ const ProjectCalendarView: React.FC = () => {
   );
 };
 
-export default ProjectCalendarView;
+export default React.memo(ProjectCalendarView);

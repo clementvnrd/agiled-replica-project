@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { useTasks } from '@/hooks/useTasks';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
@@ -55,8 +54,8 @@ const ProjectTasksBoard: React.FC<ProjectTasksBoardProps> = ({ projectId }) => {
 
       toast({ title: 'Tâche mise à jour', description: 'Le statut de la tâche a été mis à jour.' });
     } catch (error) {
-      console.error("Error updating task:", error);
-      toast({ title: 'Erreur', description: 'Impossible de mettre à jour la tâche.', variant: 'destructive' });
+      // L'erreur est déjà gérée par le hook useTasks (log + toast).
+      // Ce bloc try/catch empêche l'affichage du toast de succès en cas d'échec.
     }
   };
 
@@ -65,8 +64,7 @@ const ProjectTasksBoard: React.FC<ProjectTasksBoardProps> = ({ projectId }) => {
       await deleteTask(taskId);
       toast({ title: 'Tâche supprimée', description: 'La tâche a été supprimée avec succès.' });
     } catch (error) {
-      console.error("Error deleting task:", error);
-      toast({ title: 'Erreur', description: 'Impossible de supprimer la tâche.', variant: 'destructive' });
+      // L'erreur est déjà gérée par le hook useTasks.
     }
   };
 
