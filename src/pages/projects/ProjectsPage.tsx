@@ -22,6 +22,7 @@ import {
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useProjects } from '@/hooks/useProjects';
+import { useTasks } from '@/hooks/useTasks';
 import CreateProjectDialog from '@/components/projects/CreateProjectDialog';
 import CreateTaskDialog from '@/components/projects/CreateTaskDialog';
 import ProjectDashboard from '@/components/projects/ProjectDashboard';
@@ -33,6 +34,7 @@ import ProjectTasksBoard from '@/components/projects/ProjectTasksBoard';
 const ProjectsPage: React.FC = () => {
   const navigate = useNavigate();
   const { projects, loading, createProject, updateProject, refetch } = useProjects();
+  const { tasks } = useTasks();
   const [searchTerm, setSearchTerm] = useState('');
 
   const getStatusColor = (status: string) => {
@@ -201,7 +203,9 @@ const ProjectsPage: React.FC = () => {
 
           {/* Liste des projets */}
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-            {filteredProjects.map(project => (
+            {filteredProjects.map(project => {
+              const taskCount = tasks.filter(task => task.project_id === project.id).length;
+              return (
               <Card key={project.id} className="hover:shadow-lg transition-shadow">
                 <CardHeader className="pb-4">
                   <div className="flex items-start justify-between">
@@ -257,6 +261,10 @@ const ProjectsPage: React.FC = () => {
                         <span>{Number(project.budget).toLocaleString('fr-FR')} €</span>
                       </div>
                     )}
+                    <div className="flex items-center gap-2">
+                      <ListTodo className="h-4 w-4" />
+                      <span>{taskCount} {taskCount <= 1 ? 'tâche' : 'tâches'}</span>
+                    </div>
                   </div>
 
                   {/* Actions */}
