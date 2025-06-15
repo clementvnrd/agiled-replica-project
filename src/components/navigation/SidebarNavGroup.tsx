@@ -3,12 +3,14 @@ import { Link, useLocation } from 'react-router-dom';
 import { Home, ChevronRight, Database, FileText } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
+
 interface SidebarNavItemProps {
   icon: React.ReactNode;
   label: string;
   to: string;
   isActive?: boolean;
 }
+
 interface SidebarNavGroupProps {
   title: string;
   icon?: React.ReactNode;
@@ -18,14 +20,27 @@ interface SidebarNavGroupProps {
     to: string;
   }>;
 }
+
 export const SidebarNavItem: React.FC<SidebarNavItemProps> = ({
   icon,
   label,
   to,
   isActive
 }) => {
-  return;
+  return (
+    <Link
+      to={to}
+      className={cn(
+        "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
+        isActive ? "bg-accent text-accent-foreground" : "text-muted-foreground"
+      )}
+    >
+      {icon}
+      <span>{label}</span>
+    </Link>
+  );
 };
+
 export const SidebarNavGroup: React.FC<SidebarNavGroupProps> = ({
   title,
   icon,
