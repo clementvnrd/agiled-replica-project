@@ -32,9 +32,10 @@ Liste des améliorations à apporter à l'application, basée sur l'audit comple
 - [ ] **Animer l'Agent IA :** Ajouter des transitions fluides (`framer-motion`) pour l'ouverture/fermeture du chat IA.
 - [x] **Skeletons de Chargement :** Remplacer les indicateurs de chargement par des squelettes UI. **(FAIT)**
 - [ ] **États Vides (Empty States) :** Améliorer les écrans sans contenu avec des illustrations et des appels à l'action.
-- [ ] **Thème Sombre/Clair :** Assurer la cohérence des deux thèmes.
+- [x] **Thème Sombre/Clair :** Mettre en place le sélecteur de thème. **(FAIT)**
 
 ## 5. Ergonomie (Expérience Utilisateur - UX)
 
 - [ ] **Agent IA Proactif :** Rendre l'agent plus proactif avec des messages d'accueil contextuels.
 - [ ] **Raccourcis Clavier :** Intégrer des raccourcis (`Cmd+K` pour la recherche, `N` pour créer).
+

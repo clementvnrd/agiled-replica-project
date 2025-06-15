@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { Moon } from 'lucide-react';
+import { Moon, Sun } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { useNavigate } from 'react-router-dom';
@@ -8,6 +7,7 @@ import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { GlobalSearch } from '@/components/ui/search';
 import { NotificationsCenter } from '@/components/ui/notifications-center';
 import { useNotifications } from '@/hooks/use-notifications';
+import { useTheme } from 'next-themes';
 
 const Header: React.FC = () => {
   const navigate = useNavigate();
@@ -21,6 +21,7 @@ const Header: React.FC = () => {
     markAllAsRead,
     dismiss
   } = useNotifications();
+  const { theme, setTheme } = useTheme();
 
   const handleSignOut = async () => {
     try {
@@ -49,7 +50,7 @@ const Header: React.FC = () => {
     }
     return user?.email || 'Utilisateur';
   };
-  return <header className="h-16 bg-white border-b border-agiled-lightBorder flex items-center px-4">
+  return <header className="h-16 bg-white border-b border-agiled-lightBorder flex items-center px-4 dark:bg-gray-900 dark:border-gray-700">
       <div className="flex-1 flex items-center">
         <GlobalSearch placeholder="Chercher dans l'application..." className="w-64" />
       </div>
@@ -57,8 +58,14 @@ const Header: React.FC = () => {
       <div className="flex items-center space-x-4">
         
         
-        <Button variant="ghost" size="icon" className="text-agiled-lightText">
-          <Moon size={20} />
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="text-agiled-lightText dark:text-gray-400"
+          onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+        >
+          {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+          <span className="sr-only">Changer de thème</span>
         </Button>
         
         <NotificationsCenter notifications={notifications} onMarkAsRead={markAsRead} onMarkAllAsRead={markAllAsRead} onDismiss={dismiss} />
@@ -70,11 +77,11 @@ const Header: React.FC = () => {
         
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <div className="flex items-center gap-3 pl-3 border-l border-agiled-lightBorder cursor-pointer">
+            <div className="flex items-center gap-3 pl-3 border-l border-agiled-lightBorder cursor-pointer dark:border-gray-700">
               <div className="w-8 h-8 rounded-full bg-agiled-primary text-white flex items-center justify-center overflow-hidden">
                 {user?.user_metadata?.avatar_url ? <img src={user.user_metadata.avatar_url} alt="Avatar" className="w-full h-full object-cover rounded-full" /> : getUserInitials()}
               </div>
-              <div className="text-sm">
+              <div className="text-sm dark:text-gray-200">
                 <p className="font-medium">{getDisplayName()}</p>
               </div>
             </div>
