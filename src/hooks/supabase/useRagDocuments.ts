@@ -1,8 +1,10 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { RagDocument } from '@/types';
 import { ErrorHandler } from '@/utils/errorHandler';
+import { toast } from 'sonner';
 
 const RAG_DOCUMENTS_QUERY_KEY = 'ragDocuments';
 
@@ -67,16 +69,27 @@ export function useRagDocuments() {
       if (!user) throw new Error("User not authenticated");
       return addDocumentFn({ userId: user.id, content: newDoc.content, metadata: newDoc.metadata || {} });
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey });
+      toast.success(`Le document "${data.metadata?.title || 'Sans titre'}" est en cours de traitement.`);
     },
+    onError: (error) => {
+      toast.error(`Erreur lors de l'ajout du document: ${error.message}`);
+    }
   });
 
   const deleteDocumentMutation = useMutation({
     mutationFn: deleteDocumentFn,
-    onSuccess: () => {
+    onSuccess: (deletedId) => {
+      queryClient.setQueryData(queryKey, (oldData: RagDocument[] | undefined) => {
+        return oldData ? oldData.filter(doc => doc.id !== deletedId) : [];
+      });
       queryClient.invalidateQueries({ queryKey });
+      toast.success("Document supprimé avec succès.");
     },
+    onError: (error) => {
+      toast.error(`Erreur lors de la suppression: ${error.message}`);
+    }
   });
 
   return {
@@ -84,7 +97,9 @@ export function useRagDocuments() {
     isLoading,
     error,
     addDocument: addDocumentMutation.mutateAsync,
+    isAddingDocument: addDocumentMutation.isPending,
     deleteDocument: deleteDocumentMutation.mutateAsync,
+    isDeletingDocument: deleteDocumentMutation.isPending,
     refetch,
   };
 }

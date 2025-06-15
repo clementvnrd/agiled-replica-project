@@ -12,18 +12,15 @@ const RagDocumentEditor: React.FC = () => {
   const { user } = useSupabaseAuth();
   const [activeTab, setActiveTab] = useState<string>('editor');
 
-  // Utilisation du hook centralisé pour gérer les données RAG
   const { documents, isLoading, deleteDocument, refetch } = useRagDocuments();
 
   const handleDocumentDelete = async (id: string) => {
-    // Utilisation de la fonction de suppression du hook
     await deleteDocument(id);
   };
   
-  // La fonction de succès pour le formulaire et l'upload est maintenant le "refetch" du hook
   const handleSuccess = () => {
     refetch();
-    setActiveTab('list'); // Basculer vers la liste après un ajout réussi
+    setActiveTab('list');
   };
 
   if (!user) {
@@ -43,8 +40,6 @@ const RagDocumentEditor: React.FC = () => {
         
         <TabsContent value="editor">
           <DocumentForm 
-            userId={user.id} 
-            supabase={supabase} 
             onSuccess={handleSuccess}
           />
         </TabsContent>
@@ -53,9 +48,8 @@ const RagDocumentEditor: React.FC = () => {
           <DocumentList 
             documents={documents}
             isLoading={isLoading}
-            supabase={supabase}
             onDelete={handleDocumentDelete}
-            onRefresh={refetch} // Utiliser refetch du hook
+            onRefresh={refetch}
             onCreateNew={() => setActiveTab('editor')}
           />
         </TabsContent>

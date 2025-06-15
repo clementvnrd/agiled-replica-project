@@ -1,17 +1,14 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Loader2, FileText } from 'lucide-react';
-import { toast } from "sonner";
 import { RagDocument } from '@/types';
-import { SupabaseClient } from '@supabase/supabase-js';
 
 interface DocumentListProps {
   documents: RagDocument[];
   isLoading: boolean;
-  supabase: SupabaseClient;
-  onDelete: (id: string) => void;
+  onDelete: (id: string) => Promise<any>;
   onRefresh: () => void;
   onCreateNew: () => void;
 }
@@ -19,26 +16,20 @@ interface DocumentListProps {
 const DocumentList: React.FC<DocumentListProps> = ({ 
   documents, 
   isLoading, 
-  supabase, 
   onDelete, 
   onRefresh,
   onCreateNew 
 }) => {
-  
-  const handleDelete = async (id: string) => {
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const handleDeleteClick = async (id: string) => {
+    setDeletingId(id);
     try {
-      const { error } = await supabase
-        .from('rag_documents')
-        .delete()
-        .eq('id', id);
-        
-      if (error) throw error;
-      
-      onDelete(id);
-      toast.success("Document supprimé avec succès");
-    } catch (err) {
-      console.error('Erreur lors de la suppression:', err);
-      toast.error("Erreur lors de la suppression du document");
+      await onDelete(id);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -93,9 +84,10 @@ const DocumentList: React.FC<DocumentListProps> = ({
                   variant="ghost" 
                   size="sm" 
                   className="text-red-600 hover:text-red-800 hover:bg-red-50"
-                  onClick={() => handleDelete(doc.id)}
+                  onClick={() => handleDeleteClick(doc.id)}
+                  disabled={deletingId === doc.id}
                 >
-                  Supprimer
+                  {deletingId === doc.id ? <Loader2 className="h-4 w-4 animate-spin" /> : "Supprimer"}
                 </Button>
               </div>
             </Card>

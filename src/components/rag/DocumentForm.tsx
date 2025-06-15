@@ -6,52 +6,35 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Loader2 } from 'lucide-react';
 import { toast } from "sonner";
-import { SupabaseClient } from '@supabase/supabase-js';
+import { useRagDocuments } from '@/hooks/supabase/useRagDocuments';
 
 interface DocumentFormProps {
-  userId: string;
-  supabase: SupabaseClient;
   onSuccess: () => void;
 }
 
-const DocumentForm: React.FC<DocumentFormProps> = ({ userId, supabase, onSuccess }) => {
+const DocumentForm: React.FC<DocumentFormProps> = ({ onSuccess }) => {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { addDocument, isAddingDocument } = useRagDocuments();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!userId) return;
     
     if (!content.trim()) {
       toast.error("Le contenu du document est requis");
       return;
     }
     
-    setIsSubmitting(true);
-    
     try {
-      // Define metadata with correct type
-      const metadata: Record<string, any> = { title: title || 'Sans titre', type: 'text' };
+      const metadata: Record<string, any> = { title: title || 'Sans titre', type: 'text', source: 'DocumentForm' };
       
-      // Fix for deep type instantiation issue: Do not chain .select()
-      const { error } = await supabase
-        .from('rag_documents')
-        .insert([
-          { user_id: userId, content, metadata }
-        ]);
-        
-      if (error) throw error;
+      await addDocument({ content, metadata });
       
-      toast.success("Document RAG ajouté avec succès");
       setTitle('');
       setContent('');
-      onSuccess(); // Call callback to refresh documents
+      onSuccess();
     } catch (err) {
       console.error('Erreur lors de la création du document:', err);
-      toast.error("Erreur lors de la création du document");
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -84,10 +67,10 @@ const DocumentForm: React.FC<DocumentFormProps> = ({ userId, supabase, onSuccess
         <CardFooter>
           <Button 
             type="submit" 
-            disabled={isSubmitting || !content.trim()} 
+            disabled={isAddingDocument || !content.trim()} 
             className="w-full"
           >
-            {isSubmitting ? (
+            {isAddingDocument ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Enregistrement...
