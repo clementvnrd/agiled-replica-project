@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Bot, CheckCircle2, X, Clock, AlertTriangle, TrendingUp, Users } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -34,8 +33,8 @@ const AISuggestionCards: React.FC = () => {
   const { data: activities } = useCrmActivities();
   const { data: deals } = useCrmDeals();
   const { data: contacts } = useCrmContacts();
-  const { data: projects } = useProjects();
-  const { data: tasks } = useTasks();
+  const { projects } = useProjects();
+  const { tasks } = useTasks();
   
   const [suggestions, setSuggestions] = useState<AISuggestion[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
