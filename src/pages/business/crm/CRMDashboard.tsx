@@ -11,6 +11,7 @@ import { Building, Users, DollarSign, Ticket, Calendar, CheckSquare } from 'luci
 import ProactiveAIAgent from '@/components/crm/ProactiveAIAgent';
 import CrmTodoList from '@/components/crm/CrmTodoList';
 import AISuggestionCards from '@/components/crm/AISuggestionCards';
+import CrmFinanceIntegration from '@/components/crm/CrmFinanceIntegration';
 
 const CRMDashboard: React.FC = () => {
   const { data: accounts } = useCrmAccounts();
@@ -87,24 +88,29 @@ const CRMDashboard: React.FC = () => {
         ))}
       </div>
 
-      {/* Grille principale avec suggestions IA */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Suggestions IA - Prend toute la largeur sur mobile, 2 colonnes sur desktop */}
+      {/* Grille principale avec intégration CRM-Finance */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        {/* Analyse CRM-Finance - Prend toute la largeur sur mobile, 2 colonnes sur desktop */}
         <div className="lg:col-span-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Assistant IA - Suggestions Intelligentes</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <AISuggestionCards />
-            </CardContent>
-          </Card>
+          <CrmFinanceIntegration />
         </div>
         
         {/* To Do Liste - 1 colonne */}
         <div className="lg:col-span-1">
           <CrmTodoList />
         </div>
+      </div>
+
+      {/* Suggestions IA - Largeur complète */}
+      <div className="mb-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Assistant IA - Suggestions Intelligentes</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <AISuggestionCards />
+          </CardContent>
+        </Card>
       </div>
 
       {/* Agent IA Proactif - En bas, largeur complète */}
